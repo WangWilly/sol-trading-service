@@ -1,0 +1,13 @@
+# Node.js 
+node_modules/
+dist/
+.env
+.npmrc
+
+# TypeScript 
+*.tsbuildinfo
+*.d.ts
+
+# VSCode 
+.vscode/
+.DS_Store
