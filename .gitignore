@@ -3,6 +3,7 @@ node_modules/
 dist/
 .env
 .npmrc
+package-lock.json
 
 # TypeScript 
 *.tsbuildinfo
