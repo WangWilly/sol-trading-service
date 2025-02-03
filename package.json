@@ -1,9 +1,10 @@
 {
   "name": "copy-trading-service",
   "version": "1.0.0",
-  "main": "sol-copytrading.js",
+  "main": "src/copyTrade.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx ts-node src/copyTrade.ts"
   },
   "keywords": [],
   "author": "",
@@ -11,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@solana/web3.js": "^1.98.0",
+    "axios": "^1.7.9",
     "bs58": "^6.0.0",
     "dotenv": "^16.4.7",
     "minimist": "^1.2.8"
