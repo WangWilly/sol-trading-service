@@ -25,7 +25,13 @@ const RAYDIUM_CLMM = new PublicKey(
   'CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK'
 );
 
-// TODO: add your own Orca & Pump.fun addresses
+const ORCA_WHIRL_POOLS = 'whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc';
+
+const ORCA_TOKEN_SWAP = 'DjVE6JNiYqPL2QXyCUUh8rNjHrbz9hXHNYt99MQ59qw1';
+
+const ORCA_TOKEN_SWAP_V2 = '9W959DqEETiGZocYWCQPaJ6sBmUzgfxXfqGeTEdp3aQP';
+
+const PUMP_FUN = new PublicKey('6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P');
 
 // **載入私鑰**
 const wallet = Keypair.fromSecretKey(bs58.decode(PRIVATE_KEY));
@@ -79,7 +85,11 @@ function connectWebSocket() {
           log.includes(RAYDIUM_STANDARD_AMM.toBase58()) ||
           log.includes(RAYDIUM_LEGACY_AMM_V4.toBase58()) ||
           log.includes(RAYDIUM_STABLE_AMM.toBase58()) ||
-          log.includes(RAYDIUM_CLMM.toBase58())
+          log.includes(RAYDIUM_CLMM.toBase58()) ||
+          log.includes(ORCA_WHIRL_POOLS) ||
+          log.includes(ORCA_TOKEN_SWAP) ||
+          log.includes(ORCA_TOKEN_SWAP_V2) ||
+          log.includes(PUMP_FUN.toBase58())
       );
 
       if (isSwap) {

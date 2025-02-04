@@ -1,10 +1,10 @@
 {
   "name": "copy-trading-service",
   "version": "1.0.0",
-  "main": "src/copyTrade.ts",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx ts-node src/copyTrade.ts"
+    "dev": "npx ts-node index.ts"
   },
   "keywords": [],
   "author": "",
