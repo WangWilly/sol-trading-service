@@ -1,5 +1,10 @@
 import { BN } from "bn.js";
-import { PublicKey } from "@solana/web3.js";
+import {
+  clusterApiUrl,
+  Connection,
+  PublicKey,
+  SystemProgram,
+} from "@solana/web3.js";
 
 import {
   JupSwapClient,
@@ -7,6 +12,8 @@ import {
   BuildSwapV1BodyDtoSchema,
 } from "../src/utils/3rdParties/jup";
 
+import { VersionedTransaction } from "@solana/web3.js";
+import { insertIxToVersionedTx } from "../src/utils/transaction";
 import { safe } from "../src/utils/exceptions";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,11 +37,14 @@ async function main() {
   }
   const quoteParams = quoteParamsRes.data;
   const quoteResult = await jupSwapClient.getQuote(quoteParams);
-  console.log(`quoteResult: ${quoteResult}`);
+  console.log("🚀 ==> quoteResult:");
+  console.log(quoteResult);
 
   //////////////////////////////////////////////////////////////////////////////
 
-  const bunnerWalletPubkey = new PublicKey("HDs743XeHc6LS9akHf8sGVaonpGfP4YnZD2PD5M4HixZ");
+  const bunnerWalletPubkey = new PublicKey(
+    "HDs743XeHc6LS9akHf8sGVaonpGfP4YnZD2PD5M4HixZ"
+  );
 
   const buildSwapBodyRaw = {
     quoteResponse: quoteResult,
@@ -47,7 +57,43 @@ async function main() {
   }
   const buildSwapBody = buildSwapBodyRes.data;
   const buildSwapResult = await jupSwapClient.buildSwapTx(buildSwapBody);
-  console.log(`buildSwapResult: ${buildSwapResult}`);
+  console.log("🚀 ==> buildSwapResult:");
+  console.log(buildSwapResult);
+  if (!buildSwapResult) {
+    console.log("Failed to build swap transaction");
+    return;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  const tx = VersionedTransaction.deserialize(
+    Buffer.from(buildSwapResult.swapTransaction, "base64")
+  );
+  console.log("🚀 ==> tx:");
+  console.log(tx);
+
+  // construct the transfer instruction
+  const referralWalletPublicKey = new PublicKey(
+    "99k9aSMfBcBQZLLChVhNWBf6Jd7kKnQjVyY9V4ffkzcP"
+  );
+  const transferInstruction = SystemProgram.transfer({
+    fromPubkey: bunnerWalletPubkey,
+    toPubkey: referralWalletPublicKey,
+    lamports: 1000,
+  });
+
+  // insert the instruction into the transaction
+  const connection = new Connection(clusterApiUrl("mainnet-beta"));
+  const updatedTxRes = await safe(
+    insertIxToVersionedTx(connection, tx, transferInstruction)
+  );
+  if (!updatedTxRes.success) {
+    console.log(`Failed to insert instruction: ${updatedTxRes.error}`);
+    return;
+  }
+  const updatedTx = updatedTxRes.data;
+  console.log("🚀 ==> updatedTx:");
+  console.log(updatedTx);
 }
 
 main();
