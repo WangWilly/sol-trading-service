@@ -39,16 +39,22 @@ export function connectWebSocket() {
 
     if (message.method === 'logsNotification') {
       const logs = message.params.result;
-      console.log(`📌 交易發生: ${logs.value.signature}`);
 
       // ✅ O(1) 查詢，提高效能
-      const isSwap = logs.value.logs.some((log: string) => DEX_POOLS.has(log));
+      const isSwap = logs.value.logs.some((log: string) => {
+        console.log('log', log);
+
+        // logs 含有 dexPools 裡的任何一個地址
+        return DEX_POOLS.has(log);
+      });
+      // const isSwap = logs.value.err === null;
 
       if (isSwap) {
         console.log('🔄 目標地址正在 Swap，開始跟單...');
-        await copyTrade(logs.value.signature);
+        console.log('🔍 收到交易日誌: ', JSON.stringify(logs, null, 2));
+        // await copyTrade(logs.value.signature);
       } else {
-        console.log('❌ 交易不是 Swap，忽略...');
+        // console.log('❌ 交易不是 Swap，忽略...');
       }
     }
   });
