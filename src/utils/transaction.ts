@@ -27,6 +27,9 @@ export const insertIxToVersionedTx = async (
       });
     })
   );
+  for (const ix of tx.message.compiledInstructions) {
+    console.log("ix:", ix);
+  }
   const msg = TransactionMessage.decompile(tx.message, {
     addressLookupTableAccounts,
   });

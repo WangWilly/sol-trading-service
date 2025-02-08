@@ -1,6 +1,7 @@
 import { BN } from "bn.js";
 import {
   clusterApiUrl,
+  ComputeBudgetProgram,
   Connection,
   PublicKey,
   SystemProgram,
@@ -15,6 +16,7 @@ import {
 import { VersionedTransaction } from "@solana/web3.js";
 import { insertIxToVersionedTx } from "../src/utils/transaction";
 import { safe } from "../src/utils/exceptions";
+import { TransactionBuilder } from "../src/utils/transactionBuilder";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,6 +86,7 @@ async function main() {
 
   // insert the instruction into the transaction
   const connection = new Connection(clusterApiUrl("mainnet-beta"));
+  /**
   const updatedTxRes = await safe(
     insertIxToVersionedTx(connection, tx, transferInstruction)
   );
@@ -94,6 +97,32 @@ async function main() {
   const updatedTx = updatedTxRes.data;
   console.log("🚀 ==> updatedTx:");
   console.log(updatedTx);
+  */
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  // const builder = TransactionBuilder.fromVersionedTxV1(tx);
+  // builder.addInstruction(transferInstruction);
+  // const updatedTxV2 = builder.build(await connection.getLatestBlockhash());
+  // console.log("🚀 ==> updatedTxV2:")
+  // console.log(updatedTxV2);
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  // const ul = ComputeBudgetProgram.setComputeUnitLimit({ units: 1000 });
+  // console.log("🚀 ==> ul:");
+  // console.log(ul);
+  // console.log(ul.data[0] === 0x02);
+  // const up = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000 });
+  // console.log("🚀 ==> up:")
+  // console.log(up);
+  // console.log(up.data[0] === 0x03);
+
+  const builder = await TransactionBuilder.fromVersionedTxV2(connection, tx);
+  builder.appendIx(transferInstruction);
+  const updatedTxV2 = builder.build(await connection.getLatestBlockhash());
+  console.log("🚀 ==> updatedTxV2:");
+  console.log(updatedTxV2);
 }
 
 main();
