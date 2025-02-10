@@ -51,7 +51,7 @@ export function connectWebSocket() {
           '🔄 目標地址正在 Swap，開始跟單，交易哈希: ',
           logs.value.signature
         );
-        // await copyTrade(logs.value.signature);
+        await copyTrade(logs.value.signature);
       } else {
         // console.log('❌ 交易不是 Swap，忽略...');
       }

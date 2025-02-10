@@ -3,6 +3,7 @@ import { HTTP_RPC_URL } from './config';
 import { TransactionInstruction, PublicKey } from '@solana/web3.js';
 import { DEX_POOLS } from './dexPools';
 import { TransactionBuilder } from './utils/transactionBuilder';
+import { parseSwapTransaction } from './utils/transactionHelper';
 
 export async function copyTrade(txSignature: string) {
   try {
@@ -10,7 +11,14 @@ export async function copyTrade(txSignature: string) {
       jsonrpc: '2.0',
       id: 1,
       method: 'getTransaction',
-      params: [txSignature, { commitment: 'confirmed' }],
+      params: [
+        txSignature,
+        {
+          commitment: 'confirmed',
+          maxSupportedTransactionVersion: 0,
+          encoding: 'jsonParsed',
+        },
+      ],
     });
 
     if (!data.result) {
@@ -18,23 +26,9 @@ export async function copyTrade(txSignature: string) {
       return;
     }
 
-    // // ✅ 這裡的查詢也改用 O(1) Set 查詢
-    // const instructions: TransactionInstruction[] =
-    //   data.result.transaction.message.instructions.filter((instr: any) =>
-    //     DEX_POOLS.has(instr.programId)
-    //   );
+    const swapDetails = parseSwapTransaction(data.result);
 
-    // if (instructions.length === 0) {
-    //   console.log('❌ 交易中沒有 Swap 指令，忽略...');
-    //   return;
-    // }
-
-    console.log(`🚀 準備跟單! 交易哈希: ${txSignature}`);
-    console.log('🔍 交易資訊: ', data);
-    // 這裡可以發送 `newTx` 到鏈上
-
-    const txBuilder = TransactionBuilder.from(data.result.transaction);
-    console.log('txBuilder', txBuilder);
+    // 包裝交易
   } catch (error) {
     console.error('❌ 跟單失敗: ', error);
   }
