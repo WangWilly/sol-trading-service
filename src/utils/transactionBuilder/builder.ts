@@ -125,11 +125,11 @@ export class TransactionBuilder {
   /**
    * 設定 Compute Unit 價格 (避免重複插入)
    */
-  setComputeUnitPrice(unitPrice: number): this {
+  setComputeUnitPrice(microLamportsPerUnit: number): this {
     this.removeExistingComputeBudgetInstruction("ComputeUnitPrice");
 
     this.ixs.unshift(
-      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: unitPrice })
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: microLamportsPerUnit })
     );
 
     return this;

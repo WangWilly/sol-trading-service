@@ -1,13 +1,12 @@
-import { CREATE_ACCOUNT_FEE, TIPS_ADDRESSE_SET, TRANSFER_PROGRAM_ID } from "./const";
 import { SwapInfoDto } from "./dtos";
+import { CREATE_ACCOUNT_FEE, TIPS_ADDRESSE_SET, TRANSFER_PROGRAM_ID } from "./const";
+
 import {
   ParsedTransactionWithMeta,
-  CompiledInstruction,
   PublicKey,
   ParsedInstruction,
   PartiallyDecodedInstruction,
 } from "@solana/web3.js";
-
 import BN from "bn.js";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,6 +71,7 @@ function fromSol2TknTx(
   const isBuy = signerTokenBalanceChange.post.lt(signerTokenBalanceChange.pre);
   if (isBuy) {
     return {
+      solChanging: true,
       msg_hash: txRes.transaction.message.recentBlockhash,
       timestamp: txRes.blockTime || 0,
       status: "success",
@@ -87,6 +87,7 @@ function fromSol2TknTx(
   }
 
   return {
+    solChanging: true,
     msg_hash: txRes.transaction.message.recentBlockhash,
     timestamp: txRes.blockTime || 0,
     status: "success",
@@ -124,6 +125,7 @@ function fromTkn2TknTx(
   }
 
   return {
+    solChanging: false,
     msg_hash: txRes.transaction.message.recentBlockhash,
     timestamp: txRes.blockTime || 0,
     status: "success",

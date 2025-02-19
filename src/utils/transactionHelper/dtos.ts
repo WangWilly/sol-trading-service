@@ -81,6 +81,7 @@ export type SwapDetailDto = zod.infer<typeof SwapDetailSchema>;
 ////////////////////////////////////////////////////////////////////////////////
 
 export const SwapInfoSchema = zod.object({
+  solChanging: zod.boolean(),
   msg_hash: zod.string(),
   timestamp: zod.number(),
   status: zod.string(),
