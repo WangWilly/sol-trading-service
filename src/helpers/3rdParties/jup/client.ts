@@ -2,10 +2,10 @@ import {
   API_TOKEN_KEY,
   CONTENT_TYPE_KEY,
   CONTENT_TYPE_VAL_JSON,
-} from "../../constants";
-import { safe } from "../../exceptions";
-import { HttpClient } from "../../httpClient";
-import { ConsoleLogger, Logger } from "../../logging";
+} from "../../../utils/constants";
+import { safe } from "../../../utils/exceptions";
+import { HttpClient } from "../../../utils/httpClient";
+import { ConsoleLogger, Logger } from "../../../utils/logging";
 import {
   GetQuoteV1ParamDto,
   GetQuoteV1ResultDto,

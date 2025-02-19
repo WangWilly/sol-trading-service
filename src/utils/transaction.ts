@@ -1,3 +1,4 @@
+/**
 import {
   AddressLookupTableAccount,
   Connection,
@@ -8,6 +9,7 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// TODO: deprecated
 export const insertIxToVersionedTx = async (
   conn: Connection,
   tx: VersionedTransaction,
@@ -40,3 +42,4 @@ export const insertIxToVersionedTx = async (
   }).compileToV0Message();
   return new VersionedTransaction(messageV0);
 };
+*/

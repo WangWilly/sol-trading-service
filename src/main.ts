@@ -1,14 +1,15 @@
 import { Connection, Keypair } from "@solana/web3.js";
 import BN from "bn.js";
 
-import { CopyTradeHelper } from "./utils/copyTradeHelper";
-import { SolRpcWsClient } from "./utils/solRpcWsClient";
-import { JupSwapClient } from "./utils/3rdParties/jup";
-import { JitoClient } from "./utils/3rdParties/jito";
+import { CopyTradeHelper } from "./helpers/copyTradeHelper";
+import { SolRpcWsHelper } from "./helpers/solRpcWsHelper/helper";
+import { JupSwapClient } from "./helpers/3rdParties/jup";
+import { JitoClient } from "./helpers/3rdParties/jito";
 import {
   CopyTradeRecordOnBuyStrategySchema,
   CopyTradeRecordOnSellStrategySchema,
-} from "./utils/copyTradeHelper/dtos";
+} from "./helpers/copyTradeHelper/dtos";
+import { SolRpcWsSubscribeHelper } from "./helpers/solRpcWsSubscribeHelper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +29,17 @@ async function main() {
     jupSwapClient,
     jitoClient
   );
-  copyTradeHelper.createCopyTradeRecordOnBuyStrategy(
+  const solRpcWsHelper = new SolRpcWsHelper(
+    "wss://api.mainnet-beta.solana.com/",
+    copyTradeHelper
+  );
+  const solRpcWsSubscribeHelper = new SolRpcWsSubscribeHelper(
+    solRpcWsHelper,
+    copyTradeHelper
+  );
+  solRpcWsHelper.start();
+
+  solRpcWsSubscribeHelper.createCopyTradeRecordOnBuyStrategy(
     "HDs743XeHc6LS9akHf8sGVaonpGfP4YnZD2PD5M4HixZ",
     "OnBuyTest",
     CopyTradeRecordOnBuyStrategySchema.parse({
@@ -37,20 +48,13 @@ async function main() {
       slippageBps: 50,
     })
   );
-  copyTradeHelper.createCopyTradeRecordOnSellStrategy(
+  solRpcWsSubscribeHelper.createCopyTradeRecordOnSellStrategy(
     "HDs743XeHc6LS9akHf8sGVaonpGfP4YnZD2PD5M4HixZ",
     "OnSellTest",
     CopyTradeRecordOnSellStrategySchema.parse({
       slippageBps: 50,
     })
   );
-
-  const solRpcWsClient = new SolRpcWsClient(
-    "wss://api.mainnet-beta.solana.com/",
-    copyTradeHelper
-  );
-
-  solRpcWsClient.start();
 }
 
 main();

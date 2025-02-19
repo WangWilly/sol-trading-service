@@ -2,10 +2,10 @@ import {
   CONTENT_TYPE_KEY,
   CONTENT_TYPE_VAL_JSON,
   JITO_TOKEN_KEY,
-} from "../../constants";
-import { safe } from "../../exceptions";
-import { HttpClient } from "../../httpClient";
-import { Logger, ConsoleLogger } from "../../logging";
+} from "../../../utils/constants";
+import { safe } from "../../../utils/exceptions";
+import { HttpClient } from "../../../utils/httpClient";
+import { Logger, ConsoleLogger } from "../../../utils/logging";
 import { GetTipInfoV1ResultDto, GetTipInfoV1ResultDtoSchema, SendTransactionV1ResultDto, SendTransactionV1ResultDtoSchema } from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////

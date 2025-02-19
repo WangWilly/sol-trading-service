@@ -1,7 +1,7 @@
 import { clusterApiUrl, Connection } from "@solana/web3.js";
 import { safe } from "../src/utils/exceptions";
-import { toSwapInfoDto } from "../src/utils/transactionHelper/toSwapInfo";
-import { printSwapInfoDto } from "../src/utils/transactionHelper/dtos";
+import { toSwapInfoDto } from "../src/helpers/transactionHelper/toSwapInfo";
+import { printSwapInfoDto } from "../src/helpers/transactionHelper/dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 

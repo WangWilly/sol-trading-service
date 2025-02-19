@@ -11,12 +11,12 @@ import {
   JupSwapClient,
   GetQuoteV1ParamDtoSchema,
   BuildSwapV1BodyDtoSchema,
-} from "../src/utils/3rdParties/jup";
+} from "../src/helpers/3rdParties/jup";
 
 import { VersionedTransaction } from "@solana/web3.js";
 import { insertIxToVersionedTx } from "../src/utils/transaction";
 import { safe } from "../src/utils/exceptions";
-import { TransactionBuilder } from "../src/utils/transactionBuilder";
+import { TransactionBuilder } from "../src/helpers/transactionBuilder";
 
 ////////////////////////////////////////////////////////////////////////////////
 

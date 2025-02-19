@@ -1,0 +1,2 @@
+export const LOGS_SUBSCRIBE_FIXED_ID = 1;
+export const LOGS_UNSUBSCRIBE_FIXED_ID = 2;

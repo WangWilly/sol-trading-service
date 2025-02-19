@@ -15,8 +15,8 @@ import {
 import { getAccount } from "@solana/spl-token";
 import BN from "bn.js";
 
-import { safe } from "../exceptions";
-import { ConsoleLogger, Logger } from "../logging";
+import { safe } from "../../utils/exceptions";
+import { ConsoleLogger, Logger } from "../../utils/logging";
 import * as txHelper from "../transactionHelper";
 import {
   JupSwapClient,
