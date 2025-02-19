@@ -1,3 +1,6 @@
-import { parseSwapTransaction } from './parseSwapTx';
+import { toSwapInfoDto } from "./toSwapInfo";
+import { SwapInfoDto } from "./dtos";
 
-export { parseSwapTransaction };
+////////////////////////////////////////////////////////////////////////////////
+
+export { toSwapInfoDto, SwapInfoDto };

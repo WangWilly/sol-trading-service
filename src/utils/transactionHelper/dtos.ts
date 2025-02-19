@@ -2,7 +2,9 @@ import { sign } from 'crypto';
 import zod from 'zod';
 import BN from 'bn.js';
 
-// 定義交易資料結構
+////////////////////////////////////////////////////////////////////////////////
+/**
+// TODO: deprecated
 export const TransactionResultSchema = zod.object({
   transaction: zod.object({
     signatures: zod.array(zod.string()),
@@ -56,6 +58,9 @@ export const TransactionResultSchema = zod.object({
     .optional(),
 });
 
+export type TransactionResultDto = zod.infer<typeof TransactionResultSchema>;
+
+// TODO: deprecated
 export const SwapDetailSchema = zod.object({
   msg_hash: zod.string(),
   timestamp: zod.number(),
@@ -70,6 +75,41 @@ export const SwapDetailSchema = zod.object({
   toCoinAmount: zod.instanceof(BN).transform((v) => v.toString()),
 });
 
-// TypeScript 型別
-export type TransactionResultDto = zod.infer<typeof TransactionResultSchema>;
 export type SwapDetailDto = zod.infer<typeof SwapDetailSchema>;
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const SwapInfoSchema = zod.object({
+  msg_hash: zod.string(),
+  timestamp: zod.number(),
+  status: zod.string(),
+  block: zod.number(),
+  signer: zod.string(),
+  fromCoinType: zod.string(),
+  fromCoinAmount: zod.instanceof(BN),
+  fromCoinPreBalance: zod.instanceof(BN),
+  fromCoinPostBalance: zod.instanceof(BN),
+  toCoinType: zod.string(),
+  toCoinAmount: zod.instanceof(BN),
+});
+
+export type SwapInfoDto = zod.infer<typeof SwapInfoSchema>;
+
+export const printSwapInfoDto = (swapInfo: SwapInfoDto) => {
+  console.log('{');
+  console.log(`  msg_hash: ${swapInfo.msg_hash},`);
+  console.log(`  timestamp: ${swapInfo.timestamp},`);
+  console.log(`  status: ${swapInfo.status},`);
+  console.log(`  block: ${swapInfo.block},`);
+  console.log(`  signer: ${swapInfo.signer},`);
+  console.log(`  fromCoinType: ${swapInfo.fromCoinType},`);
+  console.log(`  fromCoinAmount: ${swapInfo.fromCoinAmount.toString()},`);
+  console.log(`  fromCoinPreBalance: ${swapInfo.fromCoinPreBalance.toString()},`);
+  console.log(`  fromCoinPostBalance: ${swapInfo.fromCoinPostBalance.toString()},`);
+  console.log(`  toCoinType: ${swapInfo.toCoinType},`);
+  console.log(`  toCoinAmount: ${swapInfo.toCoinAmount.toString()},`);
+  console.log('}');
+};
+
+////////////////////////////////////////////////////////////////////////////////
