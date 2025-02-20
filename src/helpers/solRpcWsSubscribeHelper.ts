@@ -33,4 +33,11 @@ export class SolRpcWsSubscribeHelper {
     this.copyTradeHelper.createCopyTradeRecordOnSellStrategy(targetPublicKey, strategyName, strategy);
     this.solRpcWsHelper.updateLogsSubscription();
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  async gracefulStop(): Promise<void> {
+    this.copyTradeHelper.clearAll4GracefulStop();
+    await this.solRpcWsHelper.stop();
+  }
 }

@@ -13,13 +13,8 @@ import { SolRpcWsSubscribeHelper } from "./helpers/solRpcWsSubscribeHelper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-async function main() {
-  const playerKeypair = Keypair.fromSecretKey(
-    new Uint8Array([
-      248, 70, 91, 109, 120, 91, 204, 74, 224, 186, 71, 196, 81, 188, 6, 93,
-      128, 198, 94, 189, 109, 209, 217, 68, 244, 248, 77, 26, 141, 174
-    ])
-  );
+async function main(): Promise<void> {
+  const playerKeypair = Keypair.generate();
   const solWeb3Conn = new Connection("https://api.mainnet-beta.solana.com");
   const jupSwapClient = new JupSwapClient();
   const jitoClient = new JitoClient();
@@ -30,7 +25,7 @@ async function main() {
     jitoClient
   );
   const solRpcWsHelper = new SolRpcWsHelper(
-    "wss://api.mainnet-beta.solana.com/",
+    "wss://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607",
     copyTradeHelper
   );
   const solRpcWsSubscribeHelper = new SolRpcWsSubscribeHelper(
@@ -40,7 +35,7 @@ async function main() {
   solRpcWsHelper.start();
 
   solRpcWsSubscribeHelper.createCopyTradeRecordOnBuyStrategy(
-    "HDs743XeHc6LS9akHf8sGVaonpGfP4YnZD2PD5M4HixZ",
+    "CWvdyvKHEu8Z6QqGraJT3sLPyp9bJfFhoXcxUYRKC8ou",
     "OnBuyTest",
     CopyTradeRecordOnBuyStrategySchema.parse({
       sellCoinType: "SOL",
@@ -49,12 +44,25 @@ async function main() {
     })
   );
   solRpcWsSubscribeHelper.createCopyTradeRecordOnSellStrategy(
-    "HDs743XeHc6LS9akHf8sGVaonpGfP4YnZD2PD5M4HixZ",
+    "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv",
     "OnSellTest",
     CopyTradeRecordOnSellStrategySchema.parse({
+      fixedPercentage: null,
       slippageBps: 50,
     })
   );
+
+  const exitFunc = async (): Promise<void> => {
+    await solRpcWsSubscribeHelper.gracefulStop();
+    process.exit(0);
+  };
+
+  process.on("SIGTERM", async () => {
+    await exitFunc();
+  });
+  process.on("SIGINT", async () => {
+    await exitFunc();
+  });
 }
 
 main();

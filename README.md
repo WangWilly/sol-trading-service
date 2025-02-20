@@ -4,8 +4,16 @@ This module will be frequently updated. Serve as listener for the target account
 
 ## Development
 
+### Testing
+
 ```bash
 ./scripts/test-jup-client.sh
+```
+
+### Running
+
+```bash
+./scripts/trade-serve.sh
 ```
 
 ## References

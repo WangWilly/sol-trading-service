@@ -100,8 +100,11 @@ export class CopyTradeHelper {
     strategy: CopyTradeRecordOnSellStrategy
   ): boolean {
     if (!this.copyTradeRecordMap.get(targetPublicKey)) {
-      this.logger.warn(`🚨 未找到目標 ${targetPublicKey}`);
-      return false;
+      this.copyTradeRecordMap.set(targetPublicKey, {
+        onBuyStrategiesMap: new Map(),
+        onSellStrategiesMap: new Map([[strategyName, strategy]]),
+      });
+      return true;
     }
     if (
       !this.copyTradeRecordMap
@@ -137,6 +140,11 @@ export class CopyTradeHelper {
       .get(targetPublicKey)!
       .onSellStrategiesMap.delete(strategyName);
     return true;
+  }
+
+  public clearAll4GracefulStop(): void {
+    this.logger.log("Clearing all copy trade records");
+    this.copyTradeRecordMap.clear();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -248,6 +256,7 @@ export class CopyTradeHelper {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  // TODO:
   private async getPlayerTokenBalance(
     tokenAccountPubkey: PublicKey
   ): Promise<BN> {

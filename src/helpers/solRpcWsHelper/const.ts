@@ -1,2 +1,1 @@
-export const LOGS_SUBSCRIBE_FIXED_ID = 1;
-export const LOGS_UNSUBSCRIBE_FIXED_ID = 2;
+export const BURNNER_RPC_ID = 1;
