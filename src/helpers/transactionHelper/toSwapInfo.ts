@@ -1,11 +1,19 @@
+import { COIN_TYPE_SOL_NATIVE } from "../solRpcWsHelper/const";
+
 import { SwapInfoDto } from "./dtos";
-import { CREATE_ACCOUNT_FEE, TIPS_ADDRESSE_SET, TRANSFER_PROGRAM_ID } from "./const";
+import {
+  CREATE_ACCOUNT_FEE,
+  TIPS_ADDRESSE_SET,
+  TRANSFER_PROGRAM_ID,
+} from "./const";
 
 import {
   ParsedTransactionWithMeta,
   PublicKey,
   ParsedInstruction,
   PartiallyDecodedInstruction,
+  Connection,
+  SystemProgram,
 } from "@solana/web3.js";
 import BN from "bn.js";
 
@@ -17,22 +25,24 @@ interface BalanceChange {
 }
 
 interface TokenBalanceChange {
-  mint: string;
+  mint: PublicKey;
   pre: BN;
   post: BN;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function toSwapInfoDto(
+export async function toSwapInfoDto(
+  conn: Connection,
   txRes: ParsedTransactionWithMeta
-): SwapInfoDto | null {
+): Promise<SwapInfoDto | null> {
   const signerTokenBalanceChanges = getSignerTokenBalanceChanges(txRes);
   if (signerTokenBalanceChanges.length === 1) {
-    return fromSol2TknTx(txRes, signerTokenBalanceChanges[0]);
+    return await fromSol2TknTx(conn, txRes, signerTokenBalanceChanges[0]);
   }
   if (signerTokenBalanceChanges.length === 2) {
     return fromTkn2TknTx(
+      conn,
       txRes,
       signerTokenBalanceChanges[0],
       signerTokenBalanceChanges[1]
@@ -41,10 +51,11 @@ export function toSwapInfoDto(
   return null;
 }
 
-function fromSol2TknTx(
+async function fromSol2TknTx(
+  conn: Connection,
   txRes: ParsedTransactionWithMeta,
   signerTokenBalanceChange: TokenBalanceChange
-): SwapInfoDto | null {
+): Promise<SwapInfoDto | null> {
   const signer = getSigner(txRes);
   if (!signer) {
     return null;
@@ -67,6 +78,14 @@ function fromSol2TknTx(
   const tokenBalanceAmount = signerTokenBalanceChange.post
     .sub(signerTokenBalanceChange.pre)
     .abs();
+  const mintAccInfo = await conn.getAccountInfo(
+    new PublicKey(signerTokenBalanceChange.mint)
+  );
+  if (!mintAccInfo) {
+    // TODO: error handling
+    return null;
+  }
+  const tokenMintOwnerProgramId = mintAccInfo.owner;
 
   const isBuy = signerTokenBalanceChange.post.lt(signerTokenBalanceChange.pre);
   if (isBuy) {
@@ -77,12 +96,14 @@ function fromSol2TknTx(
       status: "success",
       block: txRes.slot,
       signer: signer.toBase58(),
-      fromCoinType: "SOL",
+      fromCoinType: new PublicKey(COIN_TYPE_SOL_NATIVE),
       fromCoinAmount: solBalanceAmount,
       fromCoinPreBalance: signerSolBalanceChange.pre,
       fromCoinPostBalance: signerSolBalanceChange.post,
+      fromCoinOwnerProgramId: SystemProgram.programId,
       toCoinType: signerTokenBalanceChange.mint,
       toCoinAmount: tokenBalanceAmount,
+      toCoinOwnerProgramId: tokenMintOwnerProgramId,
     };
   }
 
@@ -97,22 +118,26 @@ function fromSol2TknTx(
     fromCoinAmount: tokenBalanceAmount,
     fromCoinPreBalance: signerTokenBalanceChange.pre,
     fromCoinPostBalance: signerTokenBalanceChange.post,
-    toCoinType: "SOL",
+    fromCoinOwnerProgramId: tokenMintOwnerProgramId,
+    toCoinType: new PublicKey(COIN_TYPE_SOL_NATIVE),
     toCoinAmount: solBalanceAmount,
+    toCoinOwnerProgramId: SystemProgram.programId,
   };
 }
 
-function fromTkn2TknTx(
+async function fromTkn2TknTx(
+  conn: Connection,
   txRes: ParsedTransactionWithMeta,
   signerTokenBalanceChange1: TokenBalanceChange,
   signerTokenBalanceChange2: TokenBalanceChange
-): SwapInfoDto | null {
+): Promise<SwapInfoDto | null> {
   if (signerTokenBalanceChange1.post.lt(signerTokenBalanceChange1.pre)) {
     if (signerTokenBalanceChange2.post.lt(signerTokenBalanceChange2.pre)) {
       // TODO: error handling
       return null;
     }
     return fromTkn2TknTx(
+      conn,
       txRes,
       signerTokenBalanceChange2,
       signerTokenBalanceChange1
@@ -123,6 +148,24 @@ function fromTkn2TknTx(
   if (!signer) {
     return null;
   }
+
+  const mint1AccInfo = await conn.getAccountInfo(
+    new PublicKey(signerTokenBalanceChange1.mint)
+  );
+  if (!mint1AccInfo) {
+    // TODO: error handling
+    return null;
+  }
+  const mint1OwnerProgramId = mint1AccInfo.owner;
+
+  const mint2AccInfo = await conn.getAccountInfo(
+    new PublicKey(signerTokenBalanceChange2.mint)
+  );
+  if (!mint2AccInfo) {
+    // TODO: error handling
+    return null;
+  }
+  const mint2OwnerProgramId = mint2AccInfo.owner;
 
   return {
     solChanging: false,
@@ -137,10 +180,12 @@ function fromTkn2TknTx(
       .abs(),
     fromCoinPreBalance: signerTokenBalanceChange1.pre,
     fromCoinPostBalance: signerTokenBalanceChange1.post,
+    fromCoinOwnerProgramId: mint1OwnerProgramId,
     toCoinType: signerTokenBalanceChange2.mint,
     toCoinAmount: signerTokenBalanceChange2.post
       .sub(signerTokenBalanceChange2.pre)
       .abs(),
+    toCoinOwnerProgramId: mint2OwnerProgramId,
   };
 }
 
@@ -212,8 +257,7 @@ function getSolTransferIxs(
   txRes: ParsedTransactionWithMeta
 ): (ParsedInstruction | PartiallyDecodedInstruction)[] {
   return txRes.transaction.message.instructions.filter(
-    (instruction) =>
-      instruction.programId.toBase58() === TRANSFER_PROGRAM_ID
+    (instruction) => instruction.programId.toBase58() === TRANSFER_PROGRAM_ID
   );
 }
 
@@ -259,7 +303,7 @@ function getSignerTokenBalanceChanges(
     .filter((token) => token.owner === signer.toBase58())
     .map((token, idx) => {
       return {
-        mint: token.mint,
+        mint: new PublicKey(token.mint),
         pre: new BN(preTokenBalances[idx].uiTokenAmount.amount),
         post: new BN(token.uiTokenAmount.amount),
       };

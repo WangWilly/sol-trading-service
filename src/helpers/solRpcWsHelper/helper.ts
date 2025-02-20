@@ -108,8 +108,6 @@ export class SolRpcWsHelper {
       return;
     }
     this.logger.log("Stopping WebSocket connection...");
-    // Unsubscribe all
-    this.updateLogsSubscription();
     this.ws.close();
     while (this.ws.readyState !== WebSocket.CLOSED) {
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -180,7 +178,9 @@ export class SolRpcWsHelper {
         return;
       }
       const subId = message.result;
-      this.logger.log(`✅ Subscription success for ${publicKey} w/ msgId ${message.id}, subId: ${subId}`);
+      this.logger.log(
+        `✅ Subscription success for ${publicKey} w/ msgId ${message.id}, subId: ${subId}`
+      );
       this.publicKeySubIdMap.set(publicKey, subId);
       this.rpcIdpubKeyMap4Sub.delete(message.id);
       return;
@@ -192,14 +192,20 @@ export class SolRpcWsHelper {
         this.logger.error(`❌ 未知的公鑰: ${publicKey}`);
         return;
       }
-      this.logger.log(`✅ Unsubscription success for ${publicKey} w/ msgId: ${message.id}`);
+      this.logger.log(
+        `✅ Unsubscription success for ${publicKey} w/ msgId: ${message.id}`
+      );
       this.publicKeySubIdMap.delete(publicKey);
       this.rpcIdpubKeyMap4Unsub.delete(message.id);
       return;
     }
 
     if (message.method === "logsNotification") {
-      if (!(new Set(this.publicKeySubIdMap.values())).has(message.params.subscription)) {
+      if (
+        !new Set(this.publicKeySubIdMap.values()).has(
+          message.params.subscription
+        )
+      ) {
         this.logger.warn(`⚠️ 未知的訂閱 ID: ${message.params.subscription}`);
         logsUnsubscribe(
           this.ws!,
@@ -215,11 +221,9 @@ export class SolRpcWsHelper {
 
   private async onLogs(logs: Logs): Promise<void> {
     this.logger.log("📜 收到新的交易日誌...");
-    // TODO:
-    console.log(logs);
 
     try {
-      // await this.copyTradeHelper.copyTradeHandler(logs);
+      await this.copyTradeHelper.copyTradeHandler(logs);
     } catch (error) {
       this.logger.error(`❌ 跟單失敗: ${error}`);
     }

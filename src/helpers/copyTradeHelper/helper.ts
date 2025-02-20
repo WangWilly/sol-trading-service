@@ -12,7 +12,11 @@ import {
   PublicKey,
   VersionedTransaction,
 } from "@solana/web3.js";
-import { getAccount } from "@solana/spl-token";
+import {
+  getAccount,
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountInstruction,
+} from "@solana/spl-token";
 import BN from "bn.js";
 
 import { safe } from "../../utils/exceptions";
@@ -26,6 +30,7 @@ import {
 import { TransactionBuilder } from "../transactionBuilder";
 import { JitoClient } from "../3rdParties/jito";
 import { GetPercentileTip } from "../3rdParties/jito";
+import { COIN_TYPE_SOL_NATIVE } from "../solRpcWsHelper/const";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -149,6 +154,43 @@ export class CopyTradeHelper {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  private getAtaPubkey(
+    mintAccountPubkey: PublicKey,
+    mintOwnerProgramId: PublicKey
+  ): PublicKey {
+    const tokenAccountPubkey = getAssociatedTokenAddressSync(
+      mintAccountPubkey,
+      this.playerKeypair.publicKey,
+      false,
+      mintOwnerProgramId
+    );
+    return tokenAccountPubkey;
+  }
+
+  // https://www.quicknode.com/guides/solana-development/spl-tokens/how-to-look-up-the-address-of-a-token-account#link-web3
+  // https://spl.solana.com/token
+  // https://spl.solana.com/token-2022/extensions
+  // https://spl.solana.com/associated-token-account
+  private async getPlayerTokenBalance(
+    tokenAccountPubkey: PublicKey,
+    mintOwnerProgramId: PublicKey
+  ): Promise<BN | null> {
+    const ata = await getAccount(
+      this.solWeb3Conn,
+      tokenAccountPubkey,
+      "confirmed",
+      mintOwnerProgramId
+    );
+    if (ata.owner.toBase58() !== this.playerKeypair.publicKey.toBase58()) {
+      this.logger.warn(`Invalid token account owner: ${ata.owner.toBase58()}`);
+      return null;
+    }
+    return new BN(ata.amount.toString());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  // https://solana.com/developers/cookbook/tokens/create-token-account
   private async copyTradeHandleOnBuyStrategyWithSol(
     swapInfo: txHelper.SwapInfoDto
   ): Promise<void> {
@@ -159,7 +201,7 @@ export class CopyTradeHelper {
     }
     const onBuyStrategiesWithSol = Array.from(
       copyTradeRecord.onBuyStrategiesMap.entries()
-    ).filter((strategy) => strategy[1].sellCoinType === "SOL");
+    ).filter((strategy) => strategy[1].sellCoinType === COIN_TYPE_SOL_NATIVE);
     if (onBuyStrategiesWithSol.length === 0) {
       return;
     }
@@ -224,6 +266,24 @@ export class CopyTradeHelper {
         this.solWeb3Conn,
         tx
       );
+      const ataPubkey = this.getAtaPubkey(
+        swapInfo.toCoinType,
+        swapInfo.toCoinOwnerProgramId
+      );
+      const ataBalance = await this.getPlayerTokenBalance(
+        ataPubkey,
+        swapInfo.toCoinOwnerProgramId,
+      );
+      if (!ataBalance) {
+        const createAtaIx = createAssociatedTokenAccountInstruction(
+          this.playerKeypair.publicKey,
+          ataPubkey,
+          this.playerKeypair.publicKey,
+          swapInfo.toCoinType,
+          swapInfo.toCoinOwnerProgramId
+        );
+        builder = builder.appendIx(createAtaIx);
+      }
       const currentTips = await this.jitoClient.getTipInfoV1();
       if (
         !currentTips ||
@@ -256,17 +316,6 @@ export class CopyTradeHelper {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  // TODO:
-  private async getPlayerTokenBalance(
-    tokenAccountPubkey: PublicKey
-  ): Promise<BN> {
-    const tokenAccount = await getAccount(this.solWeb3Conn, tokenAccountPubkey);
-    if (!tokenAccount) {
-      return new BN(0);
-    }
-    return new BN(tokenAccount.amount.toString());
-  }
-
   private async copyTradeHandleOnSellStrategyWithSol(
     swapInfo: txHelper.SwapInfoDto
   ): Promise<void> {
@@ -285,10 +334,15 @@ export class CopyTradeHelper {
     // TODO: parallelize this
     for (const [strategyName, strategy] of onSellStrategiesWithSol) {
       // Resolve: use swapInfo to get quote
-      const amount = await this.getPlayerTokenBalance(
-        new PublicKey(swapInfo.fromCoinType)
+      const ataPubkey = this.getAtaPubkey(
+        swapInfo.fromCoinType,
+        swapInfo.fromCoinOwnerProgramId
       );
-      if (amount.lte(new BN(0))) {
+      const amount = await this.getPlayerTokenBalance(
+        ataPubkey,
+        swapInfo.fromCoinType,
+      );
+      if (!amount || amount.lte(new BN(0))) {
         this.logger.warn(`❌ 無法取得 token: ${strategyName}`);
         continue;
       }
@@ -296,10 +350,15 @@ export class CopyTradeHelper {
         strategy.fixedPercentage ||
           swapInfo.fromCoinAmount.div(swapInfo.fromCoinPreBalance)
       );
+      const sellAmount = amount.mul(sellPercent);
+      if (sellAmount.lte(new BN(0))) {
+        this.logger.warn(`❌ 無法計算出售金額: ${strategyName}`);
+        continue;
+      }
       const getQuoteV1Res = GetQuoteV1ParamDtoSchema.safeParse({
         inputMint: swapInfo.fromCoinType,
-        outputMint: "SOL",
-        amount: amount.mul(sellPercent),
+        outputMint: COIN_TYPE_SOL_NATIVE,
+        amount: sellAmount,
         slippageBps: strategy.slippageBps,
       });
       if (!getQuoteV1Res.success) {
@@ -381,6 +440,9 @@ export class CopyTradeHelper {
 
   async copyTradeHandler(solRpcWsLogs: Logs): Promise<void> {
     // Validate
+    if (solRpcWsLogs.err) {
+      return;
+    }
     // TODO: need improvement maybe
     const isSwap = solRpcWsLogs.logs.some((log) =>
       Array.from(COMMON_DEX_POOLS).some((dexPool) => log.includes(dexPool))
@@ -402,7 +464,7 @@ export class CopyTradeHelper {
       return;
     }
 
-    const swapInfo = txHelper.toSwapInfoDto(txRes.data);
+    const swapInfo = await txHelper.toSwapInfoDto(this.solWeb3Conn, txRes.data);
     if (!swapInfo) {
       this.logger.warn(`❌ 無法解析 SwapInfo: ${signature}`);
       return;

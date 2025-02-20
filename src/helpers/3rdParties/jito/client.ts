@@ -6,7 +6,13 @@ import {
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
 import { Logger, ConsoleLogger } from "../../../utils/logging";
-import { GetTipInfoV1ResultDto, GetTipInfoV1ResultDtoSchema, SendTransactionV1ResultDto, SendTransactionV1ResultDtoSchema } from "./dtos";
+
+import {
+  GetTipInfoV1ResultDto,
+  GetTipInfoV1ResultDtoSchema,
+  SendTransactionV1ResultDto,
+  SendTransactionV1ResultDtoSchema,
+} from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +58,9 @@ export class JitoClient {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  async sendTransactionV1(serializedTxBase64: string): Promise<SendTransactionV1ResultDto | null> {
+  async sendTransactionV1(
+    serializedTxBase64: string
+  ): Promise<SendTransactionV1ResultDto | null> {
     const resultRes = await safe(
       this.blockEngineBaseClient.post(this.blockEngineSendTxV1Path, {
         jsonrpc: "2.0",
@@ -89,7 +97,9 @@ export class JitoClient {
    * The tip floor is the minimum tip that will be accepted by the network. The applied unit is Sol.
    */
   async getTipInfoV1(): Promise<GetTipInfoV1ResultDto | null> {
-    const resultRes = await safe(this.bundleBaseClient.get(this.bundleGetTipInfoV1Path));
+    const resultRes = await safe(
+      this.bundleBaseClient.get(this.bundleGetTipInfoV1Path)
+    );
     if (!resultRes.success) {
       this.logger.error(
         `[getBundleTipInfoV1] Failed to get response: ${resultRes.error}`

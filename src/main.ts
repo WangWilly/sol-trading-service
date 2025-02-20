@@ -10,11 +10,15 @@ import {
   CopyTradeRecordOnSellStrategySchema,
 } from "./helpers/copyTradeHelper/dtos";
 import { SolRpcWsSubscribeHelper } from "./helpers/solRpcWsSubscribeHelper";
+import { COIN_TYPE_SOL_NATIVE } from "./helpers/solRpcWsHelper/const";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 async function main(): Promise<void> {
   const playerKeypair = Keypair.generate();
+
+  //////////////////////////////////////////////////////////////////////////////
+
   const solWeb3Conn = new Connection("https://api.mainnet-beta.solana.com");
   const jupSwapClient = new JupSwapClient();
   const jitoClient = new JitoClient();
@@ -34,11 +38,13 @@ async function main(): Promise<void> {
   );
   solRpcWsHelper.start();
 
+  //////////////////////////////////////////////////////////////////////////////
+
   solRpcWsSubscribeHelper.createCopyTradeRecordOnBuyStrategy(
     "CWvdyvKHEu8Z6QqGraJT3sLPyp9bJfFhoXcxUYRKC8ou",
     "OnBuyTest",
     CopyTradeRecordOnBuyStrategySchema.parse({
-      sellCoinType: "SOL",
+      sellCoinType: COIN_TYPE_SOL_NATIVE,
       sellCoinAmount: new BN(1000),
       slippageBps: 50,
     })
@@ -52,11 +58,13 @@ async function main(): Promise<void> {
     })
   );
 
+  //////////////////////////////////////////////////////////////////////////////
+
+  // https://nairihar.medium.com/graceful-shutdown-in-nodejs-2f8f59d1c357
   const exitFunc = async (): Promise<void> => {
     await solRpcWsSubscribeHelper.gracefulStop();
     process.exit(0);
   };
-
   process.on("SIGTERM", async () => {
     await exitFunc();
   });
