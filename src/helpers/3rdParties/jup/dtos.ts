@@ -10,8 +10,8 @@ import { PublicKey } from "@solana/web3.js";
 // https://station.jup.ag/docs/api/quote
 
 export const GetQuoteV1ParamDtoSchema = zod.object({
-  inputMint: zod.string(),
-  outputMint: zod.string(),
+  inputMint: zod.instanceof(PublicKey).transform((v) => v.toString()),
+  outputMint: zod.instanceof(PublicKey).transform((v) => v.toString()),
   amount: zod.instanceof(BN).transform((v) => v.toString()), // ExactIn amount
   slippageBps: zod.number().default(50),
   restrictIntermediateTokens: zod.boolean().default(true),
@@ -125,8 +125,8 @@ const BuildSwapV1ResultDtoOkPartSchema = zod.object({
   dynamicSlippageReport: zod.object({
     slippageBps: zod.number(),
     otherAmount: zod.number(),
-    simulatedIncurredSlippageBps: zod.number(),
-    amplificationRatio: zod.string().nullable(), // TODO: zod.number().nullable()??
+    simulatedIncurredSlippageBps: zod.number().nullable(), // TODO: zod.number().nullable()??
+    amplificationRatio: zod.string().nullable(),           // TODO: zod.number().nullable()??
     categoryName: zod.string(),
     heuristicMaxSlippageBps: zod.number(),
   }),

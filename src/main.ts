@@ -1,16 +1,17 @@
 import { Connection, Keypair } from "@solana/web3.js";
 import BN from "bn.js";
 
-import { CopyTradeHelper } from "./helpers/copyTradeHelper";
 import { SolRpcWsHelper } from "./helpers/solRpcWsHelper/helper";
 import { JupSwapClient } from "./helpers/3rdParties/jup";
 import { JitoClient } from "./helpers/3rdParties/jito";
 import {
   CopyTradeRecordOnBuyStrategySchema,
   CopyTradeRecordOnSellStrategySchema,
-} from "./helpers/copyTradeHelper/dtos";
-import { SolRpcWsSubscribeHelper } from "./helpers/solRpcWsSubscribeHelper";
-import { COIN_TYPE_SOL_NATIVE } from "./helpers/solRpcWsHelper/const";
+} from "./helpers/copyTradeHelperV2/dtos";
+import { SolRpcWsSubscribeManager } from "./helpers/solRpcWsSubscribeManager";
+import { COIN_TYPE_WSOL_MINT } from "./helpers/solRpcWsHelper/const";
+import { TsLogLogger } from "./utils/logging";
+import { CopyTradeHelperV2 } from "./helpers/copyTradeHelperV2";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,38 +20,56 @@ async function main(): Promise<void> {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  const solWeb3Conn = new Connection("https://api.mainnet-beta.solana.com");
-  const jupSwapClient = new JupSwapClient();
-  const jitoClient = new JitoClient();
-  const copyTradeHelper = new CopyTradeHelper(
+  const rootLogger = new TsLogLogger({ name: "copy-trade-service" });
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  const solWeb3Conn = new Connection(
+    "https://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607"
+  );
+  const jupSwapClient = new JupSwapClient(
+    "https://api.jup.ag",
+    "",
+    rootLogger.getSubLogger({ name: "JupSwapClient" })
+  );
+  const jitoClient = new JitoClient(
+    "https://mainnet.block-engine.jito.wtf",
+    "https://bundles.jito.wtf",
+    "",
+    rootLogger.getSubLogger({ name: "JitoClient" })
+  );
+  const copyTradeHelper = new CopyTradeHelperV2(
     playerKeypair,
     solWeb3Conn,
     jupSwapClient,
-    jitoClient
+    jitoClient,
+    rootLogger.getSubLogger({ name: "CopyTradeHelper" })
   );
   const solRpcWsHelper = new SolRpcWsHelper(
     "wss://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607",
-    copyTradeHelper
+    copyTradeHelper,
+    rootLogger.getSubLogger({ name: "SolRpcWsHelper" })
   );
-  const solRpcWsSubscribeHelper = new SolRpcWsSubscribeHelper(
+  const solRpcWsSubscribeManager = new SolRpcWsSubscribeManager(
     solRpcWsHelper,
-    copyTradeHelper
+    copyTradeHelper,
+    rootLogger.getSubLogger({ name: "SolRpcWsSubscribeHelper" })
   );
   solRpcWsHelper.start();
 
   //////////////////////////////////////////////////////////////////////////////
 
-  solRpcWsSubscribeHelper.createCopyTradeRecordOnBuyStrategy(
-    "CWvdyvKHEu8Z6QqGraJT3sLPyp9bJfFhoXcxUYRKC8ou",
+  solRpcWsSubscribeManager.createCopyTradeRecordOnBuyStrategy(
+    "8589u5aHZBhnEVNKGh19uryG7Da7XUwTZ99Dso6d5Roy",
     "OnBuyTest",
     CopyTradeRecordOnBuyStrategySchema.parse({
-      sellCoinType: COIN_TYPE_SOL_NATIVE,
+      sellCoinType: COIN_TYPE_WSOL_MINT,
       sellCoinAmount: new BN(1000),
       slippageBps: 50,
     })
   );
-  solRpcWsSubscribeHelper.createCopyTradeRecordOnSellStrategy(
-    "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv",
+  solRpcWsSubscribeManager.createCopyTradeRecordOnSellStrategy(
+    "8589u5aHZBhnEVNKGh19uryG7Da7XUwTZ99Dso6d5Roy",
     "OnSellTest",
     CopyTradeRecordOnSellStrategySchema.parse({
       fixedPercentage: null,
@@ -62,7 +81,7 @@ async function main(): Promise<void> {
 
   // https://nairihar.medium.com/graceful-shutdown-in-nodejs-2f8f59d1c357
   const exitFunc = async (): Promise<void> => {
-    await solRpcWsSubscribeHelper.gracefulStop();
+    await solRpcWsSubscribeManager.gracefulStop();
     process.exit(0);
   };
   process.on("SIGTERM", async () => {

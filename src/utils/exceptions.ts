@@ -34,7 +34,7 @@ async function safeAsync<T>(
     const data = await promise;
     return { data, success: true };
   } catch (e) {
-    console.error(e);
+    // console.error(e);
     if (err !== undefined) {
       return { success: false, error: err };
     }
@@ -50,7 +50,7 @@ function safeSync<T>(func: () => T, err?: string): Safe<T> {
     const data = func();
     return { data, success: true };
   } catch (e) {
-    console.error(e);
+    // console.error(e);
     if (err !== undefined) {
       return { success: false, error: err };
     }

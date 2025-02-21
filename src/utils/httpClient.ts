@@ -1,4 +1,4 @@
-import { Logger, ConsoleLogger } from "./logging";
+import { Logger, TsLogLogger } from "./logging";
 import axios, { AxiosInstance, AxiosRequestConfig, Method } from "axios";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ export class HttpClient {
 
   constructor(
     private readonly config: HttpOptions,
-    private readonly logger: Logger = new ConsoleLogger("UnknownHttpClient"),
+    private readonly logger: Logger = new TsLogLogger({name: "UnknownHttpClient"}),
     private readonly retryTimes = 3,
     private retryBaseInterval = 1000,
     private retryIncrement = 1000
@@ -74,21 +74,21 @@ export class HttpClient {
       const res = await this.axios.request(config);
       const { data } = res;
 
-      // Log
-      this.logger.log(
-        `succeed in issuing request: { method: ${method}, base: ${
-          this.config.baseURL
-        }, path: ${path}, params: ${params}, req: ${JSON.stringify(
-          config.data
-        )}, res: ${JSON.stringify(data)}, startTime: ${startTime} }`
-      );
+      // // Log
+      // this.logger.debug(
+      //   `succeed in issuing request: { method: ${method}, base: ${
+      //     this.config.baseURL
+      //   }, path: ${path}, params: ${params}, req: ${JSON.stringify(
+      //     config.data
+      //   )}, res: ${JSON.stringify(data)}, startTime: ${startTime} }`
+      // );
 
       return data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const { code, message, response: res } = error;
         const data = res?.data ?? { code };
-        this.logger.log(
+        this.logger.debug(
           `failed to issue request: { method: ${method}, base: ${
             this.config.baseURL
           }, path: ${path}, params: ${params}, req: ${JSON.stringify(

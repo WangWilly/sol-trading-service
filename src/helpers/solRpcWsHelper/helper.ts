@@ -13,8 +13,9 @@ import {
   RpcIdRange,
 } from "./utils";
 
-import { ConsoleLogger, Logger } from "../../utils/logging";
-import { CopyTradeHelper } from "../copyTradeHelper";
+import { TsLogLogger } from "../../utils/logging";
+import type { Logger } from "../../utils/logging";
+import { CopyTradeHelperV2 } from "../copyTradeHelperV2";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,8 +48,10 @@ export class SolRpcWsHelper {
 
   constructor(
     private readonly wsRpcUrl: string,
-    private readonly copyTradeHelper: CopyTradeHelper,
-    private readonly logger: Logger = new ConsoleLogger("SolRpcWsClient")
+    private readonly copyTradeHelper: CopyTradeHelperV2,
+    private readonly logger: Logger = new TsLogLogger({
+      name: "SolRpcWsHelper",
+    })
   ) {}
 
   //////////////////////////////////////////////////////////////////////////////
@@ -68,9 +71,10 @@ export class SolRpcWsHelper {
       return;
     }
     while (this.ws.readyState !== WebSocket.OPEN) {
-      this.logger.warn("WebSocket not ready yet, waiting for 1 second...");
+      // this.logger.debug("[updateLogsSubscription] WebSocket not ready yet, waiting for 1 second...");
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
+    // this.logger.debug("[updateLogsSubscription] WebSocket is ready for logs subscription");
 
     const currTargetPublicKeySet = new Set(
       this.copyTradeHelper.getCopyTradeTargetPublicKeys()
@@ -103,24 +107,31 @@ export class SolRpcWsHelper {
     }
   }
 
+  public async getSubId(pubkey: string): Promise<number> {
+    while (!this.publicKeySubIdMap.has(pubkey)) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    return this.publicKeySubIdMap.get(pubkey)!;
+  }
+
   async stop(): Promise<void> {
     if (!this.ws) {
       return;
     }
-    this.logger.log("Stopping WebSocket connection...");
+    this.logger.info("Stopping WebSocket connection...");
     this.ws.close();
     while (this.ws.readyState !== WebSocket.CLOSED) {
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
     this.ws = null;
-    this.logger.log("WebSocket connection stopped.");
+    this.logger.info("WebSocket connection stopped.");
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   private connect(): void {
     if (this.ws) {
-      this.logger.log("🔄 重新連接 WebSocket...");
+      this.logger.info("Closing existing WebSocket connection and reconnecting...");
       this.ws.close();
     }
 
@@ -129,7 +140,7 @@ export class SolRpcWsHelper {
     this.ws.on("message", (data) => this.onMessage(data));
     this.ws.on("close", () => {});
     this.ws.on("error", (error) => {
-      this.logger.warn(`❌ WebSocket 錯誤: ${error}`);
+      this.logger.error(`WebSocket error: ${error}`);
     });
 
     setInterval(() => {
@@ -141,6 +152,7 @@ export class SolRpcWsHelper {
       if (this.ws.readyState === WebSocket.OPEN) {
         this.ws.ping();
       } else {
+        // TODO: Reconnect and refresh subscriptions in tradeHelper
         this.logger.warn("Heartbeat: lost connection, reconnecting...");
         this.connect();
       }
@@ -153,7 +165,7 @@ export class SolRpcWsHelper {
     if (!this.ws) {
       return;
     }
-    this.logger.log(`🚀 WebSocket 連線成功: ${this.wsRpcUrl}`);
+    this.logger.info(`WebSocket connected to ${this.wsRpcUrl}`);
 
     this.publicKeySubIdMap.clear();
     for (const publicKey of this.copyTradeHelper.getCopyTradeTargetPublicKeys()) {
@@ -174,12 +186,12 @@ export class SolRpcWsHelper {
     if (this.rpcIdpubKeyMap4Sub.has(message.id)) {
       const publicKey = this.rpcIdpubKeyMap4Sub.get(message.id);
       if (!publicKey) {
-        this.logger.error(`❌ 未知的公鑰: ${publicKey}`);
+        this.logger.error(`Not recognnized public key ${publicKey}`);
         return;
       }
       const subId = message.result;
-      this.logger.log(
-        `✅ Subscription success for ${publicKey} w/ msgId ${message.id}, subId: ${subId}`
+      this.logger.info(
+        `Subscription success for ${publicKey} w/ msgId ${message.id}, subId: ${subId}`
       );
       this.publicKeySubIdMap.set(publicKey, subId);
       this.rpcIdpubKeyMap4Sub.delete(message.id);
@@ -189,11 +201,11 @@ export class SolRpcWsHelper {
     if (this.rpcIdpubKeyMap4Unsub.has(message.id)) {
       const publicKey = this.rpcIdpubKeyMap4Unsub.get(message.id);
       if (!publicKey) {
-        this.logger.error(`❌ 未知的公鑰: ${publicKey}`);
+        this.logger.error(`Not recognnized public key ${publicKey}`);
         return;
       }
-      this.logger.log(
-        `✅ Unsubscription success for ${publicKey} w/ msgId: ${message.id}`
+      this.logger.info(
+        `Unsubscription success for ${publicKey} w/ msgId: ${message.id}`
       );
       this.publicKeySubIdMap.delete(publicKey);
       this.rpcIdpubKeyMap4Unsub.delete(message.id);
@@ -206,7 +218,7 @@ export class SolRpcWsHelper {
           message.params.subscription
         )
       ) {
-        this.logger.warn(`⚠️ 未知的訂閱 ID: ${message.params.subscription}`);
+        this.logger.warn(`Unknown subscriptionId ${message.params.subscription}`);
         logsUnsubscribe(
           this.ws!,
           this.rpcIdGen4Unsub,
@@ -214,18 +226,20 @@ export class SolRpcWsHelper {
         );
         return;
       }
-      this.onLogs(message.params.result.value as Logs);
+      this.onLogs(message.params.subscription, message.params.result.value as Logs);
       return;
     }
   }
 
-  private async onLogs(logs: Logs): Promise<void> {
-    this.logger.log("📜 收到新的交易日誌...");
+  private async onLogs(subId: number, logs: Logs): Promise<void> {
+    // this.logger.debug("[onLogs] Processing incoming logs...");
 
     try {
-      await this.copyTradeHelper.copyTradeHandler(logs);
+      await this.copyTradeHelper.copyTradeHandler(subId, logs);
     } catch (error) {
-      this.logger.error(`❌ 跟單失敗: ${error}`);
+      this.logger.error(
+        `[onLogs] Copy trade error occurred: ${error} when handling tx: ${logs.signature}`
+      );
     }
   }
 

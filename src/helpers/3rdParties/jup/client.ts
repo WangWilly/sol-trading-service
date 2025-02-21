@@ -5,7 +5,8 @@ import {
 } from "../../../utils/constants";
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
-import { ConsoleLogger, Logger } from "../../../utils/logging";
+import { TsLogLogger } from "../../../utils/logging";
+import type { Logger } from "../../../utils/logging";
 import {
   GetQuoteV1ParamDto,
   GetQuoteV1ResultDto,
@@ -19,7 +20,6 @@ import {
 // Reference: https://station.jup.ag/docs/api-setup
 
 export class JupSwapClient {
-  private readonly logger: Logger;
   private readonly baseClient: HttpClient;
 
   private readonly quoteV1Path = "/swap/v1/quote";
@@ -28,9 +28,9 @@ export class JupSwapClient {
   // TODO: maybe use env variable while building this binary
   constructor(
     jupSwapBaseEndpoint: string = "https://api.jup.ag",
-    apiKey: string = ""
+    apiKey: string = "",
+    private readonly logger: Logger = new TsLogLogger({ name: "JupSwapClient" })
   ) {
-    this.logger = new ConsoleLogger("JupSwapClient");
     this.baseClient = new HttpClient(
       {
         baseURL: jupSwapBaseEndpoint,

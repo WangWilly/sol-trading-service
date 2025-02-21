@@ -5,7 +5,7 @@ import {
 } from "../../../utils/constants";
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
-import { Logger, ConsoleLogger } from "../../../utils/logging";
+import { Logger, TsLogLogger } from "../../../utils/logging";
 
 import {
   GetTipInfoV1ResultDto,
@@ -31,7 +31,7 @@ export class JitoClient {
     blockEngineBaseUrl: string = "https://mainnet.block-engine.jito.wtf",
     bundleBaseUrl: string = "https://bundles.jito.wtf",
     uuid: string = "",
-    private readonly logger: Logger = new ConsoleLogger("JitoClient")
+    private readonly logger: Logger = new TsLogLogger({name: "JitoClient"})
   ) {
     this.blockEngineBaseClient = new HttpClient(
       {

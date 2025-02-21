@@ -3,7 +3,7 @@ import {
   CopyTradeRecordOnBuyStrategy,
   CopyTradeRecordOnSellStrategy,
 } from "./dtos";
-import { COMMON_DEX_POOLS } from "./const";
+import { COMMON_DEX_REGEX } from "./const";
 
 import {
   Connection,
@@ -12,17 +12,13 @@ import {
   PublicKey,
   VersionedTransaction,
 } from "@solana/web3.js";
-import {
-  getAccount,
-  getAssociatedTokenAddressSync,
-  createAssociatedTokenAccountInstruction,
-} from "@solana/spl-token";
 import BN from "bn.js";
 
 import { safe } from "../../utils/exceptions";
 import { TsLogLogger } from "../../utils/logging";
 import type { Logger } from "../../utils/logging";
 import * as txHelper from "../transactionHelper";
+import { TokenHelper } from "../tokenHelper";
 import {
   JupSwapClient,
   GetQuoteV1ParamDtoSchema,
@@ -31,16 +27,13 @@ import {
 import { TransactionBuilder } from "../transactionBuilder";
 import { JitoClient } from "../3rdParties/jito";
 import { GetPercentileTip } from "../3rdParties/jito";
-import { COIN_TYPE_SOL_NATIVE } from "../solRpcWsHelper/const";
+import { COIN_TYPE_WSOL_MINT } from "../solRpcWsHelper/const";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type AtaPubKey = PublicKey;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class CopyTradeHelper {
-  private copyTradeRecordMap: Map<string, CopyTradeRecord> = new Map(); // publicKey -> CopyTradeRecord
+export class CopyTradeHelperV2 {
+  private copyTradeSubIdTarPubkeyMap: Map<number, string> = new Map(); // subId -> targetPublicKey
+  private copyTradeRecordMap: Map<string, CopyTradeRecord> = new Map(); // targetPublicKey -> CopyTradeRecord
 
   public constructor(
     private readonly playerKeypair: Keypair,
@@ -48,7 +41,7 @@ export class CopyTradeHelper {
     private readonly jupSwapClient: JupSwapClient,
     private readonly jitoClient: JitoClient,
     private readonly logger: Logger = new TsLogLogger({
-      name: "CopyTradeHelper",
+      name: "CopyTradeHelperV2",
     })
   ) {}
 
@@ -56,6 +49,20 @@ export class CopyTradeHelper {
 
   public getCopyTradeTargetPublicKeys(): string[] {
     return Array.from(this.copyTradeRecordMap.keys());
+  }
+
+  public registerCopyTradeTargetPublicKey(
+    subId: number,
+    targetPublicKey: string
+  ): void {
+    if (this.copyTradeSubIdTarPubkeyMap.has(subId)) {
+      this.logger.debug(`SubId ${subId} already exists`);
+      return;
+    }
+    this.logger.debug(
+      `Registering subId ${subId} with target ${targetPublicKey}`
+    );
+    this.copyTradeSubIdTarPubkeyMap.set(subId, targetPublicKey);
   }
 
   public createCopyTradeRecordOnBuyStrategy(
@@ -103,6 +110,19 @@ export class CopyTradeHelper {
     this.copyTradeRecordMap
       .get(targetPublicKey)!
       .onBuyStrategiesMap.delete(strategyName);
+    if (
+      this.copyTradeRecordMap.get(targetPublicKey)!.onBuyStrategiesMap.size ===
+        0 &&
+      this.copyTradeRecordMap.get(targetPublicKey)!.onSellStrategiesMap.size ===
+        0
+    ) {
+      this.copyTradeRecordMap.delete(targetPublicKey);
+      this.copyTradeSubIdTarPubkeyMap = new Map(
+        Array.from(this.copyTradeSubIdTarPubkeyMap.entries()).filter(
+          ([_, target]) => target !== targetPublicKey
+        )
+      );
+    }
     return true;
   }
 
@@ -151,6 +171,19 @@ export class CopyTradeHelper {
     this.copyTradeRecordMap
       .get(targetPublicKey)!
       .onSellStrategiesMap.delete(strategyName);
+    if (
+      this.copyTradeRecordMap.get(targetPublicKey)!.onBuyStrategiesMap.size ===
+        0 &&
+      this.copyTradeRecordMap.get(targetPublicKey)!.onSellStrategiesMap.size ===
+        0
+    ) {
+      this.copyTradeRecordMap.delete(targetPublicKey);
+      this.copyTradeSubIdTarPubkeyMap = new Map(
+        Array.from(this.copyTradeSubIdTarPubkeyMap.entries()).filter(
+          ([_, target]) => target !== targetPublicKey
+        )
+      );
+    }
     return true;
   }
 
@@ -161,66 +194,43 @@ export class CopyTradeHelper {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private getAtaPubkey(
-    mintAccountPubkey: PublicKey,
-    mintOwnerProgramId: PublicKey
-  ): AtaPubKey {
-    const tokenAccountPubkey = getAssociatedTokenAddressSync(
-      mintAccountPubkey,
-      this.playerKeypair.publicKey,
-      false,
-      mintOwnerProgramId
-    );
-    return tokenAccountPubkey;
-  }
-
-  // https://www.quicknode.com/guides/solana-development/spl-tokens/how-to-look-up-the-address-of-a-token-account#link-web3
-  // https://spl.solana.com/token
-  // https://spl.solana.com/token-2022/extensions
-  // https://spl.solana.com/associated-token-account
-  private async getPlayerTokenBalance(
-    tokenAccountPubkey: AtaPubKey,
-    mintOwnerProgramId: PublicKey
-  ): Promise<BN | null> {
-    const ata = await getAccount(
-      this.solWeb3Conn,
-      tokenAccountPubkey,
-      "confirmed",
-      mintOwnerProgramId
-    );
-    if (ata.owner.toBase58() !== this.playerKeypair.publicKey.toBase58()) {
-      this.logger.warn(`Invalid token account owner: ${ata.owner.toBase58()}`);
-      return null;
-    }
-    return new BN(ata.amount.toString());
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
   // https://solana.com/developers/cookbook/tokens/create-token-account
-  private async copyTradeHandleOnBuyStrategyWithSol(
+  private async copyTradeHandleOnBuyStrategyWithWSOL(
     swapInfo: txHelper.SwapInfoDto
   ): Promise<void> {
     // Validate
     if (!swapInfo.toCoinType) {
-      this.logger.debug(
-        `[copyTradeHandleOnBuyStrategyWithSol] No toCoinType found in swapInfo, tx: ${swapInfo.txSignature}`
+      // this.logger.debug(
+      //   `[copyTradeHandleOnBuyStrategyWithSol] No toCoinType found in swapInfo, tx: ${swapInfo.txSignature}`
+      // );
+      return;
+    }
+    const targetPublicKey = this.copyTradeSubIdTarPubkeyMap.get(swapInfo.subId);
+    if (!targetPublicKey) {
+      this.logger.error(
+        `[copyTradeHandleOnBuyStrategyWithSol] No target found in [Tx]${swapInfo.txSignature}`
       );
       return;
     }
-    const copyTradeRecord = this.copyTradeRecordMap.get(swapInfo.signer);
+    const copyTradeRecord = this.copyTradeRecordMap.get(targetPublicKey);
     if (!copyTradeRecord) {
-      this.logger.debug(`[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`);
+      this.logger.error(
+        `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the target PK on [Tx]${swapInfo.txSignature}`
+      );
       return;
     }
     const onBuyStrategiesWithSol = Array.from(
       copyTradeRecord.onBuyStrategiesMap.entries()
-    ).filter((strategy) => strategy[1].sellCoinType === COIN_TYPE_SOL_NATIVE);
+    ).filter((strategy) => strategy[1].sellCoinType === COIN_TYPE_WSOL_MINT);
     if (onBuyStrategiesWithSol.length === 0) {
-      this.logger.debug(`[copyTradeHandleOnBuyStrategyWithSol] No strategy is applied to [Tx]${swapInfo.txSignature}`);
+      this.logger.debug(
+        `[copyTradeHandleOnBuyStrategyWithSol] No strategy is applied to [Tx]${swapInfo.txSignature}`
+      );
       return;
     }
-    this.logger.debug(`[copyTradeHandleOnBuyStrategyWithSol] onBuy w/ sol strategies processing: [Tx]${swapInfo.txSignature}`);
+    this.logger.debug(
+      `[copyTradeHandleOnBuyStrategyWithSol] onBuy w/ sol strategies processing: [Tx]${swapInfo.txSignature}`
+    );
 
     // TODO: parallelize this
     for (const [strategyName, strategy] of onBuyStrategiesWithSol) {
@@ -232,40 +242,56 @@ export class CopyTradeHelper {
         slippageBps: strategy.slippageBps,
       });
       if (!getQuoteV1Res.success) {
-        this.logger.warn(`[copyTradeHandleOnBuyStrategyWithSol] Cannot parse strategy: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot parse strategy: ${strategyName}. Error: ${getQuoteV1Res.error}`
+        );
         continue;
       }
       const quoteRes = await safe(
         this.jupSwapClient.getQuote(getQuoteV1Res.data)
       );
       if (!quoteRes.success) {
-        this.logger.warn(`[copyTradeHandleOnBuyStrategyWithSol] Cannot get quote: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get quote: ${strategyName}`
+        );
         continue;
       }
       if (!quoteRes.data) {
-        this.logger.warn(`[copyTradeHandleOnBuyStrategyWithSol] Quote data not found: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Quote data not found: ${strategyName}`
+        );
         continue;
       }
 
       // Resolve: build swap transaction
       const buildSwapV1BodyDtoRes = BuildSwapV1BodyDtoSchema.safeParse({
         quoteResponse: quoteRes.data,
-        userPublicKey: this.playerKeypair.publicKey,
+        // FIXME:
+        // userPublicKey: this.playerKeypair.publicKey,
+        userPublicKey: new PublicKey(
+          "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"
+        ),
         // TODO: additional config
       });
       if (!buildSwapV1BodyDtoRes.success) {
-        this.logger.warn(`[copyTradeHandleOnBuyStrategyWithSol] Cannot parse quote: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot parse quote: ${strategyName}`
+        );
         continue;
       }
       const buildSwapRes = await safe(
         this.jupSwapClient.buildSwapTx(buildSwapV1BodyDtoRes.data)
       );
       if (!buildSwapRes.success) {
-        this.logger.warn(`[copyTradeHandleOnBuyStrategyWithSol] Cannot build Swap: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot build Swap: ${strategyName}`
+        );
         continue;
       }
       if (!buildSwapRes.data) {
-        this.logger.warn(`[copyTradeHandleOnBuyStrategyWithSol] Swap data not found: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Swap data not found: ${strategyName}`
+        );
         continue;
       }
 
@@ -282,34 +308,45 @@ export class CopyTradeHelper {
         this.solWeb3Conn,
         tx
       );
-      const ataPubkey = this.getAtaPubkey(
+      // 1. check and create ATA for toCoinType
+      const toCoinIx = await TokenHelper.getCreateIxPlayerTokenForDeposit(
+        this.solWeb3Conn,
+        // FIXME:
+        // this.playerKeypair.publicKey,
+        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
         swapInfo.toCoinType,
         swapInfo.toCoinOwnerProgramId
       );
-      const ataBalance = await this.getPlayerTokenBalance(
-        ataPubkey,
-        swapInfo.toCoinOwnerProgramId
-      );
-      if (!ataBalance) {
-        const createAtaIx = createAssociatedTokenAccountInstruction(
-          this.playerKeypair.publicKey,
-          ataPubkey,
-          this.playerKeypair.publicKey,
-          swapInfo.toCoinType,
-          swapInfo.toCoinOwnerProgramId
-        );
-        builder = builder.appendIx(createAtaIx);
+      if (toCoinIx) {
+        builder = builder.pushIxToFront(toCoinIx);
       }
+      // 2. check and create ATA for sellCoinType
+      const sellCoinIx = await TokenHelper.getIxsPlayerAmpleWsolForSell(
+        this.solWeb3Conn,
+        // FIXME:
+        // this.playerKeypair.publicKey,
+        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
+        strategy.sellCoinAmount
+      );
+      builder = builder.batchPushIxsToFront(sellCoinIx);
+      // FIXME: not sure how to calculate fee
       const currentTips = await this.jitoClient.getTipInfoV1();
+      this.logger.debug(
+        `[copyTradeHandleOnBuyStrategyWithSol] currentTips: ${JSON.stringify(
+          currentTips
+        )}`
+      );
+      /**
       if (
         !currentTips ||
         currentTips.length === 0 ||
         !GetPercentileTip(currentTips, strategy.jitoTipPercentile)
       ) {
-        this.logger.warn(`[copyTradeHandleOnBuyStrategyWithSol] Cannot get tips: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get tips: ${strategyName}`
+        );
         continue;
       }
-      // TODO: not sure how to calculate fee
       const tip = GetPercentileTip(currentTips, strategy.jitoTipPercentile);
       const fee = tip * strategy.jitoTxFeeTipRatio;
       builder = builder.setComputeUnitPrice(fee);
@@ -323,54 +360,72 @@ export class CopyTradeHelper {
         Buffer.from(builtTx.serialize()).toString("base64")
       );
       if (!sendTxRes) {
-        this.logger.warn(`[copyTradeHandleOnBuyStrategyWithSol] Cannot send transaction: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot send transaction: ${strategyName}`
+        );
         continue;
       }
       this.logger.info(
         `[copyTradeHandleOnBuyStrategyWithSol] Transaction sent: ${strategyName}. Followed tx sign: ${swapInfo.txSignature}. Issued tx sign: ${sendTxRes.result}.`
       );
+      */
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private async copyTradeHandleOnSellStrategyWithSol(
+  private async copyTradeHandleOnSellStrategyWithWSOL(
     swapInfo: txHelper.SwapInfoDto
   ): Promise<void> {
     // Validate
     if (!swapInfo.fromCoinType) {
-      this.logger.debug(
-        `[copyTradeHandleOnSellStrategyWithSol] No fromCoinType found in swapInfo, tx: ${swapInfo.txSignature}`
+      // this.logger.debug(
+      //   `[copyTradeHandleOnSellStrategyWithSol] No fromCoinType found in swapInfo, tx: ${swapInfo.txSignature}`
+      // );
+      return;
+    }
+    const targetPublicKey = this.copyTradeSubIdTarPubkeyMap.get(swapInfo.subId);
+    if (!targetPublicKey) {
+      this.logger.error(
+        `[copyTradeHandleOnSellStrategyWithSol] No target found in [Tx]${swapInfo.txSignature}`
       );
       return;
     }
-    const copyTradeRecord = this.copyTradeRecordMap.get(swapInfo.signer);
+    const copyTradeRecord = this.copyTradeRecordMap.get(targetPublicKey);
     if (!copyTradeRecord) {
-      this.logger.debug(`[copyTradeHandleOnSellStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`);
+      this.logger.error(
+        `[copyTradeHandleOnSellStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`
+      );
       return;
     }
     const onSellStrategiesWithSol = Array.from(
       copyTradeRecord.onSellStrategiesMap.entries()
     );
     if (onSellStrategiesWithSol.length === 0) {
-      this.logger.debug(`[copyTradeHandleOnSellStrategyWithSol] No strategy is applied to [Tx]${swapInfo.txSignature}`);
+      this.logger.debug(
+        `[copyTradeHandleOnSellStrategyWithSol] No strategy is applied to [Tx]${swapInfo.txSignature}`
+      );
       return;
     }
-    this.logger.debug(`[copyTradeHandleOnSellStrategyWithSol] onSell w/ sol strategies processing: [Tx]${swapInfo.txSignature}`);
+    this.logger.debug(
+      `[copyTradeHandleOnSellStrategyWithSol] onSell w/ sol strategies processing: [Tx]${swapInfo.txSignature}`
+    );
 
     // TODO: parallelize this
     for (const [strategyName, strategy] of onSellStrategiesWithSol) {
       // Resolve: use swapInfo to get quote
-      const ataPubkey = this.getAtaPubkey(
+      const amount = await TokenHelper.getPlayerTokenBalanceForSell(
+        this.solWeb3Conn,
+        // FIXME:
+        // this.playerKeypair.publicKey,
+        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
         swapInfo.fromCoinType,
         swapInfo.fromCoinOwnerProgramId
       );
-      const amount = await this.getPlayerTokenBalance(
-        ataPubkey,
-        swapInfo.fromCoinType
-      );
       if (!amount || amount.lte(new BN(0))) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Cannot get sell amount: ${strategyName}`);
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}] Cannot get sell amount from ${swapInfo.fromCoinType.toBase58()}`
+        );
         continue;
       }
       const sellPercent = new BN(
@@ -379,49 +434,67 @@ export class CopyTradeHelper {
       );
       const sellAmount = amount.mul(sellPercent);
       if (sellAmount.lte(new BN(0))) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Sell amount is zero: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Sell amount is zero: ${strategyName}`
+        );
         continue;
       }
       const getQuoteV1Res = GetQuoteV1ParamDtoSchema.safeParse({
         inputMint: swapInfo.fromCoinType,
-        outputMint: COIN_TYPE_SOL_NATIVE,
+        outputMint: COIN_TYPE_WSOL_MINT,
         amount: sellAmount,
         slippageBps: strategy.slippageBps,
       });
       if (!getQuoteV1Res.success) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Cannot parse strategy: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Cannot parse strategy: ${strategyName}`
+        );
         continue;
       }
       const quoteRes = await safe(
         this.jupSwapClient.getQuote(getQuoteV1Res.data)
       );
       if (!quoteRes.success) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Cannot get quote: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Cannot get quote: ${strategyName}`
+        );
         continue;
       }
       if (!quoteRes.data) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Quote data not found: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Quote data not found: ${strategyName}`
+        );
         continue;
       }
 
       // Resolve: build swap transaction
       const buildSwapV1BodyDtoRes = BuildSwapV1BodyDtoSchema.safeParse({
         quoteResponse: quoteRes.data,
-        userPublicKey: this.playerKeypair.publicKey,
+        // FIXME:
+        // userPublicKey: this.playerKeypair.publicKey,
+        userPublicKey: new PublicKey(
+          "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"
+        ),
       });
       if (!buildSwapV1BodyDtoRes.success) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Cannot parse quote: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Cannot parse quote: ${strategyName}`
+        );
         continue;
       }
       const buildSwapRes = await safe(
         this.jupSwapClient.buildSwapTx(buildSwapV1BodyDtoRes.data)
       );
       if (!buildSwapRes.success) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Cannot build Swap: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Cannot build Swap: ${strategyName}`
+        );
         continue;
       }
       if (!buildSwapRes.data) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Swap data not found: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Swap data not found: ${strategyName}`
+        );
         continue;
       }
 
@@ -433,16 +506,35 @@ export class CopyTradeHelper {
         this.solWeb3Conn,
         tx
       );
+      // 1. check and create ATA for toCoinType
+      const toCoinIx = await TokenHelper.getCreateIxPlayerWsolForDeposit(
+        this.solWeb3Conn,
+        // FIXME:
+        // this.playerKeypair.publicKey,
+        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv")
+      );
+      if (toCoinIx) {
+        builder = builder.pushIxToFront(toCoinIx);
+      }
+      // FIXME: not sure how to calculate fee
       const currentTips = await this.jitoClient.getTipInfoV1();
+      this.logger.debug(
+        `[copyTradeHandleOnSellStrategyWithSol] currentTips: ${JSON.stringify(
+          currentTips
+        )}`
+      );
+      /**
       if (
         !currentTips ||
         currentTips.length === 0 ||
         !GetPercentileTip(currentTips, strategy.jitoTipPercentile)
       ) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Cannot get tips: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Cannot get tips: ${strategyName}`
+        );
         continue;
       }
-      // TODO: not sure how to calculate fee
+
       const tip = GetPercentileTip(currentTips, strategy.jitoTipPercentile);
       const fee = tip * strategy.jitoTxFeeTipRatio;
       builder = builder.setComputeUnitPrice(fee);
@@ -456,10 +548,15 @@ export class CopyTradeHelper {
         Buffer.from(builtTx.serialize()).toString("base64")
       );
       if (!sendTxRes) {
-        this.logger.warn(`[copyTradeHandleOnSellStrategyWithSol] Cannot send transaction: ${strategyName}`);
+        this.logger.warn(
+          `[copyTradeHandleOnSellStrategyWithSol] Cannot send transaction: ${strategyName}`
+        );
         continue;
       }
-      this.logger.info(`[copyTradeHandleOnSellStrategyWithSol] Transaction sent: ${strategyName}`);
+      this.logger.info(
+        `[copyTradeHandleOnSellStrategyWithSol] Transaction sent: ${strategyName}`
+      );
+      */
     }
   }
 
@@ -468,21 +565,24 @@ export class CopyTradeHelper {
   async copyTradeHandler(subId: number, solRpcWsLogs: Logs): Promise<void> {
     // Validate
     if (solRpcWsLogs.err) {
-      this.logger.debug(`[copyTradeHandler] [Tx]${solRpcWsLogs.signature} is failed, skip.`);
+      // this.logger.debug(
+      //   `[copyTradeHandler] [Tx]${solRpcWsLogs.signature} is failed, skip.`
+      // );
       return;
     }
-    // TODO: need improvement maybe
-    const isSwap = solRpcWsLogs.logs.some((log) =>
-      Array.from(COMMON_DEX_POOLS).some((dexPool) => log.includes(dexPool))
-    );
+    const isSwap = solRpcWsLogs.logs.some((log) => COMMON_DEX_REGEX.test(log));
     if (!isSwap) {
-      this.logger.debug(`[copyTradeHandler] [Tx]${solRpcWsLogs.signature} is not identified as swap, skip.`);
+      // this.logger.debug(
+      //   `[copyTradeHandler] [Tx]${solRpcWsLogs.signature} is not identified as swap, skip.`
+      // );
       return;
     }
 
     // Resolve: target tx
     const signature = solRpcWsLogs.signature;
-    this.logger.debug(`[copyTradeHandler] Get detailed info for tx: ${signature}`);
+    // this.logger.debug(
+    //   `[copyTradeHandler] Get detailed info for tx: ${signature}`
+    // );
     const txRes = await safe(
       this.solWeb3Conn.getParsedTransaction(signature, {
         commitment: "confirmed",
@@ -510,13 +610,15 @@ export class CopyTradeHelper {
     }
     const swapInfo = swapInfoRes.data;
     if (!swapInfo.fromSol && !swapInfo.toSol) {
-      this.logger.warn(`[copyTradeHandler] No SOL involved in swap: ${signature}`);
+      this.logger.warn(
+        `[copyTradeHandler] No SOL involved in swap: ${signature}`
+      );
       return;
     }
 
     // Resolve
-    this.copyTradeHandleOnBuyStrategyWithSol(swapInfo);
-    this.copyTradeHandleOnSellStrategyWithSol(swapInfo);
+    this.copyTradeHandleOnBuyStrategyWithWSOL(swapInfo);
+    this.copyTradeHandleOnSellStrategyWithWSOL(swapInfo);
   }
 
   //////////////////////////////////////////////////////////////////////////////

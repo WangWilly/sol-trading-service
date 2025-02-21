@@ -1,5 +1,3 @@
-import { COIN_TYPE_SOL_NATIVE } from "../solRpcWsHelper/const";
-
 import { SwapInfoDto } from "./dtos";
 import {
   CREATE_ACCOUNT_FEE,
@@ -16,6 +14,7 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import BN from "bn.js";
+import { COIN_TYPE_WSOL_MINT } from "../solRpcWsHelper/const";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,36 +33,48 @@ interface TokenBalanceChange {
 
 export async function toSwapInfoDto(
   conn: Connection,
+  subId: number,
+  txSignature: string,
   txRes: ParsedTransactionWithMeta
-): Promise<SwapInfoDto | null> {
+): Promise<SwapInfoDto> {
   const signerTokenBalanceChanges = getSignerTokenBalanceChanges(txRes);
   if (signerTokenBalanceChanges.length === 1) {
-    return await fromSol2TknTx(conn, txRes, signerTokenBalanceChanges[0]);
+    return await fromSol2TknTx(
+      conn,
+      subId,
+      txSignature,
+      txRes,
+      signerTokenBalanceChanges[0]
+    );
   }
   if (signerTokenBalanceChanges.length === 2) {
     return fromTkn2TknTx(
       conn,
+      subId,
+      txSignature,
       txRes,
       signerTokenBalanceChanges[0],
       signerTokenBalanceChanges[1]
     );
   }
-  return null;
+  throw new Error("Invalid number of token balance changes");
 }
 
 async function fromSol2TknTx(
   conn: Connection,
+  subId: number,
+  txSignature: string,
   txRes: ParsedTransactionWithMeta,
   signerTokenBalanceChange: TokenBalanceChange
-): Promise<SwapInfoDto | null> {
+): Promise<SwapInfoDto> {
   const signer = getSigner(txRes);
   if (!signer) {
-    return null;
+    throw new Error("Signer not found");
   }
 
   const signerSolBalanceChange = getSignerBalanceChange(txRes);
   if (!signerSolBalanceChange) {
-    return null;
+    throw new Error("Signer balance change not found");
   }
   const txFee = getTxFee(txRes);
   const createAccountFeesSum = getCreateAccountFeesSum(txRes);
@@ -82,25 +93,27 @@ async function fromSol2TknTx(
     new PublicKey(signerTokenBalanceChange.mint)
   );
   if (!mintAccInfo) {
-    // TODO: error handling
-    return null;
+    throw new Error("Mint account info not found");
   }
   const tokenMintOwnerProgramId = mintAccInfo.owner;
 
   const isBuy = signerTokenBalanceChange.post.lt(signerTokenBalanceChange.pre);
   if (isBuy) {
     return {
-      solChanging: true,
+      subId,
+      txSignature,
       msg_hash: txRes.transaction.message.recentBlockhash,
       timestamp: txRes.blockTime || 0,
       status: "success",
       block: txRes.slot,
       signer: signer.toBase58(),
-      fromCoinType: new PublicKey(COIN_TYPE_SOL_NATIVE),
+      fromSol: true,
+      fromCoinType: null,
       fromCoinAmount: solBalanceAmount,
       fromCoinPreBalance: signerSolBalanceChange.pre,
       fromCoinPostBalance: signerSolBalanceChange.post,
       fromCoinOwnerProgramId: SystemProgram.programId,
+      toSol: false,
       toCoinType: signerTokenBalanceChange.mint,
       toCoinAmount: tokenBalanceAmount,
       toCoinOwnerProgramId: tokenMintOwnerProgramId,
@@ -108,18 +121,21 @@ async function fromSol2TknTx(
   }
 
   return {
-    solChanging: true,
+    subId,
+    txSignature,
     msg_hash: txRes.transaction.message.recentBlockhash,
     timestamp: txRes.blockTime || 0,
     status: "success",
     block: txRes.slot,
     signer: signer.toBase58(),
+    fromSol: false,
     fromCoinType: signerTokenBalanceChange.mint,
     fromCoinAmount: tokenBalanceAmount,
     fromCoinPreBalance: signerTokenBalanceChange.pre,
     fromCoinPostBalance: signerTokenBalanceChange.post,
     fromCoinOwnerProgramId: tokenMintOwnerProgramId,
-    toCoinType: new PublicKey(COIN_TYPE_SOL_NATIVE),
+    toSol: true,
+    toCoinType: null,
     toCoinAmount: solBalanceAmount,
     toCoinOwnerProgramId: SystemProgram.programId,
   };
@@ -127,17 +143,22 @@ async function fromSol2TknTx(
 
 async function fromTkn2TknTx(
   conn: Connection,
+  subId: number,
+  txSignature: string,
   txRes: ParsedTransactionWithMeta,
   signerTokenBalanceChange1: TokenBalanceChange,
   signerTokenBalanceChange2: TokenBalanceChange
-): Promise<SwapInfoDto | null> {
+): Promise<SwapInfoDto> {
   if (signerTokenBalanceChange1.post.lt(signerTokenBalanceChange1.pre)) {
     if (signerTokenBalanceChange2.post.lt(signerTokenBalanceChange2.pre)) {
-      // TODO: error handling
-      return null;
+      throw new Error(
+        `Invalid token balance changes mint1: {${signerTokenBalanceChange1.mint}, ${signerTokenBalanceChange1.pre}, ${signerTokenBalanceChange1.post}}, mint2: {${signerTokenBalanceChange2.mint}, ${signerTokenBalanceChange2.pre}, ${signerTokenBalanceChange2.post}}`
+      );
     }
     return fromTkn2TknTx(
       conn,
+      subId,
+      txSignature,
       txRes,
       signerTokenBalanceChange2,
       signerTokenBalanceChange1
@@ -146,15 +167,14 @@ async function fromTkn2TknTx(
 
   const signer = getSigner(txRes);
   if (!signer) {
-    return null;
+    throw new Error("Signer not found");
   }
 
   const mint1AccInfo = await conn.getAccountInfo(
     new PublicKey(signerTokenBalanceChange1.mint)
   );
   if (!mint1AccInfo) {
-    // TODO: error handling
-    return null;
+    throw new Error("Mint1 account info not found");
   }
   const mint1OwnerProgramId = mint1AccInfo.owner;
 
@@ -162,18 +182,19 @@ async function fromTkn2TknTx(
     new PublicKey(signerTokenBalanceChange2.mint)
   );
   if (!mint2AccInfo) {
-    // TODO: error handling
-    return null;
+    throw new Error("Mint2 account info not found");
   }
   const mint2OwnerProgramId = mint2AccInfo.owner;
 
   return {
-    solChanging: false,
-    msg_hash: txRes.transaction.message.recentBlockhash,
-    timestamp: txRes.blockTime || 0,
+    subId,
+    txSignature,
+    msg_hash: txRes.transaction.message.recentBlockhash, // ✅
+    timestamp: txRes.blockTime || 0, // ✅
     status: "success",
-    block: txRes.slot,
+    block: txRes.slot, // ✅
     signer: signer.toBase58(),
+    fromSol: signerTokenBalanceChange1.mint.equals(COIN_TYPE_WSOL_MINT),
     fromCoinType: signerTokenBalanceChange1.mint,
     fromCoinAmount: signerTokenBalanceChange1.post
       .sub(signerTokenBalanceChange1.pre)
@@ -181,6 +202,7 @@ async function fromTkn2TknTx(
     fromCoinPreBalance: signerTokenBalanceChange1.pre,
     fromCoinPostBalance: signerTokenBalanceChange1.post,
     fromCoinOwnerProgramId: mint1OwnerProgramId,
+    toSol: signerTokenBalanceChange2.mint.equals(COIN_TYPE_WSOL_MINT),
     toCoinType: signerTokenBalanceChange2.mint,
     toCoinAmount: signerTokenBalanceChange2.post
       .sub(signerTokenBalanceChange2.pre)
@@ -191,10 +213,11 @@ async function fromTkn2TknTx(
 
 ////////////////////////////////////////////////////////////////////////////////
 // common
-
-function getSigner(txRes: ParsedTransactionWithMeta): PublicKey | null {
+// ✅: parseTransactionAccounts
+// https://github.com/debridge-finance/solana-tx-parser-public/blob/18e3642d5423f388b4c1031ab71d51f07dbb77de/src/helpers.ts#L123
+function getSigner(txRes: ParsedTransactionWithMeta): PublicKey {
   if (txRes.transaction.message.accountKeys.length === 0) {
-    return null;
+    throw new Error("No account keys found");
   }
   // TODO: signer is the first account key?
   const signers = txRes.transaction.message.accountKeys.filter(
@@ -202,7 +225,7 @@ function getSigner(txRes: ParsedTransactionWithMeta): PublicKey | null {
   );
 
   if (signers.length === 0) {
-    return null;
+    throw new Error("No signer found");
   }
 
   if (signers.length > 1) {
@@ -214,18 +237,19 @@ function getSigner(txRes: ParsedTransactionWithMeta): PublicKey | null {
 
 ////////////////////////////////////////////////////////////////////////////////
 // native sol
-
+// ✅
+// VersionedTransactionResponse -> meta -> ConfirmedTransactionMeta -> preBalances, postBalances
 function getSignerBalanceChange(
   txRes: ParsedTransactionWithMeta
-): BalanceChange | null {
+): BalanceChange {
   if (!txRes.meta) {
-    return null;
+    throw new Error("Transaction meta not found");
   }
   if (
     txRes.meta.preBalances.length === 0 ||
     txRes.meta.postBalances.length === 0
   ) {
-    return null;
+    throw new Error("Balances not found");
   }
   // TODO: signer is the first account key?
   return {
@@ -234,6 +258,8 @@ function getSignerBalanceChange(
   };
 }
 
+// ✅
+// VersionedTransactionResponse -> meta -> ConfirmedTransactionMeta -> fee
 function getTxFee(txRes: ParsedTransactionWithMeta): BN {
   if (!txRes.meta) {
     return new BN(0);
@@ -241,6 +267,8 @@ function getTxFee(txRes: ParsedTransactionWithMeta): BN {
   return new BN(txRes.meta.fee);
 }
 
+// ✅
+// VersionedTransactionResponse -> meta -> ConfirmedTransactionMeta -> preBalances, postBalances
 function getCreateAccountFeesSum(txRes: ParsedTransactionWithMeta): BN {
   if (!txRes.meta) {
     return new BN(0);
@@ -253,6 +281,9 @@ function getCreateAccountFeesSum(txRes: ParsedTransactionWithMeta): BN {
     .reduce((total, balance) => total.add(new BN(balance)), new BN(0));
 }
 
+// ✅
+// flattenTransactionResponse: https://github.com/debridge-finance/solana-tx-parser-public/blob/18e3642d5423f388b4c1031ab71d51f07dbb77de/src/helpers.ts#L119C17-L119C43
+// VersionedTransactionResponse -> TransactionInstruction -> programId
 function getSolTransferIxs(
   txRes: ParsedTransactionWithMeta
 ): (ParsedInstruction | PartiallyDecodedInstruction)[] {
@@ -261,6 +292,10 @@ function getSolTransferIxs(
   );
 }
 
+// ✅
+// https://github.com/debridge-finance/solana-tx-parser-public/blob/18e3642d5423f388b4c1031ab71d51f07dbb77de/src/parsers.ts#L249
+// https://github.com/debridge-finance/solana-tx-parser-public/blob/18e3642d5423f388b4c1031ab71d51f07dbb77de/src/parsers.ts#L197
+// https://github.com/debridge-finance/solana-tx-parser-public/blob/18e3642d5423f388b4c1031ab71d51f07dbb77de/src/decoders/system.ts#L132
 function getTipsSum(
   ixs: (ParsedInstruction | PartiallyDecodedInstruction)[]
 ): BN {
@@ -284,28 +319,34 @@ function getTipsSum(
 ////////////////////////////////////////////////////////////////////////////////
 // token
 
+// TokenBalance
 function getSignerTokenBalanceChanges(
   txRes: ParsedTransactionWithMeta
 ): TokenBalanceChange[] {
   const signer = getSigner(txRes);
   if (!signer) {
-    return [];
+    throw new Error("Signer not found");
   }
   if (
     !txRes.meta ||
     !txRes.meta.preTokenBalances ||
     !txRes.meta.postTokenBalances
   ) {
-    return [];
+    throw new Error("Token balances not found");
   }
-  const preTokenBalances = txRes.meta.preTokenBalances;
+  const preTokenBalances = new Map(
+    txRes.meta.preTokenBalances
+      .filter((token) => token.owner === signer.toBase58())
+      .map((token) => [token.mint, token.uiTokenAmount.amount])
+  );
   return txRes.meta.postTokenBalances
     .filter((token) => token.owner === signer.toBase58())
-    .map((token, idx) => {
+    .map((token) => {
       return {
         mint: new PublicKey(token.mint),
-        pre: new BN(preTokenBalances[idx].uiTokenAmount.amount),
+        pre: new BN(preTokenBalances.get(token.mint) || 0),
         post: new BN(token.uiTokenAmount.amount),
       };
-    });
+    })
+    .filter((token) => token.pre.cmp(token.post) !== 0);
 }

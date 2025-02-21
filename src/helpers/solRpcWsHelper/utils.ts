@@ -49,6 +49,7 @@ export function logsSubscribe(
     jsonrpc: "2.0",
     id: rpcIdGen(publicKey),
     method: "logsSubscribe",
+    // https://solana.com/docs/rpc#configuring-state-commitment
     params: [{ mentions: [publicKey] }, { commitment: "confirmed" }],
   };
   publicKeySubIdMap.set(publicKey, -1); // prevent duplicate subscription

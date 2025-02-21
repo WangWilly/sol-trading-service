@@ -1,6 +1,6 @@
 import { toSwapInfoDto } from "./toSwapInfo";
-import { SwapInfoDto } from "./dtos";
+import { SwapInfoDto, printSwapInfoDto } from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export { toSwapInfoDto, SwapInfoDto };
+export { toSwapInfoDto, SwapInfoDto, printSwapInfoDto };

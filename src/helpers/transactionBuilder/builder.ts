@@ -83,6 +83,16 @@ export class TransactionBuilder {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  pushIxToFront(instruction: TransactionInstruction): this {
+    this.ixs.unshift(instruction);
+    return this;
+  }
+
+  batchPushIxsToFront(instructions: TransactionInstruction[]): this {
+    this.ixs = [...instructions, ...this.ixs];
+    return this;
+  }
+
   appendIx(instruction: TransactionInstruction): this {
     this.ixs.push(instruction);
     return this;
@@ -115,6 +125,7 @@ export class TransactionBuilder {
    * 設定 Compute Unit 限制 (避免重複插入)
    */
   setComputeUnitLimit(units: number): this {
+    // TODO:
     this.removeExistingComputeBudgetInstruction("ComputeUnitLimit");
 
     this.ixs.unshift(ComputeBudgetProgram.setComputeUnitLimit({ units }));
@@ -126,6 +137,7 @@ export class TransactionBuilder {
    * 設定 Compute Unit 價格 (避免重複插入)
    */
   setComputeUnitPrice(microLamportsPerUnit: number): this {
+    // TODO:
     this.removeExistingComputeBudgetInstruction("ComputeUnitPrice");
 
     this.ixs.unshift(
