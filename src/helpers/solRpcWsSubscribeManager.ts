@@ -5,7 +5,7 @@ import {
   CopyTradeRecordOnSellStrategy,
 } from "./copyTradeHelperV2/dtos";
 import { CopyTradeHelperV2 } from "./copyTradeHelperV2";
-import { SolRpcWsHelper } from "./solRpcWsHelper/helper";
+import { SolRpcWsHelper } from "./solRpcWsClient/client";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,9 +32,6 @@ export class SolRpcWsSubscribeManager {
       strategy
     );
     this.solRpcWsHelper.updateLogsSubscription();
-    const subId = await this.solRpcWsHelper.getSubId(targetPublicKey);
-    this.copyTradeHelper.registerCopyTradeTargetPublicKey(subId, targetPublicKey);
-    this.logger.info(`CopyTradeRecordOnBuyStrategy: ${strategyName} created`);
   }
 
   async createCopyTradeRecordOnSellStrategy(
@@ -49,9 +46,6 @@ export class SolRpcWsSubscribeManager {
       strategy
     );
     this.solRpcWsHelper.updateLogsSubscription();
-    const subId = await this.solRpcWsHelper.getSubId(targetPublicKey);
-    this.copyTradeHelper.registerCopyTradeTargetPublicKey(subId, targetPublicKey);
-    this.logger.info(`CopyTradeRecordOnSellStrategy: ${strategyName} created`);
   }
 
   // TODO: removeCopyTradeRecordOnBuyStrategy

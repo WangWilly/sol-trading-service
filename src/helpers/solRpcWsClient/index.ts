@@ -1,6 +1,6 @@
 import {
   SolRpcWsHelper,
-} from "./helper";
+} from "./client";
 
 export {
   SolRpcWsHelper,

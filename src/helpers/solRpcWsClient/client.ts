@@ -107,12 +107,14 @@ export class SolRpcWsHelper {
     }
   }
 
+  /**
   public async getSubId(pubkey: string): Promise<number> {
     while (!this.publicKeySubIdMap.has(pubkey)) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     return this.publicKeySubIdMap.get(pubkey)!;
   }
+  */
 
   async stop(): Promise<void> {
     if (!this.ws) {
@@ -194,6 +196,7 @@ export class SolRpcWsHelper {
         `Subscription success for ${publicKey} w/ msgId ${message.id}, subId: ${subId}`
       );
       this.publicKeySubIdMap.set(publicKey, subId);
+      this.copyTradeHelper.registerCopyTradeTargetPublicKey(subId, publicKey);
       this.rpcIdpubKeyMap4Sub.delete(message.id);
       return;
     }

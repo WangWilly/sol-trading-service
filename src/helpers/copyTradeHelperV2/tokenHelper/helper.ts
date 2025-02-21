@@ -12,8 +12,8 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 
-import { safe } from "../../utils/exceptions";
-import { COIN_TYPE_WSOL_MINT } from "../solRpcWsHelper/const";
+import { safe } from "../../../utils/exceptions";
+import { COIN_TYPE_WSOL_MINT } from "../../solRpcWsClient/const";
 
 ////////////////////////////////////////////////////////////////////////////////
 

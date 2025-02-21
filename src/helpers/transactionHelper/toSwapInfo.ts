@@ -14,7 +14,7 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import { COIN_TYPE_WSOL_MINT } from "../solRpcWsHelper/const";
+import { COIN_TYPE_WSOL_MINT } from "../solRpcWsClient/const";
 
 ////////////////////////////////////////////////////////////////////////////////
 

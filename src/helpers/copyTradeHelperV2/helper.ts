@@ -18,7 +18,7 @@ import { safe } from "../../utils/exceptions";
 import { TsLogLogger } from "../../utils/logging";
 import type { Logger } from "../../utils/logging";
 import * as txHelper from "../transactionHelper";
-import { TokenHelper } from "../tokenHelper";
+import { TokenHelper } from "./tokenHelper";
 import {
   JupSwapClient,
   GetQuoteV1ParamDtoSchema,
@@ -27,7 +27,7 @@ import {
 import { TransactionBuilder } from "../transactionBuilder";
 import { JitoClient } from "../3rdParties/jito";
 import { GetPercentileTip } from "../3rdParties/jito";
-import { COIN_TYPE_WSOL_MINT } from "../solRpcWsHelper/const";
+import { COIN_TYPE_WSOL_MINT } from "../solRpcWsClient/const";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,7 +1,7 @@
 import { Connection, Keypair } from "@solana/web3.js";
 import BN from "bn.js";
 
-import { SolRpcWsHelper } from "./helpers/solRpcWsHelper/helper";
+import { SolRpcWsHelper } from "./helpers/solRpcWsClient/client";
 import { JupSwapClient } from "./helpers/3rdParties/jup";
 import { JitoClient } from "./helpers/3rdParties/jito";
 import {
@@ -9,7 +9,7 @@ import {
   CopyTradeRecordOnSellStrategySchema,
 } from "./helpers/copyTradeHelperV2/dtos";
 import { SolRpcWsSubscribeManager } from "./helpers/solRpcWsSubscribeManager";
-import { COIN_TYPE_WSOL_MINT } from "./helpers/solRpcWsHelper/const";
+import { COIN_TYPE_WSOL_MINT } from "./helpers/solRpcWsClient/const";
 import { TsLogLogger } from "./utils/logging";
 import { CopyTradeHelperV2 } from "./helpers/copyTradeHelperV2";
 
@@ -60,7 +60,7 @@ async function main(): Promise<void> {
   //////////////////////////////////////////////////////////////////////////////
 
   solRpcWsSubscribeManager.createCopyTradeRecordOnBuyStrategy(
-    "8589u5aHZBhnEVNKGh19uryG7Da7XUwTZ99Dso6d5Roy",
+    "FH7zhuLGeQ5bNhMwwmYemDyW7mhyZyi885XghcDGpump",
     "OnBuyTest",
     CopyTradeRecordOnBuyStrategySchema.parse({
       sellCoinType: COIN_TYPE_WSOL_MINT,
@@ -69,7 +69,7 @@ async function main(): Promise<void> {
     })
   );
   solRpcWsSubscribeManager.createCopyTradeRecordOnSellStrategy(
-    "8589u5aHZBhnEVNKGh19uryG7Da7XUwTZ99Dso6d5Roy",
+    "FH7zhuLGeQ5bNhMwwmYemDyW7mhyZyi885XghcDGpump",
     "OnSellTest",
     CopyTradeRecordOnSellStrategySchema.parse({
       fixedPercentage: null,

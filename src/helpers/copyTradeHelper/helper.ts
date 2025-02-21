@@ -31,7 +31,7 @@ import {
 import { TransactionBuilder } from "../transactionBuilder";
 import { JitoClient } from "../3rdParties/jito";
 import { GetPercentileTip } from "../3rdParties/jito";
-import { COIN_TYPE_SOL_NATIVE } from "../solRpcWsHelper/const";
+import { COIN_TYPE_SOL_NATIVE } from "../solRpcWsClient/const";
 
 ////////////////////////////////////////////////////////////////////////////////
 
