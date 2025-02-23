@@ -5,13 +5,7 @@ import {
 } from "./dtos";
 import { COMMON_DEX_REGEX } from "./const";
 
-import {
-  Connection,
-  Keypair,
-  Logs,
-  PublicKey,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { Connection, Keypair, Logs, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
 import { safe } from "../../utils/exceptions";
@@ -19,15 +13,17 @@ import { TsLogLogger } from "../../utils/logging";
 import type { Logger } from "../../utils/logging";
 import * as txHelper from "../transactionHelper";
 import { TokenHelper } from "./tokenHelper";
+import { JupSwapClient, GetQuoteV1ParamDtoSchema } from "../3rdParties/jup";
 import {
-  JupSwapClient,
-  GetQuoteV1ParamDtoSchema,
-  BuildSwapV1BodyDtoSchema,
-} from "../3rdParties/jup";
-import { TransactionBuilder } from "../transactionBuilder";
+  BuildSwapWithIxsV1BodyDtoSchema,
+  getComputeBudgetFromBuildSwapWithIxsV1Result,
+  getTxFromBuildSwapWithIxsV1Result,
+} from "../3rdParties/jup/dtos";
 import { JitoClient } from "../3rdParties/jito";
-import { GetPercentileTip } from "../3rdParties/jito";
 import { COIN_TYPE_WSOL_MINT } from "../solRpcWsClient/const";
+
+import { FeeHelper } from "./feeHelper/helper";
+import { versionedTxToSerializedBase64 } from "../../utils/transaction";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,6 +36,7 @@ export class CopyTradeHelperV2 {
     private readonly solWeb3Conn: Connection,
     private readonly jupSwapClient: JupSwapClient,
     private readonly jitoClient: JitoClient,
+    private readonly feeHelper: FeeHelper,
     private readonly logger: Logger = new TsLogLogger({
       name: "CopyTradeHelperV2",
     })
@@ -252,43 +249,57 @@ export class CopyTradeHelperV2 {
       );
       if (!quoteRes.success) {
         this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get quote: ${strategyName}`
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get quote: ${strategyName} for [Tx]${swapInfo.txSignature}`
         );
         continue;
       }
       if (!quoteRes.data) {
         this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Quote data not found: ${strategyName}`
+          `[copyTradeHandleOnBuyStrategyWithSol] Quote data not found: ${strategyName} for [Tx]${swapInfo.txSignature}`
         );
         continue;
       }
 
       // Resolve: build swap transaction
-      const buildSwapV1BodyDtoRes = BuildSwapV1BodyDtoSchema.safeParse({
-        quoteResponse: quoteRes.data,
-        // FIXME:
-        // userPublicKey: this.playerKeypair.publicKey,
-        userPublicKey: new PublicKey(
-          "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"
-        ),
-        // TODO: additional config
-      });
-      if (!buildSwapV1BodyDtoRes.success) {
+      const jitoTipLamports =
+        await this.jitoClient.getLatestXpercentileTipInLamportsV1(
+          strategy.jitoTipPercentile
+        );
+      if (!jitoTipLamports) {
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get tips: ${strategyName}`
+        );
+        continue;
+      }
+      const buildSwapWithIxsV1BodyDtoRes =
+        BuildSwapWithIxsV1BodyDtoSchema.safeParse({
+          // FIXME:
+          // userPublicKey: this.playerKeypair.publicKey,
+          userPublicKey: new PublicKey(
+            "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"
+          ),
+          wrapAndUnwrapSol: true,
+          prioritizationFeeLamports: {
+            jitoTipLamports,
+          },
+          quoteResponse: quoteRes.data,
+        });
+      if (!buildSwapWithIxsV1BodyDtoRes.success) {
         this.logger.warn(
           `[copyTradeHandleOnBuyStrategyWithSol] Cannot parse quote: ${strategyName}`
         );
         continue;
       }
-      const buildSwapRes = await safe(
-        this.jupSwapClient.buildSwapTx(buildSwapV1BodyDtoRes.data)
+      const buildSwapWithIxsRes = await safe(
+        this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data)
       );
-      if (!buildSwapRes.success) {
+      if (!buildSwapWithIxsRes.success) {
         this.logger.warn(
           `[copyTradeHandleOnBuyStrategyWithSol] Cannot build Swap: ${strategyName}`
         );
         continue;
       }
-      if (!buildSwapRes.data) {
+      if (!buildSwapWithIxsRes.data) {
         this.logger.warn(
           `[copyTradeHandleOnBuyStrategyWithSol] Swap data not found: ${strategyName}`
         );
@@ -296,68 +307,35 @@ export class CopyTradeHelperV2 {
       }
 
       // Arrange: replace fee/tip
-      // https://solana.com/docs/core/fees
-      // https://solana.com/developers/guides/advanced/how-to-use-priority-fees
-      // https://docs.helius.dev/solana-apis/priority-fee-api
-      // https://docs.jito.wtf/lowlatencytxnsend/#tip-amount
-      // https://www.reddit.com/r/solana/comments/1bjh2g5/understanding_the_transaction_fees_on_a_jupiter/
-      const tx = VersionedTransaction.deserialize(
-        Buffer.from(buildSwapRes.data.swapTransaction, "base64")
+      const computeBudget = getComputeBudgetFromBuildSwapWithIxsV1Result(
+        buildSwapWithIxsRes.data
       );
-      let builder = await TransactionBuilder.fromVersionedTxV2(
-        this.solWeb3Conn,
-        tx
-      );
-      // 1. check and create ATA for toCoinType
-      const toCoinIx = await TokenHelper.getCreateIxPlayerTokenForDeposit(
-        this.solWeb3Conn,
-        // FIXME:
-        // this.playerKeypair.publicKey,
-        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
-        swapInfo.toCoinType,
-        swapInfo.toCoinOwnerProgramId
-      );
-      if (toCoinIx) {
-        builder = builder.pushIxToFront(toCoinIx);
-      }
-      // 2. check and create ATA for sellCoinType
-      const sellCoinIx = await TokenHelper.getIxsPlayerAmpleWsolForSell(
-        this.solWeb3Conn,
-        // FIXME:
-        // this.playerKeypair.publicKey,
-        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
-        strategy.sellCoinAmount
-      );
-      builder = builder.batchPushIxsToFront(sellCoinIx);
-      // FIXME: not sure how to calculate fee
-      const currentTips = await this.jitoClient.getTipInfoV1();
-      this.logger.debug(
-        `[copyTradeHandleOnBuyStrategyWithSol] currentTips: ${JSON.stringify(
-          currentTips
-        )}`
-      );
-      /**
-      if (
-        !currentTips ||
-        currentTips.length === 0 ||
-        !GetPercentileTip(currentTips, strategy.jitoTipPercentile)
-      ) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get tips: ${strategyName}`
+      const { transferFeeIx, newComputeBudget } =
+        this.feeHelper.transferFeeIxProc(
+          computeBudget,
+          // FIXME:
+          // userPublicKey: this.playerKeypair.publicKey,
+          new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv")
         );
+      const builtTx = await getTxFromBuildSwapWithIxsV1Result(
+        this.solWeb3Conn,
+        // FIXME:
+        // this.playerKeypair.publicKey,
+        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
+        buildSwapWithIxsRes.data,
+        newComputeBudget,
+        [transferFeeIx]
+      );
+      try {
+        builtTx.sign([this.playerKeypair]);
+      } catch (e) {
+        this.logger.error(e);
         continue;
       }
-      const tip = GetPercentileTip(currentTips, strategy.jitoTipPercentile);
-      const fee = tip * strategy.jitoTxFeeTipRatio;
-      builder = builder.setComputeUnitPrice(fee);
-      const builtTx = builder.build(
-        await this.solWeb3Conn.getLatestBlockhash()
-      );
-      builtTx.sign([this.playerKeypair]);
 
       // Resolve: send transaction
       const sendTxRes = await this.jitoClient.sendTransactionV1(
-        Buffer.from(builtTx.serialize()).toString("base64")
+        versionedTxToSerializedBase64(builtTx)
       );
       if (!sendTxRes) {
         this.logger.warn(
@@ -368,7 +346,6 @@ export class CopyTradeHelperV2 {
       this.logger.info(
         `[copyTradeHandleOnBuyStrategyWithSol] Transaction sent: ${strategyName}. Followed tx sign: ${swapInfo.txSignature}. Issued tx sign: ${sendTxRes.result}.`
       );
-      */
     }
   }
 
@@ -468,30 +445,45 @@ export class CopyTradeHelperV2 {
       }
 
       // Resolve: build swap transaction
-      const buildSwapV1BodyDtoRes = BuildSwapV1BodyDtoSchema.safeParse({
-        quoteResponse: quoteRes.data,
-        // FIXME:
-        // userPublicKey: this.playerKeypair.publicKey,
-        userPublicKey: new PublicKey(
-          "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"
-        ),
-      });
-      if (!buildSwapV1BodyDtoRes.success) {
+      const jitoTipLamports =
+        await this.jitoClient.getLatestXpercentileTipInLamportsV1(
+          strategy.jitoTipPercentile
+        );
+      if (!jitoTipLamports) {
+        this.logger.warn(
+          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get tips: ${strategyName}`
+        );
+        continue;
+      }
+      const buildSwapWithIxsV1BodyDtoRes =
+        BuildSwapWithIxsV1BodyDtoSchema.safeParse({
+          // FIXME:
+          // userPublicKey: this.playerKeypair.publicKey,
+          userPublicKey: new PublicKey(
+            "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"
+          ),
+          wrapAndUnwrapSol: true,
+          prioritizationFeeLamports: {
+            jitoTipLamports,
+          },
+          quoteResponse: quoteRes.data,
+        });
+      if (!buildSwapWithIxsV1BodyDtoRes.success) {
         this.logger.warn(
           `[copyTradeHandleOnSellStrategyWithSol] Cannot parse quote: ${strategyName}`
         );
         continue;
       }
-      const buildSwapRes = await safe(
-        this.jupSwapClient.buildSwapTx(buildSwapV1BodyDtoRes.data)
+      const buildSwapWithIxsRes = await safe(
+        this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data)
       );
-      if (!buildSwapRes.success) {
+      if (!buildSwapWithIxsRes.success) {
         this.logger.warn(
           `[copyTradeHandleOnSellStrategyWithSol] Cannot build Swap: ${strategyName}`
         );
         continue;
       }
-      if (!buildSwapRes.data) {
+      if (!buildSwapWithIxsRes.data) {
         this.logger.warn(
           `[copyTradeHandleOnSellStrategyWithSol] Swap data not found: ${strategyName}`
         );
@@ -499,53 +491,35 @@ export class CopyTradeHelperV2 {
       }
 
       // Arrange: replace fee/tip
-      const tx = VersionedTransaction.deserialize(
-        Buffer.from(buildSwapRes.data.swapTransaction, "base64")
+      const computeBudget = getComputeBudgetFromBuildSwapWithIxsV1Result(
+        buildSwapWithIxsRes.data
       );
-      let builder = await TransactionBuilder.fromVersionedTxV2(
-        this.solWeb3Conn,
-        tx
-      );
-      // 1. check and create ATA for toCoinType
-      const toCoinIx = await TokenHelper.getCreateIxPlayerWsolForDeposit(
+      const { transferFeeIx, newComputeBudget } =
+        this.feeHelper.transferFeeIxProc(
+          computeBudget,
+          // FIXME:
+          // userPublicKey: this.playerKeypair.publicKey,
+          new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv")
+        );
+      const builtTx = await getTxFromBuildSwapWithIxsV1Result(
         this.solWeb3Conn,
         // FIXME:
         // this.playerKeypair.publicKey,
-        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv")
+        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
+        buildSwapWithIxsRes.data,
+        newComputeBudget,
+        [transferFeeIx]
       );
-      if (toCoinIx) {
-        builder = builder.pushIxToFront(toCoinIx);
-      }
-      // FIXME: not sure how to calculate fee
-      const currentTips = await this.jitoClient.getTipInfoV1();
-      this.logger.debug(
-        `[copyTradeHandleOnSellStrategyWithSol] currentTips: ${JSON.stringify(
-          currentTips
-        )}`
-      );
-      /**
-      if (
-        !currentTips ||
-        currentTips.length === 0 ||
-        !GetPercentileTip(currentTips, strategy.jitoTipPercentile)
-      ) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Cannot get tips: ${strategyName}`
-        );
+      try {
+        builtTx.sign([this.playerKeypair]);
+      } catch (e) {
+        this.logger.error(e);
         continue;
       }
 
-      const tip = GetPercentileTip(currentTips, strategy.jitoTipPercentile);
-      const fee = tip * strategy.jitoTxFeeTipRatio;
-      builder = builder.setComputeUnitPrice(fee);
-      const builtTx = builder.build(
-        await this.solWeb3Conn.getLatestBlockhash()
-      );
-      builtTx.sign([this.playerKeypair]);
-
       // Resolve: send transaction
       const sendTxRes = await this.jitoClient.sendTransactionV1(
-        Buffer.from(builtTx.serialize()).toString("base64")
+        versionedTxToSerializedBase64(builtTx)
       );
       if (!sendTxRes) {
         this.logger.warn(
@@ -556,7 +530,6 @@ export class CopyTradeHelperV2 {
       this.logger.info(
         `[copyTradeHandleOnSellStrategyWithSol] Transaction sent: ${strategyName}`
       );
-      */
     }
   }
 

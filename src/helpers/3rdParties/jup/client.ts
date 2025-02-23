@@ -14,6 +14,9 @@ import {
   BuildSwapV1BodyDto,
   BuildSwapV1ResultDto,
   BuildSwapV1ResultDtoSchema,
+  BuildSwapWithIxsV1BodyDto,
+  BuildSwapWithIxsV1ResultDto,
+  BuildSwapWithIxsV1ResultDtoSchema,
 } from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,6 +27,7 @@ export class JupSwapClient {
 
   private readonly quoteV1Path = "/swap/v1/quote";
   private readonly buildSwapTxV1Path = "/swap/v1/swap";
+  private readonly buildSwapWithIxsPath = "/swap/v1/swap-instructions";
 
   // TODO: maybe use env variable while building this binary
   constructor(
@@ -97,6 +101,32 @@ export class JupSwapClient {
       );
       return null;
     }
+
+    return data;
+  }
+
+  async buildSwapWithIxs(
+    body: BuildSwapWithIxsV1BodyDto
+  ): Promise<BuildSwapWithIxsV1ResultDto | null> {
+    const resultRes = await safe(
+      this.baseClient.post(this.buildSwapWithIxsPath, body)
+    );
+    if (!resultRes.success) {
+      this.logger.error(
+        `[buildSwapWithIxs] Failed to get response: ${resultRes.error}`
+      );
+      return null;
+    }
+
+    const parseRes = BuildSwapWithIxsV1ResultDtoSchema.safeParse(resultRes.data);
+    if (!parseRes.success) {
+      this.logger.error(
+        `[buildSwapWithIxs] Failed to parse response: ${parseRes.error.toString()}`
+      );
+      return null;
+    }
+
+    const { data } = parseRes;
 
     return data;
   }

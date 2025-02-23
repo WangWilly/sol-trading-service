@@ -270,11 +270,6 @@ export class CopyTradeHelper {
       }
 
       // Arrange: replace fee/tip
-      // https://solana.com/docs/core/fees
-      // https://solana.com/developers/guides/advanced/how-to-use-priority-fees
-      // https://docs.helius.dev/solana-apis/priority-fee-api
-      // https://docs.jito.wtf/lowlatencytxnsend/#tip-amount
-      // https://www.reddit.com/r/solana/comments/1bjh2g5/understanding_the_transaction_fees_on_a_jupiter/
       const tx = VersionedTransaction.deserialize(
         Buffer.from(buildSwapRes.data.swapTransaction, "base64")
       );

@@ -1,4 +1,4 @@
-import { Connection, Keypair } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
 import { SolRpcWsHelper } from "./helpers/solRpcWsClient/client";
@@ -12,6 +12,7 @@ import { SolRpcWsSubscribeManager } from "./helpers/solRpcWsSubscribeManager";
 import { COIN_TYPE_WSOL_MINT } from "./helpers/solRpcWsClient/const";
 import { TsLogLogger } from "./utils/logging";
 import { CopyTradeHelperV2 } from "./helpers/copyTradeHelperV2";
+import { FeeHelper } from "./helpers/copyTradeHelperV2/feeHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,11 +39,17 @@ async function main(): Promise<void> {
     "",
     rootLogger.getSubLogger({ name: "JitoClient" })
   );
+  // FIXME:
+  const feeHelper = new FeeHelper(
+    1_000_000,
+    new PublicKey("HXcTToogMmLXUC7ArzTtjDS9HKZY33KdYhjRiRrcpump")
+  );
   const copyTradeHelper = new CopyTradeHelperV2(
     playerKeypair,
     solWeb3Conn,
     jupSwapClient,
     jitoClient,
+    feeHelper,
     rootLogger.getSubLogger({ name: "CopyTradeHelper" })
   );
   const solRpcWsHelper = new SolRpcWsHelper(
@@ -60,7 +67,7 @@ async function main(): Promise<void> {
   //////////////////////////////////////////////////////////////////////////////
 
   solRpcWsSubscribeManager.createCopyTradeRecordOnBuyStrategy(
-    "FH7zhuLGeQ5bNhMwwmYemDyW7mhyZyi885XghcDGpump",
+    "DXBYAw9aQheMdujaLZYnVSpKSK4n8jMS7HfLbiv5RWnS",
     "OnBuyTest",
     CopyTradeRecordOnBuyStrategySchema.parse({
       sellCoinType: COIN_TYPE_WSOL_MINT,
@@ -69,7 +76,7 @@ async function main(): Promise<void> {
     })
   );
   solRpcWsSubscribeManager.createCopyTradeRecordOnSellStrategy(
-    "FH7zhuLGeQ5bNhMwwmYemDyW7mhyZyi885XghcDGpump",
+    "DXBYAw9aQheMdujaLZYnVSpKSK4n8jMS7HfLbiv5RWnS",
     "OnSellTest",
     CopyTradeRecordOnSellStrategySchema.parse({
       fixedPercentage: null,

@@ -1,3 +1,4 @@
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {
   CONTENT_TYPE_KEY,
   CONTENT_TYPE_VAL_JSON,
@@ -8,6 +9,7 @@ import { HttpClient } from "../../../utils/httpClient";
 import { Logger, TsLogLogger } from "../../../utils/logging";
 
 import {
+  GetPercentileTip,
   GetTipInfoV1ResultDto,
   GetTipInfoV1ResultDtoSchema,
   SendTransactionV1ResultDto,
@@ -31,7 +33,7 @@ export class JitoClient {
     blockEngineBaseUrl: string = "https://mainnet.block-engine.jito.wtf",
     bundleBaseUrl: string = "https://bundles.jito.wtf",
     uuid: string = "",
-    private readonly logger: Logger = new TsLogLogger({name: "JitoClient"})
+    private readonly logger: Logger = new TsLogLogger({ name: "JitoClient" })
   ) {
     this.blockEngineBaseClient = new HttpClient(
       {
@@ -115,5 +117,31 @@ export class JitoClient {
     }
 
     return parseRes.data;
+  }
+
+  async getLatestXpercentileTipInLamportsV1(
+    jitoTipPercentile: string
+  ): Promise<number | null> {
+    const tipInfo = await this.getTipInfoV1();
+    if (!tipInfo) {
+      this.logger.error(
+        `[getLatestXpercentileTipInfoV1] Failed to get tip info`
+      );
+      return null;
+    }
+
+    if (
+      !tipInfo ||
+      tipInfo.length === 0 ||
+      !GetPercentileTip(tipInfo, jitoTipPercentile)
+    ) {
+      this.logger.error(
+        `[getLatestXpercentileTipInfoV1] Failed to get tip info for percentile: ${jitoTipPercentile}`
+      );
+      return null;
+    }
+    const tipInSol = GetPercentileTip(tipInfo, jitoTipPercentile);
+    // https://docs.jito.wtf/lowlatencytxnsend/#sendtransaction
+    return Math.ceil(tipInSol * LAMPORTS_PER_SOL);
   }
 }

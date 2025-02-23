@@ -8,7 +8,9 @@ import {
   AddressLookupTableAccount,
   Connection,
   BlockhashWithExpiryBlockHeight,
+  ComputeBudgetInstruction,
 } from "@solana/web3.js";
+import { COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX, COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX } from "../../utils/constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,10 +135,23 @@ export class TransactionBuilder {
     return this;
   }
 
+  getCurrentComputeUnitPrice(): number | bigint | null {
+    const ix = this.ixs.find(
+      (ix) =>
+        ix.programId.equals(ComputeBudgetProgram.programId) &&
+        ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX
+    );
+    if (!ix) {
+      return null;
+    }
+    const parsedIx = ComputeBudgetInstruction.decodeSetComputeUnitPrice(ix);
+    return parsedIx.microLamports;
+  }
+
   /**
    * 設定 Compute Unit 價格 (避免重複插入)
    */
-  setComputeUnitPrice(microLamportsPerUnit: number): this {
+  setComputeUnitPrice(microLamportsPerUnit: number | bigint): this {
     // TODO:
     this.removeExistingComputeBudgetInstruction("ComputeUnitPrice");
 
@@ -145,6 +160,21 @@ export class TransactionBuilder {
     );
 
     return this;
+  }
+
+  getCurrentComputeUnitLimit(): number | null {
+    const ix = this.ixs.find(
+      (ix) =>
+        ix.programId.equals(ComputeBudgetProgram.programId) &&
+        ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX
+    );
+
+    if (!ix) {
+      return null;
+    }
+
+    const parsedIx = ComputeBudgetInstruction.decodeSetComputeUnitLimit(ix);
+    return parsedIx.units;
   }
 
   /**
@@ -159,8 +189,8 @@ export class TransactionBuilder {
       (ix) =>
         !(
           ix.programId.equals(ComputeBudgetProgram.programId) &&
-          ((type === "ComputeUnitLimit" && ix.data[0] === 0x02) ||
-            (type === "ComputeUnitPrice" && ix.data[0] === 0x03))
+          ((type === "ComputeUnitLimit" && ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX) ||
+            (type === "ComputeUnitPrice" && ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX))
         )
     );
   }
