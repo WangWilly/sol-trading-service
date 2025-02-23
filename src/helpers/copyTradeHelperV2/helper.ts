@@ -403,7 +403,9 @@ export class CopyTradeHelperV2 {
       }
       const sellPercent = new BN(
         strategy.fixedPercentage ||
-          swapInfo.fromCoinAmount.div(swapInfo.fromCoinPreBalance)
+          (swapInfo.fromCoinPreBalance.isZero()
+            ? 1
+            : swapInfo.fromCoinAmount.div(swapInfo.fromCoinPreBalance))
       );
       const sellAmount = amount.mul(sellPercent);
       if (sellAmount.lte(new BN(0))) {
