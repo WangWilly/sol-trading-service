@@ -154,9 +154,11 @@ export class SolRpcWsHelper {
       if (this.ws.readyState === WebSocket.OPEN) {
         this.ws.ping();
       } else {
-        // TODO: Reconnect and refresh subscriptions in tradeHelper
         this.logger.warn("Heartbeat: lost connection, reconnecting...");
         this.connect();
+        // Reconnect and refresh subscriptions in tradeHelper
+        this.publicKeySubIdMap.clear();
+        this.updateLogsSubscription();
       }
     }, 30_000);
   }

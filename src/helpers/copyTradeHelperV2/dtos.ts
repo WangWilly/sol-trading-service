@@ -40,3 +40,8 @@ export interface CopyTradeRecord {
   onBuyStrategiesMap: Map<string, CopyTradeRecordOnBuyStrategy>; // strategyName -> CopyTradeRecordOnBuyStrategy
   onSellStrategiesMap: Map<string, CopyTradeRecordOnSellStrategy>; // strategyName -> CopyTradeRecordOnSellStrategy
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type SubIdTarPubkeyMap = Map<number, string>;
+export type RecordMap = Map<string, CopyTradeRecord>;

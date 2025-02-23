@@ -1,7 +1,8 @@
 import {
-  CopyTradeRecord,
   CopyTradeRecordOnBuyStrategy,
   CopyTradeRecordOnSellStrategy,
+  RecordMap,
+  SubIdTarPubkeyMap,
 } from "./dtos";
 import { COMMON_DEX_REGEX } from "./const";
 
@@ -24,12 +25,13 @@ import { COIN_TYPE_WSOL_MINT } from "../solRpcWsClient/const";
 
 import { FeeHelper } from "./feeHelper/helper";
 import { versionedTxToSerializedBase64 } from "../../utils/transaction";
+import { SubHelper } from "./subHelper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class CopyTradeHelperV2 {
-  private copyTradeSubIdTarPubkeyMap: Map<number, string> = new Map(); // subId -> targetPublicKey
-  private copyTradeRecordMap: Map<string, CopyTradeRecord> = new Map(); // targetPublicKey -> CopyTradeRecord
+  private copyTradeSubIdTarPubkeyMap: SubIdTarPubkeyMap = new Map(); // subId -> targetPublicKey
+  private copyTradeRecordMap: RecordMap = new Map(); // targetPublicKey -> CopyTradeRecord
 
   public constructor(
     private readonly playerKeypair: Keypair,
@@ -202,17 +204,14 @@ export class CopyTradeHelperV2 {
       // );
       return;
     }
-    const targetPublicKey = this.copyTradeSubIdTarPubkeyMap.get(swapInfo.subId);
-    if (!targetPublicKey) {
-      this.logger.error(
-        `[copyTradeHandleOnBuyStrategyWithSol] No target found in [Tx]${swapInfo.txSignature}`
-      );
-      return;
-    }
-    const copyTradeRecord = this.copyTradeRecordMap.get(targetPublicKey);
+    const copyTradeRecord = SubHelper.getCopyTradeRecord(
+      swapInfo.subId,
+      this.copyTradeSubIdTarPubkeyMap,
+      this.copyTradeRecordMap
+    );
     if (!copyTradeRecord) {
       this.logger.error(
-        `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the target PK on [Tx]${swapInfo.txSignature}`
+        `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`
       );
       return;
     }
@@ -361,17 +360,14 @@ export class CopyTradeHelperV2 {
       // );
       return;
     }
-    const targetPublicKey = this.copyTradeSubIdTarPubkeyMap.get(swapInfo.subId);
-    if (!targetPublicKey) {
-      this.logger.error(
-        `[copyTradeHandleOnSellStrategyWithSol] No target found in [Tx]${swapInfo.txSignature}`
-      );
-      return;
-    }
-    const copyTradeRecord = this.copyTradeRecordMap.get(targetPublicKey);
+    const copyTradeRecord = SubHelper.getCopyTradeRecord(
+      swapInfo.subId,
+      this.copyTradeSubIdTarPubkeyMap,
+      this.copyTradeRecordMap
+    );
     if (!copyTradeRecord) {
       this.logger.error(
-        `[copyTradeHandleOnSellStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`
+        `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`
       );
       return;
     }
