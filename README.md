@@ -8,9 +8,18 @@ This module will be frequently updated. Serve as listener for the target account
 
 ```bash
 ./scripts/test-jup-client.sh
+./scripts/test-parse-swap-transaction.sh
 ```
 
 ### Running
+
+Create `.env` file with the following content:
+
+```env
+PRIVATE_KEY_BASE58=<private_key_base58>
+```
+
+Use the `solRpcWsSubscribeManager` in the main function to subscribe to the target account.
 
 ```bash
 ./scripts/trade-serve.sh
