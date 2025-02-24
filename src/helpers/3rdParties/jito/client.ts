@@ -70,17 +70,22 @@ export class JitoClient {
     serializedTxBase64: string
   ): Promise<SendTransactionV1ResultDto | null> {
     const resultRes = await safe(
-      this.blockEngineBaseClient.post(this.blockEngineSendTxV1Path, {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "sendTransaction",
-        params: [
-          serializedTxBase64,
-          {
-            encoding: "base64",
-          },
-        ],
-      })
+      this.blockEngineBaseClient.post(
+        this.blockEngineSendTxV1Path,
+        {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "sendTransaction",
+          params: [
+            serializedTxBase64,
+            {
+              encoding: "base64",
+            },
+          ],
+        },
+        undefined,
+        true
+      )
     );
     if (!resultRes.success) {
       this.logger.error(
@@ -106,7 +111,7 @@ export class JitoClient {
    */
   async getTipInfoV1(): Promise<GetTipInfoV1ResultDto | null> {
     const resultRes = await safe(
-      this.bundleBaseClient.get(this.bundleGetTipInfoV1Path)
+      this.bundleBaseClient.get(this.bundleGetTipInfoV1Path, undefined, true)
     );
     if (!resultRes.success) {
       this.logger.error(

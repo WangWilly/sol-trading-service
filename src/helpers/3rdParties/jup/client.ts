@@ -52,7 +52,9 @@ export class JupSwapClient {
   async getQuote(
     params: GetQuoteV1ParamDto
   ): Promise<GetQuoteV1ResultDto | null> {
-    const resultRes = await safe(this.baseClient.get(this.quoteV1Path, params));
+    const resultRes = await safe(
+      this.baseClient.get(this.quoteV1Path, params, true)
+    );
     if (!resultRes.success) {
       this.logger.error(
         `[getQuote] Failed to get response: ${resultRes.error}`
@@ -77,7 +79,7 @@ export class JupSwapClient {
     body: BuildSwapV1BodyDto
   ): Promise<BuildSwapV1ResultDto | null> {
     const resultRes = await safe(
-      this.baseClient.post(this.buildSwapTxV1Path, body)
+      this.baseClient.post(this.buildSwapTxV1Path, body, undefined, true)
     );
     if (!resultRes.success) {
       this.logger.error(
@@ -109,7 +111,7 @@ export class JupSwapClient {
     body: BuildSwapWithIxsV1BodyDto
   ): Promise<BuildSwapWithIxsV1ResultDto | null> {
     const resultRes = await safe(
-      this.baseClient.post(this.buildSwapWithIxsPath, body)
+      this.baseClient.post(this.buildSwapWithIxsPath, body, undefined, true)
     );
     if (!resultRes.success) {
       this.logger.error(
@@ -118,7 +120,9 @@ export class JupSwapClient {
       return null;
     }
 
-    const parseRes = BuildSwapWithIxsV1ResultDtoSchema.safeParse(resultRes.data);
+    const parseRes = BuildSwapWithIxsV1ResultDtoSchema.safeParse(
+      resultRes.data
+    );
     if (!parseRes.success) {
       this.logger.error(
         `[buildSwapWithIxs] Failed to parse response: ${parseRes.error.toString()}`
