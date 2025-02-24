@@ -3,8 +3,8 @@ import { Logger, TsLogLogger } from "../utils/logging";
 import {
   CopyTradeRecordOnBuyStrategy,
   CopyTradeRecordOnSellStrategy,
-} from "./copyTradeHelperV2/dtos";
-import { CopyTradeHelperV2 } from "./copyTradeHelperV2";
+} from "./copyTradeHelper/dtos";
+import { CopyTradeHelper } from "./copyTradeHelper";
 import { SolRpcWsHelper } from "./solRpcWsClient/client";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -12,7 +12,7 @@ import { SolRpcWsHelper } from "./solRpcWsClient/client";
 export class SolRpcWsSubscribeManager {
   constructor(
     private readonly solRpcWsHelper: SolRpcWsHelper,
-    private readonly copyTradeHelper: CopyTradeHelperV2,
+    private readonly copyTradeHelper: CopyTradeHelper,
     private readonly logger: Logger = new TsLogLogger({
       name: "SolRpcWsSubscribe",
     })

@@ -15,7 +15,7 @@ import {
 
 import { TsLogLogger } from "../../utils/logging";
 import type { Logger } from "../../utils/logging";
-import { CopyTradeHelperV2 } from "../copyTradeHelperV2";
+import { CopyTradeHelper } from "../copyTradeHelper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,7 @@ export class SolRpcWsHelper {
 
   constructor(
     private readonly wsRpcUrl: string,
-    private readonly copyTradeHelper: CopyTradeHelperV2,
+    private readonly copyTradeHelper: CopyTradeHelper,
     private readonly logger: Logger = new TsLogLogger({
       name: "SolRpcWsHelper",
     })

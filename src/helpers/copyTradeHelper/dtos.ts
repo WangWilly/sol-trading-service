@@ -1,10 +1,12 @@
 import zod from "zod";
+
 import BN from "bn.js";
+import { PublicKey } from "@solana/web3.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const CopyTradeRecordOnBuyStrategySchema = zod.object({
-  sellCoinType: zod.string(),
+  sellCoinType: zod.instanceof(PublicKey),
   sellCoinAmount: zod.instanceof(BN),
   slippageBps: zod.number(),
 
@@ -19,7 +21,7 @@ export type CopyTradeRecordOnBuyStrategy = zod.infer<
 >;
 
 export const CopyTradeRecordOnSellStrategySchema = zod.object({
-  fixedPercentage: zod.number().nullable(),
+  fixedSellingBps: zod.number().nullable(), // 1 - 10000
   slippageBps: zod.number(),
 
   //////////////////////////////////////////////////////////////////////////////
@@ -38,3 +40,8 @@ export interface CopyTradeRecord {
   onBuyStrategiesMap: Map<string, CopyTradeRecordOnBuyStrategy>; // strategyName -> CopyTradeRecordOnBuyStrategy
   onSellStrategiesMap: Map<string, CopyTradeRecordOnSellStrategy>; // strategyName -> CopyTradeRecordOnSellStrategy
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type SubIdTarPubkeyMap = Map<number, string>;
+export type RecordMap = Map<string, CopyTradeRecord>;

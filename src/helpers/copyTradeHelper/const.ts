@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
-export const COMMON_DEX_POOLS = new Set([
+const COMMON_DEX_BASE = [
   'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C', // RAYDIUM_STANDARD_AMM
   '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8', // RAYDIUM_LEGACY_AMM_V4
   '5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h', // RAYDIUM_STABLE_AMM
@@ -11,4 +11,8 @@ export const COMMON_DEX_POOLS = new Set([
   'LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo',  // METEORA_DLMM
   'Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB', // METEORA
   '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P',  // PUMP_FUN
-]);
+];
+
+// RegExp for a string contains any of the COMMON_DEX_BASE
+const base58Pattern = COMMON_DEX_BASE.map(base58 => base58.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+export const COMMON_DEX_REGEX = new RegExp(`(${base58Pattern})`);

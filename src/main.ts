@@ -7,12 +7,12 @@ import { JitoClient } from "./helpers/3rdParties/jito";
 import {
   CopyTradeRecordOnBuyStrategySchema,
   CopyTradeRecordOnSellStrategySchema,
-} from "./helpers/copyTradeHelperV2/dtos";
+} from "./helpers/copyTradeHelper/dtos";
 import { SolRpcWsSubscribeManager } from "./helpers/solRpcWsSubscribeManager";
 import { COIN_TYPE_WSOL_MINT } from "./helpers/solRpcWsClient/const";
 import { TsLogLogger } from "./utils/logging";
-import { CopyTradeHelperV2 } from "./helpers/copyTradeHelperV2";
-import { FeeHelper } from "./helpers/copyTradeHelperV2/feeHelper/helper";
+import { CopyTradeHelper } from "./helpers/copyTradeHelper";
+import { FeeHelper } from "./helpers/copyTradeHelper/feeHelper/helper";
 import { loadPrivateKeyBase58 } from "./utils/privateKey";
 import { PRIVATE_KEY_BASE58 } from "./config";
 
@@ -46,7 +46,7 @@ async function main(): Promise<void> {
     100_000,
     new PublicKey("81v6neWF9XPArSSeHoUqc49Zb6npuK4cWsErQ8TiA5Rh")
   );
-  const copyTradeHelper = new CopyTradeHelperV2(
+  const copyTradeHelper = new CopyTradeHelper(
     playerKeypair,
     solWeb3Conn,
     jupSwapClient,
