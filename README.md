@@ -46,3 +46,11 @@ This module will be frequently updated. Serve as listener for the target account
 - Reading list
     - [ ] https://documentation.axenai.com/axen-sniper-bot/settings-command
     - [ ] https://solana.stackexchange.com/questions/13356/how-to-add-my-own-fee-to-jupiter-swap
+    - [ ] https://www.quicknode.com/guides/solana-development/3rd-party-integrations/jupiter-api-trading-bot
+    - [ ] https://www.reddit.com/r/solana/comments/1ghytve/safetrustworthy_sol_trading_bots/
+    - [ ] https://www.reddit.com/r/solana/comments/1ikbulw/automated_memecoin_trading_bot/
+    - [ ] https://www.reddit.com/r/solana/comments/1idniwf/anyone_here_using_trading_bots/
+    - [ ] https://www.solulab.com/how-to-build-solana-trading-bots/
+    - [ ] 📌 https://github.com/ARBProtocol/solana-jupiter-bot
+    - [ ] 📌 https://www.quicknode.com/guides/solana-development/defi/pump-fun-copy-trade
+    - [ ] 📌 [Phantom Wallet: Failed swap but still had to pay SOL?](https://www.reddit.com/r/solana/comments/1i5czkh/phantom_wallet_failed_swap_but_still_had_to_pay/)

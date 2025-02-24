@@ -6,7 +6,7 @@ import {
 } from "./dtos";
 import { COMMON_DEX_REGEX } from "./const";
 
-import { Connection, Keypair, Logs, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, Logs } from "@solana/web3.js";
 import BN from "bn.js";
 
 import { safe } from "../../utils/exceptions";
@@ -26,6 +26,7 @@ import { COIN_TYPE_WSOL_MINT } from "../solRpcWsClient/const";
 import { FeeHelper } from "./feeHelper/helper";
 import { versionedTxToSerializedBase64 } from "../../utils/transaction";
 import { SubHelper } from "./subHelper";
+import { FULL_SELLING_BPS } from "../../utils/constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -198,7 +199,7 @@ export class CopyTradeHelperV2 {
     swapInfo: txHelper.SwapInfoDto
   ): Promise<void> {
     // Validate
-    if (!swapInfo.toCoinType) {
+    if (!swapInfo.toCoinType || swapInfo.toSol) {
       // this.logger.debug(
       //   `[copyTradeHandleOnBuyStrategyWithSol] No toCoinType found in swapInfo, tx: ${swapInfo.txSignature}`
       // );
@@ -234,12 +235,12 @@ export class CopyTradeHelperV2 {
       const getQuoteV1Res = GetQuoteV1ParamDtoSchema.safeParse({
         inputMint: strategy.sellCoinType,
         outputMint: swapInfo.toCoinType,
-        amount: swapInfo.fromCoinAmount,
+        amount: strategy.sellCoinAmount,
         slippageBps: strategy.slippageBps,
       });
       if (!getQuoteV1Res.success) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot parse strategy: ${strategyName}. Error: ${getQuoteV1Res.error}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse strategy. Error: ${getQuoteV1Res.error}`
         );
         continue;
       }
@@ -247,14 +248,14 @@ export class CopyTradeHelperV2 {
         this.jupSwapClient.getQuote(getQuoteV1Res.data)
       );
       if (!quoteRes.success) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get quote: ${strategyName} for [Tx]${swapInfo.txSignature}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get quote.`
         );
         continue;
       }
       if (!quoteRes.data) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Quote data not found: ${strategyName} for [Tx]${swapInfo.txSignature}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Quote data not found.`
         );
         continue;
       }
@@ -265,18 +266,14 @@ export class CopyTradeHelperV2 {
           strategy.jitoTipPercentile
         );
       if (!jitoTipLamports) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get tips: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get tips.`
         );
         continue;
       }
       const buildSwapWithIxsV1BodyDtoRes =
         BuildSwapWithIxsV1BodyDtoSchema.safeParse({
-          // FIXME:
-          // userPublicKey: this.playerKeypair.publicKey,
-          userPublicKey: new PublicKey(
-            "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"
-          ),
+          userPublicKey: this.playerKeypair.publicKey,
           wrapAndUnwrapSol: true,
           prioritizationFeeLamports: {
             jitoTipLamports,
@@ -284,8 +281,8 @@ export class CopyTradeHelperV2 {
           quoteResponse: quoteRes.data,
         });
       if (!buildSwapWithIxsV1BodyDtoRes.success) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot parse quote: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse quote.`
         );
         continue;
       }
@@ -293,14 +290,14 @@ export class CopyTradeHelperV2 {
         this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data)
       );
       if (!buildSwapWithIxsRes.success) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot build Swap: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot build Swap.`
         );
         continue;
       }
       if (!buildSwapWithIxsRes.data) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Swap data not found: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Swap data not found.`
         );
         continue;
       }
@@ -312,15 +309,11 @@ export class CopyTradeHelperV2 {
       const { transferFeeIx, newComputeBudget } =
         this.feeHelper.transferFeeIxProc(
           computeBudget,
-          // FIXME:
-          // userPublicKey: this.playerKeypair.publicKey,
-          new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv")
+          this.playerKeypair.publicKey
         );
       const builtTx = await getTxFromBuildSwapWithIxsV1Result(
         this.solWeb3Conn,
-        // FIXME:
-        // this.playerKeypair.publicKey,
-        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
+        this.playerKeypair.publicKey,
         buildSwapWithIxsRes.data,
         newComputeBudget,
         [transferFeeIx]
@@ -337,13 +330,13 @@ export class CopyTradeHelperV2 {
         versionedTxToSerializedBase64(builtTx)
       );
       if (!sendTxRes) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot send transaction: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot send transaction.`
         );
         continue;
       }
       this.logger.info(
-        `[copyTradeHandleOnBuyStrategyWithSol] Transaction sent: ${strategyName}. Followed tx sign: ${swapInfo.txSignature}. Issued tx sign: ${sendTxRes.result}.`
+        `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} CopyTradeTransaction sent: ${sendTxRes.result}`
       );
     }
   }
@@ -354,7 +347,7 @@ export class CopyTradeHelperV2 {
     swapInfo: txHelper.SwapInfoDto
   ): Promise<void> {
     // Validate
-    if (!swapInfo.fromCoinType) {
+    if (!swapInfo.fromCoinType || swapInfo.fromSol) {
       // this.logger.debug(
       //   `[copyTradeHandleOnSellStrategyWithSol] No fromCoinType found in swapInfo, tx: ${swapInfo.txSignature}`
       // );
@@ -366,7 +359,7 @@ export class CopyTradeHelperV2 {
       this.copyTradeRecordMap
     );
     if (!copyTradeRecord) {
-      this.logger.error(
+      this.logger.debug(
         `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`
       );
       return;
@@ -389,28 +382,36 @@ export class CopyTradeHelperV2 {
       // Resolve: use swapInfo to get quote
       const amount = await TokenHelper.getPlayerTokenBalanceForSell(
         this.solWeb3Conn,
-        // FIXME:
-        // this.playerKeypair.publicKey,
-        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
+        this.playerKeypair.publicKey,
         swapInfo.fromCoinType,
         swapInfo.fromCoinOwnerProgramId
       );
       if (!amount || amount.lte(new BN(0))) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}] Cannot get sell amount from ${swapInfo.fromCoinType.toBase58()}`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${
+            swapInfo.txSignature
+          } Cannot get enough amount for sell from [Mint]${swapInfo.fromCoinType.toBase58()}`
         );
         continue;
       }
-      const sellPercent = new BN(
-        strategy.fixedPercentage ||
-          (swapInfo.fromCoinPreBalance.isZero()
-            ? 1
-            : swapInfo.fromCoinAmount.div(swapInfo.fromCoinPreBalance))
-      );
-      const sellAmount = amount.mul(sellPercent);
+      if (swapInfo.fromCoinPreBalance.isZero()) {
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Nonsence fromCoinPreBalance`
+        );
+      }
+      let sellAmount = new BN(0);
+      if (strategy.fixedSellingBps) {
+        sellAmount = amount
+          .muln(strategy.fixedSellingBps)
+          .divn(FULL_SELLING_BPS);
+      } else {
+        sellAmount = amount
+          .mul(swapInfo.fromCoinAmount)
+          .div(swapInfo.fromCoinPreBalance);
+      }
       if (sellAmount.lte(new BN(0))) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Sell amount is zero: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Sell amount is zero.`
         );
         continue;
       }
@@ -421,8 +422,8 @@ export class CopyTradeHelperV2 {
         slippageBps: strategy.slippageBps,
       });
       if (!getQuoteV1Res.success) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Cannot parse strategy: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse strategy.`
         );
         continue;
       }
@@ -430,14 +431,14 @@ export class CopyTradeHelperV2 {
         this.jupSwapClient.getQuote(getQuoteV1Res.data)
       );
       if (!quoteRes.success) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Cannot get quote: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get quote.`
         );
         continue;
       }
       if (!quoteRes.data) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Quote data not found: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Quote data not found.`
         );
         continue;
       }
@@ -448,18 +449,14 @@ export class CopyTradeHelperV2 {
           strategy.jitoTipPercentile
         );
       if (!jitoTipLamports) {
-        this.logger.warn(
-          `[copyTradeHandleOnBuyStrategyWithSol] Cannot get tips: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get tips.`
         );
         continue;
       }
       const buildSwapWithIxsV1BodyDtoRes =
         BuildSwapWithIxsV1BodyDtoSchema.safeParse({
-          // FIXME:
-          // userPublicKey: this.playerKeypair.publicKey,
-          userPublicKey: new PublicKey(
-            "ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"
-          ),
+          userPublicKey: this.playerKeypair.publicKey,
           wrapAndUnwrapSol: true,
           prioritizationFeeLamports: {
             jitoTipLamports,
@@ -467,8 +464,8 @@ export class CopyTradeHelperV2 {
           quoteResponse: quoteRes.data,
         });
       if (!buildSwapWithIxsV1BodyDtoRes.success) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Cannot parse quote: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse quote.`
         );
         continue;
       }
@@ -476,14 +473,14 @@ export class CopyTradeHelperV2 {
         this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data)
       );
       if (!buildSwapWithIxsRes.success) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Cannot build Swap: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot build Swap.`
         );
         continue;
       }
       if (!buildSwapWithIxsRes.data) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Swap data not found: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Swap data not found.`
         );
         continue;
       }
@@ -495,15 +492,11 @@ export class CopyTradeHelperV2 {
       const { transferFeeIx, newComputeBudget } =
         this.feeHelper.transferFeeIxProc(
           computeBudget,
-          // FIXME:
-          // userPublicKey: this.playerKeypair.publicKey,
-          new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv")
+          this.playerKeypair.publicKey
         );
       const builtTx = await getTxFromBuildSwapWithIxsV1Result(
         this.solWeb3Conn,
-        // FIXME:
-        // this.playerKeypair.publicKey,
-        new PublicKey("ERCjfWc8ZYH2eCSzuhTn8CbSHorueEJ5XLpBvTe7ovVv"),
+        this.playerKeypair.publicKey,
         buildSwapWithIxsRes.data,
         newComputeBudget,
         [transferFeeIx]
@@ -520,13 +513,13 @@ export class CopyTradeHelperV2 {
         versionedTxToSerializedBase64(builtTx)
       );
       if (!sendTxRes) {
-        this.logger.warn(
-          `[copyTradeHandleOnSellStrategyWithSol] Cannot send transaction: ${strategyName}`
+        this.logger.error(
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot send transaction.`
         );
         continue;
       }
       this.logger.info(
-        `[copyTradeHandleOnSellStrategyWithSol] Transaction sent: ${strategyName}`
+        `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} CopyTradeTransaction sent: ${sendTxRes.result}`
       );
     }
   }

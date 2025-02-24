@@ -35,24 +35,30 @@ export class JitoClient {
     uuid: string = "",
     private readonly logger: Logger = new TsLogLogger({ name: "JitoClient" })
   ) {
+    const blockEngineHeaders: Record<string, string> = {
+      [CONTENT_TYPE_KEY]: CONTENT_TYPE_VAL_JSON,
+    };
+    if (uuid) {
+      blockEngineHeaders[JITO_TOKEN_KEY] = uuid;
+    }
     this.blockEngineBaseClient = new HttpClient(
       {
         baseURL: blockEngineBaseUrl,
-        headers: {
-          [CONTENT_TYPE_KEY]: CONTENT_TYPE_VAL_JSON,
-          [JITO_TOKEN_KEY]: uuid,
-        },
+        headers: blockEngineHeaders,
       },
       logger
     );
 
+    const bundleHeaders: Record<string, string> = {
+      [CONTENT_TYPE_KEY]: CONTENT_TYPE_VAL_JSON,
+    };
+    if (uuid) {
+      bundleHeaders[JITO_TOKEN_KEY] = uuid;
+    }
     this.bundleBaseClient = new HttpClient(
       {
         baseURL: bundleBaseUrl,
-        headers: {
-          [CONTENT_TYPE_KEY]: CONTENT_TYPE_VAL_JSON,
-          [JITO_TOKEN_KEY]: uuid,
-        },
+        headers: bundleHeaders,
       },
       logger
     );

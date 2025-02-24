@@ -21,7 +21,7 @@ export type CopyTradeRecordOnBuyStrategy = zod.infer<
 >;
 
 export const CopyTradeRecordOnSellStrategySchema = zod.object({
-  fixedPercentage: zod.number().nullable(),
+  fixedSellingBps: zod.number().nullable(), // 1 - 10000
   slippageBps: zod.number(),
 
   //////////////////////////////////////////////////////////////////////////////

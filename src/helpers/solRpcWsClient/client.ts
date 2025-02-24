@@ -107,15 +107,6 @@ export class SolRpcWsHelper {
     }
   }
 
-  /**
-  public async getSubId(pubkey: string): Promise<number> {
-    while (!this.publicKeySubIdMap.has(pubkey)) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-    return this.publicKeySubIdMap.get(pubkey)!;
-  }
-  */
-
   async stop(): Promise<void> {
     if (!this.ws) {
       return;
@@ -133,7 +124,9 @@ export class SolRpcWsHelper {
 
   private connect(): void {
     if (this.ws) {
-      this.logger.info("Closing existing WebSocket connection and reconnecting...");
+      this.logger.info(
+        "Closing existing WebSocket connection and reconnecting..."
+      );
       this.ws.close();
     }
 
@@ -223,7 +216,9 @@ export class SolRpcWsHelper {
           message.params.subscription
         )
       ) {
-        this.logger.warn(`Unknown subscriptionId ${message.params.subscription}`);
+        this.logger.warn(
+          `Unknown subscriptionId ${message.params.subscription}`
+        );
         logsUnsubscribe(
           this.ws!,
           this.rpcIdGen4Unsub,
@@ -231,7 +226,10 @@ export class SolRpcWsHelper {
         );
         return;
       }
-      this.onLogs(message.params.subscription, message.params.result.value as Logs);
+      this.onLogs(
+        message.params.subscription,
+        message.params.result.value as Logs
+      );
       return;
     }
   }

@@ -97,7 +97,7 @@ async function fromSol2TknTx(
   }
   const tokenMintOwnerProgramId = mintAccInfo.owner;
 
-  const isBuy = signerTokenBalanceChange.post.lt(signerTokenBalanceChange.pre);
+  const isBuy = signerSolBalanceChange.post.lt(signerSolBalanceChange.pre);
   if (isBuy) {
     return {
       subId,
@@ -146,13 +146,19 @@ async function fromTkn2TknTx(
   subId: number,
   txSignature: string,
   txRes: ParsedTransactionWithMeta,
-  signerTokenBalanceChange1: TokenBalanceChange,
-  signerTokenBalanceChange2: TokenBalanceChange
+  signerTokenBalanceChange1AsFrom: TokenBalanceChange,
+  signerTokenBalanceChange2AsTo: TokenBalanceChange
 ): Promise<SwapInfoDto> {
-  if (signerTokenBalanceChange1.post.lt(signerTokenBalanceChange1.pre)) {
-    if (signerTokenBalanceChange2.post.lt(signerTokenBalanceChange2.pre)) {
+  if (
+    signerTokenBalanceChange2AsTo.post.lt(signerTokenBalanceChange2AsTo.pre)
+  ) {
+    if (
+      signerTokenBalanceChange1AsFrom.post.lt(
+        signerTokenBalanceChange1AsFrom.pre
+      )
+    ) {
       throw new Error(
-        `Invalid token balance changes mint1: {${signerTokenBalanceChange1.mint}, ${signerTokenBalanceChange1.pre}, ${signerTokenBalanceChange1.post}}, mint2: {${signerTokenBalanceChange2.mint}, ${signerTokenBalanceChange2.pre}, ${signerTokenBalanceChange2.post}}`
+        `Invalid token balance changes mint1: {${signerTokenBalanceChange1AsFrom.mint}, ${signerTokenBalanceChange1AsFrom.pre}, ${signerTokenBalanceChange1AsFrom.post}}, mint2: {${signerTokenBalanceChange2AsTo.mint}, ${signerTokenBalanceChange2AsTo.pre}, ${signerTokenBalanceChange2AsTo.post}}`
       );
     }
     return fromTkn2TknTx(
@@ -160,8 +166,8 @@ async function fromTkn2TknTx(
       subId,
       txSignature,
       txRes,
-      signerTokenBalanceChange2,
-      signerTokenBalanceChange1
+      signerTokenBalanceChange2AsTo,
+      signerTokenBalanceChange1AsFrom
     );
   }
 
@@ -171,7 +177,7 @@ async function fromTkn2TknTx(
   }
 
   const mint1AccInfo = await conn.getAccountInfo(
-    new PublicKey(signerTokenBalanceChange1.mint)
+    new PublicKey(signerTokenBalanceChange1AsFrom.mint)
   );
   if (!mint1AccInfo) {
     throw new Error("Mint1 account info not found");
@@ -179,7 +185,7 @@ async function fromTkn2TknTx(
   const mint1OwnerProgramId = mint1AccInfo.owner;
 
   const mint2AccInfo = await conn.getAccountInfo(
-    new PublicKey(signerTokenBalanceChange2.mint)
+    new PublicKey(signerTokenBalanceChange2AsTo.mint)
   );
   if (!mint2AccInfo) {
     throw new Error("Mint2 account info not found");
@@ -194,18 +200,18 @@ async function fromTkn2TknTx(
     status: "success",
     block: txRes.slot, // ✅
     signer: signer.toBase58(),
-    fromSol: signerTokenBalanceChange1.mint.equals(COIN_TYPE_WSOL_MINT),
-    fromCoinType: signerTokenBalanceChange1.mint,
-    fromCoinAmount: signerTokenBalanceChange1.post
-      .sub(signerTokenBalanceChange1.pre)
+    fromSol: signerTokenBalanceChange1AsFrom.mint.equals(COIN_TYPE_WSOL_MINT),
+    fromCoinType: signerTokenBalanceChange1AsFrom.mint,
+    fromCoinAmount: signerTokenBalanceChange1AsFrom.post
+      .sub(signerTokenBalanceChange1AsFrom.pre)
       .abs(),
-    fromCoinPreBalance: signerTokenBalanceChange1.pre,
-    fromCoinPostBalance: signerTokenBalanceChange1.post,
+    fromCoinPreBalance: signerTokenBalanceChange1AsFrom.pre,
+    fromCoinPostBalance: signerTokenBalanceChange1AsFrom.post,
     fromCoinOwnerProgramId: mint1OwnerProgramId,
-    toSol: signerTokenBalanceChange2.mint.equals(COIN_TYPE_WSOL_MINT),
-    toCoinType: signerTokenBalanceChange2.mint,
-    toCoinAmount: signerTokenBalanceChange2.post
-      .sub(signerTokenBalanceChange2.pre)
+    toSol: signerTokenBalanceChange2AsTo.mint.equals(COIN_TYPE_WSOL_MINT),
+    toCoinType: signerTokenBalanceChange2AsTo.mint,
+    toCoinAmount: signerTokenBalanceChange2AsTo.post
+      .sub(signerTokenBalanceChange2AsTo.pre)
       .abs(),
     toCoinOwnerProgramId: mint2OwnerProgramId,
   };

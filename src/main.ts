@@ -1,4 +1,4 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
 import { SolRpcWsHelper } from "./helpers/solRpcWsClient/client";
@@ -13,11 +13,13 @@ import { COIN_TYPE_WSOL_MINT } from "./helpers/solRpcWsClient/const";
 import { TsLogLogger } from "./utils/logging";
 import { CopyTradeHelperV2 } from "./helpers/copyTradeHelperV2";
 import { FeeHelper } from "./helpers/copyTradeHelperV2/feeHelper/helper";
+import { loadPrivateKeyBase58 } from "./utils/privateKey";
+import { PRIVATE_KEY_BASE58 } from "./config";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 async function main(): Promise<void> {
-  const playerKeypair = Keypair.generate();
+  const playerKeypair = loadPrivateKeyBase58(PRIVATE_KEY_BASE58);
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -41,8 +43,8 @@ async function main(): Promise<void> {
   );
   // FIXME:
   const feeHelper = new FeeHelper(
-    1_000_000,
-    new PublicKey("HXcTToogMmLXUC7ArzTtjDS9HKZY33KdYhjRiRrcpump")
+    100_000,
+    new PublicKey("81v6neWF9XPArSSeHoUqc49Zb6npuK4cWsErQ8TiA5Rh")
   );
   const copyTradeHelper = new CopyTradeHelperV2(
     playerKeypair,
@@ -66,23 +68,23 @@ async function main(): Promise<void> {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  solRpcWsSubscribeManager.createCopyTradeRecordOnBuyStrategy(
-    "DXBYAw9aQheMdujaLZYnVSpKSK4n8jMS7HfLbiv5RWnS",
-    "OnBuyTest",
-    CopyTradeRecordOnBuyStrategySchema.parse({
-      sellCoinType: COIN_TYPE_WSOL_MINT,
-      sellCoinAmount: new BN(1000),
-      slippageBps: 50,
-    })
-  );
-  solRpcWsSubscribeManager.createCopyTradeRecordOnSellStrategy(
-    "DXBYAw9aQheMdujaLZYnVSpKSK4n8jMS7HfLbiv5RWnS",
-    "OnSellTest",
-    CopyTradeRecordOnSellStrategySchema.parse({
-      fixedPercentage: null,
-      slippageBps: 50,
-    })
-  );
+  // solRpcWsSubscribeManager.createCopyTradeRecordOnBuyStrategy(
+  //   "Ey2zXiwP4Kaytz76e28TfhYx2n8QWx4KajmoZK1w623C",
+  //   "OnBuyTest",
+  //   CopyTradeRecordOnBuyStrategySchema.parse({
+  //     sellCoinType: COIN_TYPE_WSOL_MINT,
+  //     sellCoinAmount: new BN(1_000),
+  //     slippageBps: 100,
+  //   })
+  // );
+  // solRpcWsSubscribeManager.createCopyTradeRecordOnSellStrategy(
+  //   "Ey2zXiwP4Kaytz76e28TfhYx2n8QWx4KajmoZK1w623C",
+  //   "OnSellTest",
+  //   CopyTradeRecordOnSellStrategySchema.parse({
+  //     fixedSellingBps: 500,
+  //     slippageBps: 100,
+  //   })
+  // );
 
   //////////////////////////////////////////////////////////////////////////////
 
