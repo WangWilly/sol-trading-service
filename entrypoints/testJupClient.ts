@@ -14,7 +14,7 @@ import {
 
 import { VersionedTransaction } from "@solana/web3.js";
 import { TransactionBuilder } from "../src/helpers/transactionBuilder";
-import { BuildSwapWithIxsV1BodyDtoSchema } from "../src/helpers/3rdParties/jup/dtos";
+import { BuildSwapWithIxsV1BodyDtoSchema, filterOutFeeInstructions, printBuildSwapWithIxsV1Result, printGetQuoteV1Result, printTransferParams } from "../src/helpers/3rdParties/jup/dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,8 +37,11 @@ async function main() {
   }
   const quoteParams = quoteParamsRes.data;
   const quoteResult = await jupSwapClient.getQuote(quoteParams);
-  console.log("🚀 ==> quoteResult:");
-  console.log(quoteResult);
+  if (!quoteResult) {
+    console.log("Failed to get quote");
+    return;
+  }
+  printGetQuoteV1Result(quoteResult);
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -61,8 +64,18 @@ async function main() {
 
   const buildSwapBody = BuildSwapWithIxsV1BodyDtoSchema.parse(buildSwapBodyRaw);
   const buildSwapResult = await jupSwapClient.buildSwapWithIxs(buildSwapBody);
-  console.log("🚀 ==> buildSwapResult:");
-  console.log(buildSwapResult);
+  if (!buildSwapResult) {
+    console.log("Failed to build swap transaction");
+    return;
+  }
+  printBuildSwapWithIxsV1Result(buildSwapResult);
+
+  if (buildSwapResult.otherInstructions) {
+    filterOutFeeInstructions(buildSwapResult.otherInstructions).map(printTransferParams);
+  }
+  if (buildSwapResult.setupInstructions) {
+    filterOutFeeInstructions(buildSwapResult.setupInstructions).map(printTransferParams);
+  }
   
   // const buildSwapBodyRes = BuildSwapV1BodyDtoSchema.safeParse(buildSwapBodyRaw);
   // if (!buildSwapBodyRes.success) {

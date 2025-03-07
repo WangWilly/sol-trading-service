@@ -7,7 +7,9 @@ import {
   ComputeBudgetProgram,
   Connection,
   PublicKey,
+  SystemInstruction,
   SystemProgram,
+  TransferParams,
   TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
@@ -16,6 +18,7 @@ import {
 import {
   COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX,
   COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX,
+  SYSTEM_TRANSFER_IX,
 } from "../../../utils/constants";
 import { ComputeBudgetInfo } from "../../../utils/dtos";
 
@@ -66,6 +69,39 @@ export const GetQuoteV1ResultDtoSchema = zod.object({
 
 export type GetQuoteV1ResultDto = zod.infer<typeof GetQuoteV1ResultDtoSchema>;
 
+export const printGetQuoteV1Result = (quote: GetQuoteV1ResultDto): void => {
+  console.log("🚀 ==> quote: {");
+  console.log(`  inputMint: ${quote.inputMint}`);
+  console.log(`  inAmount: ${quote.inAmount.toString()}`);
+  console.log(`  outputMint: ${quote.outputMint}`);
+  console.log(`  outAmount: ${quote.outAmount.toString()}`);
+  console.log(
+    `  otherAmountThreshold: ${quote.otherAmountThreshold.toString()}`
+  );
+  console.log(`  swapMode: ${quote.swapMode}`);
+  console.log(`  slippageBps: ${quote.slippageBps}`);
+  console.log(`  platformFee: ${quote.platformFee}`);
+  console.log(`  priceImpactPct: ${quote.priceImpactPct}`);
+  console.log(`  routePlan: [`);
+  quote.routePlan.forEach((routePlan) => {
+    console.log(`    {`);
+    console.log(`      ammKey: ${routePlan.swapInfo.ammKey}`);
+    console.log(`      label: ${routePlan.swapInfo.label}`);
+    console.log(`      inputMint: ${routePlan.swapInfo.inputMint}`);
+    console.log(`      outputMint: ${routePlan.swapInfo.outputMint}`);
+    console.log(`      inAmount: ${routePlan.swapInfo.inAmount.toString()}`);
+    console.log(`      outAmount: ${routePlan.swapInfo.outAmount.toString()}`);
+    console.log(`      feeAmount: ${routePlan.swapInfo.feeAmount.toString()}`);
+    console.log(`      feeMint: ${routePlan.swapInfo.feeMint}`);
+    console.log(`      percent: ${routePlan.percent}`);
+    console.log(`    }`);
+  });
+  console.log(`  ]`);
+  console.log(`  contextSlot: ${quote.contextSlot}`);
+  console.log(`  timeTaken: ${quote.timeTaken}`);
+  console.log(`}`);
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Build Swap W/ Transacrtion
@@ -111,10 +147,10 @@ const BuildSwapV1BodyJitoTipLamportsSchema = zod.object({
 });
 
 /**
-  * - https://station.jup.ag/docs/api/swap-instructions
-  * - To specify a level or amount of additional fees to prioritize the transaction
-  * - It can be used for EITHER priority fee OR Jito tip
-  * - FIXME: If you want to include both, you will need to use `/swap-instructions` to add both at the same time (outcome w/ error) 🤔
+ * - https://station.jup.ag/docs/api/swap-instructions
+ * - To specify a level or amount of additional fees to prioritize the transaction
+ * - It can be used for EITHER priority fee OR Jito tip
+ * - FIXME: If you want to include both, you will need to use `/swap-instructions` to add both at the same time (outcome w/ error) 🤔
  */
 export const BuildSwapV1BodyPrioritizationFeeLamportsSchema = zod.union([
   BuildSwapV1BodyPriorityLevelWithMaxLamportsSchema,
@@ -190,10 +226,10 @@ export type BuildSwapV1ResultDto = zod.infer<typeof BuildSwapV1ResultDtoSchema>;
 // https://station.jup.ag/docs/swap-api/build-swap-transaction#build-your-own-transaction-with-instructions
 
 /**
-  * - https://station.jup.ag/docs/api/swap-instructions
-  * - To specify a level or amount of additional fees to prioritize the transaction
-  * - It can be used for EITHER priority fee OR Jito tip
-  * - FIXME: If you want to include both, you will need to use `/swap-instructions` to add both at the same time (outcome w/ error) 🤔
+ * - https://station.jup.ag/docs/api/swap-instructions
+ * - To specify a level or amount of additional fees to prioritize the transaction
+ * - It can be used for EITHER priority fee OR Jito tip
+ * - FIXME: If you want to include both, you will need to use `/swap-instructions` to add both at the same time (outcome w/ error) 🤔
  */
 export const BuildSwapWithIxsV1BodyDtoSchema = BuildSwapV1BodyDtoSchema;
 
@@ -217,7 +253,6 @@ export type BuildSwapWithIxsV1IxDto = zod.infer<
   typeof BuildSwapWithIxsV1IxDtoSchema
 >;
 
-// TODO: Sanitize the ixs to exclude the fee to Jupiter
 export const BuildSwapWithIxsV1ResultDtoSchema = zod.object({
   otherInstructions: zod.array(BuildSwapWithIxsV1IxDtoSchema).nullable(), // 🤔 If you are using `useTokenLedger = true`.
   computeBudgetInstructions: zod.array(BuildSwapWithIxsV1IxDtoSchema), // The necessary instructions to setup the compute budget.
@@ -230,6 +265,99 @@ export const BuildSwapWithIxsV1ResultDtoSchema = zod.object({
 export type BuildSwapWithIxsV1ResultDto = zod.infer<
   typeof BuildSwapWithIxsV1ResultDtoSchema
 >;
+
+export const printBuildSwapWithIxsV1Result = (
+  result: BuildSwapWithIxsV1ResultDto
+): void => {
+  console.log("🚀 ==> buildSwapWithIxsV1Result: {");
+  if (result.otherInstructions) {
+    console.log(`  otherInstructions: [`);
+    result.otherInstructions.forEach((ix) => {
+      console.log(`    {`);
+      console.log(`      programId: ${ix.programId}`);
+      console.log(`      accounts: [`);
+      ix.accounts.forEach((account) => {
+        console.log(`        {`);
+        console.log(`          pubkey: ${account.pubkey}`);
+        console.log(`          isSigner: ${account.isSigner}`);
+        console.log(`          isWritable: ${account.isWritable}`);
+        console.log(`        }`);
+      });
+      console.log(`      ]`);
+      console.log(`      data: ${ix.data}`);
+      console.log(`    }`);
+    });
+    console.log(`  ]`);
+  }
+  console.log(`  computeBudgetInstructions: [`);
+  result.computeBudgetInstructions.forEach((ix) => {
+    console.log(`    {`);
+    console.log(`      programId: ${ix.programId}`);
+    console.log(`      accounts: [`);
+    ix.accounts.forEach((account) => {
+      console.log(`        {`);
+      console.log(`          pubkey: ${account.pubkey}`);
+      console.log(`          isSigner: ${account.isSigner}`);
+      console.log(`          isWritable: ${account.isWritable}`);
+      console.log(`        }`);
+    });
+    console.log(`      ]`);
+    console.log(`      data: ${ix.data}`);
+    console.log(`    }`);
+  });
+  console.log(`  ]`);
+  console.log(`  setupInstructions: [`);
+  result.setupInstructions.forEach((ix) => {
+    console.log(`    {`);
+    console.log(`      programId: ${ix.programId}`);
+    console.log(`      accounts: [`);
+    ix.accounts.forEach((account) => {
+      console.log(`        {`);
+      console.log(`          pubkey: ${account.pubkey}`);
+      console.log(`          isSigner: ${account.isSigner}`);
+      console.log(`          isWritable: ${account.isWritable}`);
+      console.log(`        }`);
+    });
+    console.log(`      ]`);
+    console.log(`      data: ${ix.data}`);
+    console.log(`    }`);
+  });
+  console.log(`  ]`);
+  console.log(`  swapInstruction: {`);
+  console.log(`    programId: ${result.swapInstruction.programId}`);
+  console.log(`    accounts: [`);
+  result.swapInstruction.accounts.forEach((account) => {
+    console.log(`      {`);
+    console.log(`        pubkey: ${account.pubkey}`);
+    console.log(`        isSigner: ${account.isSigner}`);
+    console.log(`        isWritable: ${account.isWritable}`);
+    console.log(`      }`);
+  });
+  console.log(`    ]`);
+  console.log(`    data: ${result.swapInstruction.data}`);
+  console.log(`  }`);
+  if (result.cleanupInstruction) {
+    console.log(`  cleanupInstruction: {`);
+    console.log(`    programId: ${result.cleanupInstruction.programId}`);
+    console.log(`    accounts: [`);
+    result.cleanupInstruction.accounts.forEach((account) => {
+      console.log(`      {`);
+      console.log(`        pubkey: ${account.pubkey}`);
+      console.log(`        isSigner: ${account.isSigner}`);
+      console.log(`        isWritable: ${account.isWritable}`);
+      console.log(`      }`);
+    });
+    console.log(`    ]`);
+    console.log(`    data: ${result.cleanupInstruction.data}`);
+    console.log(`  }`);
+  }
+  console.log(`  addressLookupTableAddresses: [`);
+  result.addressLookupTableAddresses.forEach((address) => {
+    console.log(`${address}`);
+  });
+  console.log(`  ]`);
+  console.log(`}`);
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // helpers
@@ -300,21 +428,31 @@ export const getComputeBudgetFromBuildSwapWithIxsV1Result = (
     };
   }
 
-  const parsedUnitPriceIx = ComputeBudgetInstruction.decodeSetComputeUnitPrice(unitPriceIx);
+  const parsedUnitPriceIx =
+    ComputeBudgetInstruction.decodeSetComputeUnitPrice(unitPriceIx);
   return {
     unitPriceMicroLamports: parsedUnitPriceIx.microLamports,
     unitsLimit: parsedunitLimitIx.units,
   };
 };
 
-// TODO:
-// const filterOutFeeInstructions = (
-//   instructions: BuildSwapWithIxsV1IxDto[]
-// ): BuildSwapWithIxsV1IxDto[] => {
-//   return instructions.filter(
-//     (ix) =>
-//       ix.programId !== SystemProgram.programId.toBase58() &&
-//       ix.accounts
+export const filterOutFeeInstructions = (
+  instructions: BuildSwapWithIxsV1IxDto[]
+): TransferParams[] => {
+  return instructions
+    .filter((ix) => ix.programId === SystemProgram.programId.toBase58())
+    .map(deserializeInstruction)
+    .filter((ix) => ix.data[0] === SYSTEM_TRANSFER_IX)
+    .map((ix) => SystemInstruction.decodeTransfer(ix));
+};
+
+export const printTransferParams = (transferParams: TransferParams): void => {
+  console.log("🚀 ==> transferParams: {");
+  console.log(`  fromPubkey: ${transferParams.fromPubkey.toString()}`);
+  console.log(`  toPubkey: ${transferParams.toPubkey.toString()}`);
+  console.log(`  lamports: ${transferParams.lamports.toString()}`);
+  console.log(`}`);
+};
 
 export const getTxFromBuildSwapWithIxsV1Result = async (
   conn: Connection,
@@ -347,7 +485,7 @@ export const getTxFromBuildSwapWithIxsV1Result = async (
   }
 
   if (result.otherInstructions) {
-    // TODO: tip to Jito?
+    // Ix of tipping to Jito is included in otherInstructions
     ixs.push(...result.otherInstructions.map(deserializeInstruction));
   }
   ixs.push(...result.setupInstructions.map(deserializeInstruction));
