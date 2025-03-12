@@ -10,10 +10,13 @@ import { Logger, TsLogLogger } from "../../../utils/logging";
 
 import {
   GetPercentileTip,
-  GetTipInfoV1ResultDto,
   GetTipInfoV1ResultDtoSchema,
-  SendTransactionV1ResultDto,
   SendTransactionV1ResultDtoSchema,
+} from "./dtos";
+
+import type {
+  GetTipInfoV1ResultDto,
+  SendTransactionV1ResultDto,
 } from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////

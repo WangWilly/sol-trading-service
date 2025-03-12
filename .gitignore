@@ -5,7 +5,7 @@ node_modules/
 dist/
 .env
 .npmrc
-package-lock.json
+*.bun-build
 
 # TypeScript 
 *.tsbuildinfo

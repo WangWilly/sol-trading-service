@@ -1,5 +1,5 @@
 import { toSwapInfoDto } from "./toSwapInfo";
-import { SwapInfoDto, printSwapInfoDto } from "./dtos";
+import type { SwapInfoDto, printSwapInfoDto } from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 

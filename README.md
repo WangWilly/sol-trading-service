@@ -4,6 +4,24 @@ This module will be frequently updated. Serve as listener for the target account
 
 ## Development
 
+Install bun for the first time ([ref](https://bun.sh/docs/installation)):
+
+```bash
+# On MacOS
+brew install oven-sh/bun/bun
+
+bun --version # Check the version
+
+# Add to the shell profile
+# First, determine what shell you're using:
+echo $SHELL
+
+# Then add these lines below to bottom of your shell's configuration file. (eg. add to ~/.zshrc)
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+```
+
+
 ### Testing
 
 ```bash
@@ -22,7 +40,19 @@ PRIVATE_KEY_BASE58=<private_key_base58>
 Use the `solRpcWsSubscribeManager` in the main function to subscribe to the target account.
 
 ```bash
-./scripts/trade-serve.sh
+./scripts/run-trade-serve.sh
+```
+
+### Building
+
+```bash
+./scripts/build-trade-serve.sh
+```
+
+### Running the built
+
+```bash
+./scripts/start-trade-serve.sh
 ```
 
 ## References
@@ -63,3 +93,14 @@ Use the `solRpcWsSubscribeManager` in the main function to subscribe to the targ
     - [ ] 📌 https://github.com/ARBProtocol/solana-jupiter-bot
     - [ ] 📌 https://www.quicknode.com/guides/solana-development/defi/pump-fun-copy-trade
     - [ ] 📌 [Phantom Wallet: Failed swap but still had to pay SOL?](https://www.reddit.com/r/solana/comments/1i5czkh/phantom_wallet_failed_swap_but_still_had_to_pay/)
+- Features study
+    - [ ] https://github.com/ARBProtocol/solana-jupiter-bot/blob/main/src/bot/index.js
+
+### Bun integration
+
+- https://www.reddit.com/r/javascript/comments/1adwwht/an_example_of_how_to_use_nodes_experimental/
+- https://github.com/oven-sh/bun/issues/7384
+- Build to execution
+    - https://bun.sh/docs/runtime/nodejs-apis
+    - https://bun.sh/docs/bundler/executables
+    - https://www.reddit.com/r/node/comments/1g1muz1/so_what_optimizations_does_bun_have_that_node/

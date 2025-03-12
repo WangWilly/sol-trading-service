@@ -1,11 +1,6 @@
-import {
-  JitoClient
-} from "./client";
-import {
-  SendTransactionV1ResultDto,
-  GetTipInfoV1ResultDto,
-  GetPercentileTip,
-} from "./dtos";
+import { JitoClient } from "./client";
+import { GetPercentileTip } from "./dtos";
+import type { SendTransactionV1ResultDto, GetTipInfoV1ResultDto } from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 

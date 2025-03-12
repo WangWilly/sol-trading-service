@@ -1,4 +1,4 @@
-import { SwapInfoDto } from "./dtos";
+import type { SwapInfoDto } from "./dtos";
 import {
   CREATE_ACCOUNT_FEE,
   TIPS_ADDRESSE_SET,

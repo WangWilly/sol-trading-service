@@ -8,15 +8,17 @@ import { HttpClient } from "../../../utils/httpClient";
 import { TsLogLogger } from "../../../utils/logging";
 import type { Logger } from "../../../utils/logging";
 import {
+  GetQuoteV1ResultDtoSchema,
+  BuildSwapV1ResultDtoSchema,
+  BuildSwapWithIxsV1ResultDtoSchema,
+} from "./dtos";
+import {
   GetQuoteV1ParamDto,
   GetQuoteV1ResultDto,
-  GetQuoteV1ResultDtoSchema,
   BuildSwapV1BodyDto,
   BuildSwapV1ResultDto,
-  BuildSwapV1ResultDtoSchema,
   BuildSwapWithIxsV1BodyDto,
   BuildSwapWithIxsV1ResultDto,
-  BuildSwapWithIxsV1ResultDtoSchema,
 } from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////

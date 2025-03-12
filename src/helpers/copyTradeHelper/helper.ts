@@ -1,4 +1,4 @@
-import {
+import type {
   CopyTradeRecordOnBuyStrategy,
   CopyTradeRecordOnSellStrategy,
   RecordMap,

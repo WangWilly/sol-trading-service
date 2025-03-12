@@ -1,4 +1,4 @@
-import { SubIdTarPubkeyMap, RecordMap, CopyTradeRecord } from "../dtos";
+import type { SubIdTarPubkeyMap, RecordMap, CopyTradeRecord } from "../dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 
