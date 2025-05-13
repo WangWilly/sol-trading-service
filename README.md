@@ -52,7 +52,12 @@ PRIVATE_KEY_BASE58=<private_key_base58>  # Your private key in Base58 format
 Use the `solRpcWsSubscribeManager` in the main function to subscribe to the target account:
 
 ```bash
-./scripts/run-trade-serve.sh
+./scripts/run-sol-trade-dev.sh
+
+# or
+
+# set NOT_USE_CLI to false in the env
+bun run ./src/cli.ts -k <private_key_base58>
 ```
 
 ### 📦 Building for Production
@@ -60,33 +65,26 @@ Use the `solRpcWsSubscribeManager` in the main function to subscribe to the targ
 Build the project for production deployment:
 
 ```bash
-./scripts/build-trade-serve.sh
-```
-
-### ▶️ Executing the Built Application
-
-To run the compiled application:
-
-```bash
-./scripts/start-trade-serve.sh
+./scripts/build-sol-trade.sh
 ```
 
 ### 🖥️ Using the CLI Interface
 
 The service comes with an interactive CLI for managing copy trading strategies.
 
-#### Starting the CLI
+#### Step 1: Build the CLI
 
-To launch the CLI interface:
+Ensure you have built the project for production as described above.
+The CLI is located in the `dist` directory.
+
+#### Step 2: Run the CLI
+
+The CLI is built using Bun and is located in the `dist` directory. To run the CLI, you need to have the Bun runtime installed.
+
+You can run the CLI directly from the `dist` directory:
 
 ```bash
-bun run src/cli.ts
-```
-
-Or from the compiled version:
-
-```bash
-node dist/cli.js
+./dist/sol-trade -k <private_key_base58>
 ```
 
 #### Available Features
