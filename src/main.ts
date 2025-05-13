@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 
 import { SolRpcWsHelper } from "./helpers/solRpcWsClient/client";
@@ -14,22 +14,24 @@ import { TsLogLogger } from "./utils/logging";
 import { CopyTradeHelper } from "./helpers/copyTradeHelper";
 import { FeeHelper } from "./helpers/copyTradeHelper/feeHelper/helper";
 import { loadPrivateKeyBase58 } from "./utils/privateKey";
-import { PRIVATE_KEY_BASE58, LOG_TYPE, USE_CLI } from "./config";
+import { PRIVATE_KEY_BASE58, LOG_TYPE, NOT_USE_CLI } from "./config";
 import { transportFunc } from "./helpers/logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Export the initialization function for CLI usage
-export async function initializeCopyTradingService() {
-  const playerKeypair = loadPrivateKeyBase58(PRIVATE_KEY_BASE58);
-
-  //////////////////////////////////////////////////////////////////////////////
-
+export async function initializeCopyTradingService(playerKeypair: Keypair): Promise<{
+  copyTradeHelper: CopyTradeHelper;
+  solRpcWsHelper: SolRpcWsHelper;
+  solRpcWsSubscribeManager: SolRpcWsSubscribeManager;
+  jupSwapClient: JupSwapClient;
+  jitoClient: JitoClient;
+}> {
   const rootLogger = new TsLogLogger({ 
     name: "copy-trade-service",
     type: LOG_TYPE,
     overwrite: {
-      transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+      transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
         transportFunc(json);
       }
     },
@@ -89,7 +91,8 @@ export async function initializeCopyTradingService() {
 // If file is run directly (not imported), start the service
 if (require.main === module) {
   async function main(): Promise<void> {
-    const { solRpcWsSubscribeManager } = await initializeCopyTradingService();
+    const playerKeypair = loadPrivateKeyBase58(PRIVATE_KEY_BASE58);
+    const { solRpcWsSubscribeManager } = await initializeCopyTradingService(playerKeypair);
 
     //////////////////////////////////////////////////////////////////////////////
 

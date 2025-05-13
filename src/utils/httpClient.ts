@@ -1,5 +1,5 @@
 import { Logger, TsLogLogger } from "./logging";
-import { LOG_TYPE, USE_CLI } from "../config";
+import { LOG_TYPE, NOT_USE_CLI } from "../config";
 import axios, { AxiosInstance, AxiosRequestConfig, Method } from "axios";
 import { transportFunc } from "../helpers/logHistoryHelper/helper";
 
@@ -31,7 +31,7 @@ export class HttpClient {
       name: "UnknownHttpClient",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
           transportFunc(json);
         }
       },

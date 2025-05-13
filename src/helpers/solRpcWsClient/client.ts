@@ -14,7 +14,7 @@ import {
 } from "./utils";
 
 import { TsLogLogger } from "../../utils/logging";
-import { LOG_TYPE, USE_CLI } from "../../config";
+import { LOG_TYPE, NOT_USE_CLI } from "../../config";
 import type { Logger } from "../../utils/logging";
 import { CopyTradeHelper } from "../copyTradeHelper";
 import { transportFunc } from "../logHistoryHelper/helper";
@@ -57,7 +57,7 @@ export class SolRpcWsHelper {
       name: "SolRpcWsHelper",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
           transportFunc(json);
         }
       },

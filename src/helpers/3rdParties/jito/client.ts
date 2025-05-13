@@ -7,7 +7,7 @@ import {
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
 import { Logger, TsLogLogger } from "../../../utils/logging";
-import { LOG_TYPE, USE_CLI } from "../../../config";
+import { LOG_TYPE, NOT_USE_CLI } from "../../../config";
 
 import {
   GetPercentileTip,
@@ -41,7 +41,7 @@ export class JitoClient {
     private readonly logger: Logger = new TsLogLogger({ name: "JitoClient",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
           transportFunc(json);
         }
       },

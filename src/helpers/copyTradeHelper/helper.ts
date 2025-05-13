@@ -11,7 +11,7 @@ import BN from "bn.js";
 
 import { safe } from "../../utils/exceptions";
 import { TsLogLogger } from "../../utils/logging";
-import { LOG_TYPE, USE_CLI } from "../../config";
+import { LOG_TYPE, NOT_USE_CLI } from "../../config";
 import type { Logger } from "../../utils/logging";
 import * as txHelper from "../transactionHelper";
 import { TokenHelper } from "./tokenHelper";
@@ -46,7 +46,7 @@ export class CopyTradeHelper {
       name: "CopyTradeHelper",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
           transportFunc(json);
         }
       },

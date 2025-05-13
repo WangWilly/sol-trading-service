@@ -6,7 +6,7 @@ import {
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
 import { TsLogLogger } from "../../../utils/logging";
-import { LOG_TYPE, USE_CLI } from "../../../config";
+import { LOG_TYPE, NOT_USE_CLI } from "../../../config";
 import type { Logger } from "../../../utils/logging";
 import {
   GetQuoteV1ResultDtoSchema,
@@ -40,7 +40,7 @@ export class JupSwapClient {
     private readonly logger: Logger = new TsLogLogger({ name: "JupSwapClient"
       , type: LOG_TYPE,
       overwrite: {
-        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
           transportFunc(json);
         }
       },

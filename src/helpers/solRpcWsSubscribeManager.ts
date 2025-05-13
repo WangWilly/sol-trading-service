@@ -6,7 +6,7 @@ import {
 } from "./copyTradeHelper/dtos";
 import { CopyTradeHelper } from "./copyTradeHelper";
 import { SolRpcWsHelper } from "./solRpcWsClient/client";
-import { LOG_TYPE, USE_CLI } from "../config";
+import { LOG_TYPE, NOT_USE_CLI } from "../config";
 import { transportFunc } from "./logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@ export class SolRpcWsSubscribeManager {
       name: "SolRpcWsSubscribe",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
           transportFunc(json);
         }
       },
