@@ -11,12 +11,12 @@ import { ComputeBudgetInfo } from "../../../utils/dtos";
 export class FeeHelper {
   constructor(
     private readonly fixedFeeLamports: number | bigint,
-    private readonly receiver: PublicKey
+    private readonly receiver: PublicKey,
   ) {}
 
   transferFeeIxProc = (
     computeBudget: ComputeBudgetInfo,
-    payerKey: PublicKey
+    payerKey: PublicKey,
   ): {
     transferFeeIx: TransactionInstruction;
     newComputeBudget: ComputeBudgetInfo;

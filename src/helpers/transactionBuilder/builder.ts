@@ -10,7 +10,10 @@ import {
   BlockhashWithExpiryBlockHeight,
   ComputeBudgetInstruction,
 } from "@solana/web3.js";
-import { COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX, COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX } from "../../utils/constants";
+import {
+  COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX,
+  COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX,
+} from "../../utils/constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -20,7 +23,7 @@ export class TransactionBuilder {
 
   private constructor(
     payerKey: PublicKey,
-    instructions: TransactionInstruction[] = []
+    instructions: TransactionInstruction[] = [],
   ) {
     this.payerKey = payerKey;
     this.ixs = [...instructions];
@@ -56,7 +59,7 @@ export class TransactionBuilder {
   static async fromVersionedTxV2(
     conn: Connection,
     tx: VersionedTransaction,
-    newPayerKey: PublicKey | null = null
+    newPayerKey: PublicKey | null = null,
   ): Promise<TransactionBuilder> {
     // https://solana.stackexchange.com/questions/17269/add-instructions-to-versioned-transactions
     // https://station.jup.ag/docs/old/additional-topics/composing-with-versioned-transaction
@@ -70,7 +73,7 @@ export class TransactionBuilder {
           key: lookup.accountKey,
           state: AddressLookupTableAccount.deserialize(accInfo.data),
         });
-      })
+      }),
     );
 
     const msg = TransactionMessage.decompile(tx.message, {
@@ -79,7 +82,7 @@ export class TransactionBuilder {
 
     return new TransactionBuilder(
       newPayerKey || msg.payerKey,
-      msg.instructions
+      msg.instructions,
     );
   }
 
@@ -139,7 +142,7 @@ export class TransactionBuilder {
     const ix = this.ixs.find(
       (ix) =>
         ix.programId.equals(ComputeBudgetProgram.programId) &&
-        ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX
+        ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX,
     );
     if (!ix) {
       return null;
@@ -156,7 +159,9 @@ export class TransactionBuilder {
     this.removeExistingComputeBudgetInstruction("ComputeUnitPrice");
 
     this.ixs.unshift(
-      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: microLamportsPerUnit })
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: microLamportsPerUnit,
+      }),
     );
 
     return this;
@@ -166,7 +171,7 @@ export class TransactionBuilder {
     const ix = this.ixs.find(
       (ix) =>
         ix.programId.equals(ComputeBudgetProgram.programId) &&
-        ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX
+        ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX,
     );
 
     if (!ix) {
@@ -183,15 +188,17 @@ export class TransactionBuilder {
    * https://github.com/solana-labs/solana/blob/7700cb3128c1f19820de67b81aa45d18f73d2ac0/sdk/program/src/instruction.rs#L389
    */
   private removeExistingComputeBudgetInstruction(
-    type: "ComputeUnitLimit" | "ComputeUnitPrice"
+    type: "ComputeUnitLimit" | "ComputeUnitPrice",
   ) {
     this.ixs = this.ixs.filter(
       (ix) =>
         !(
           ix.programId.equals(ComputeBudgetProgram.programId) &&
-          ((type === "ComputeUnitLimit" && ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX) ||
-            (type === "ComputeUnitPrice" && ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX))
-        )
+          ((type === "ComputeUnitLimit" &&
+            ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX) ||
+            (type === "ComputeUnitPrice" &&
+              ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX))
+        ),
     );
   }
 

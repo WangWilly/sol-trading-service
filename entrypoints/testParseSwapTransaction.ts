@@ -6,14 +6,12 @@ import * as txHelper from "../src/helpers/transactionHelper";
 async function main() {
   const solWeb3Conn = new Connection("https://api.mainnet-beta.solana.com");
 
-  const signature = "wRqdZaDDHUpWTSwPFuQmCpbgFQM2Z6pHUwXVxA1hKdJMQjn6mBx8tmqLtdT2413yr8TnDmFAfU7kyHRCw8xCyjb";
-  const tx = await solWeb3Conn.getParsedTransaction(
-    signature,
-    {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 0,
-    }
-  );
+  const signature =
+    "wRqdZaDDHUpWTSwPFuQmCpbgFQM2Z6pHUwXVxA1hKdJMQjn6mBx8tmqLtdT2413yr8TnDmFAfU7kyHRCw8xCyjb";
+  const tx = await solWeb3Conn.getParsedTransaction(signature, {
+    commitment: "confirmed",
+    maxSupportedTransactionVersion: 0,
+  });
   if (!tx) {
     console.log("Transaction not found");
     return;

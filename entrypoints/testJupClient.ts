@@ -14,7 +14,13 @@ import {
 
 import { VersionedTransaction } from "@solana/web3.js";
 import { TransactionBuilder } from "../src/helpers/transactionBuilder";
-import { BuildSwapWithIxsV1BodyDtoSchema, filterOutFeeInstructions, printBuildSwapWithIxsV1Result, printGetQuoteV1Result, printTransferParams } from "../src/helpers/3rdParties/jup/dtos";
+import {
+  BuildSwapWithIxsV1BodyDtoSchema,
+  filterOutFeeInstructions,
+  printBuildSwapWithIxsV1Result,
+  printGetQuoteV1Result,
+  printTransferParams,
+} from "../src/helpers/3rdParties/jup/dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +52,7 @@ async function main() {
   //////////////////////////////////////////////////////////////////////////////
 
   const bunnerWalletPubkey = new PublicKey(
-    "HDs743XeHc6LS9akHf8sGVaonpGfP4YnZD2PD5M4HixZ"
+    "HDs743XeHc6LS9akHf8sGVaonpGfP4YnZD2PD5M4HixZ",
   );
 
   const buildSwapBodyRaw = {
@@ -71,12 +77,16 @@ async function main() {
   printBuildSwapWithIxsV1Result(buildSwapResult);
 
   if (buildSwapResult.otherInstructions) {
-    filterOutFeeInstructions(buildSwapResult.otherInstructions).map(printTransferParams);
+    filterOutFeeInstructions(buildSwapResult.otherInstructions).map(
+      printTransferParams,
+    );
   }
   if (buildSwapResult.setupInstructions) {
-    filterOutFeeInstructions(buildSwapResult.setupInstructions).map(printTransferParams);
+    filterOutFeeInstructions(buildSwapResult.setupInstructions).map(
+      printTransferParams,
+    );
   }
-  
+
   // const buildSwapBodyRes = BuildSwapV1BodyDtoSchema.safeParse(buildSwapBodyRaw);
   // if (!buildSwapBodyRes.success) {
   //   console.log(`Failed to parse buildSwapBody: ${buildSwapBodyRes.error}`);

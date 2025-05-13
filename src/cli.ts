@@ -79,7 +79,7 @@ async function initialize() {
     .description("Interactive CLI for Solana copy-trading service")
     .option(
       "-k, --private-key <string>",
-      "Private key (base58 encoded) for the wallet"
+      "Private key (base58 encoded) for the wallet",
     );
 
   program.parse(process.argv);
@@ -87,7 +87,7 @@ async function initialize() {
 
   if (!options.privateKey) {
     console.error(
-      `❌ Error: Private key is required. Use -k or --private-key option.`
+      `❌ Error: Private key is required. Use -k or --private-key option.`,
     );
     process.exit(1);
   }
@@ -154,7 +154,7 @@ async function createBuyStrategy() {
   await solRpcWsSubscribeManager.createCopyTradeRecordOnBuyStrategy(
     walletAddress,
     strategyName,
-    buyStrategy
+    buyStrategy,
   );
 
   console.log(`✅ Buy strategy "${strategyName}" created successfully!`);
@@ -212,7 +212,7 @@ async function createSellStrategy() {
   await solRpcWsSubscribeManager.createCopyTradeRecordOnSellStrategy(
     walletAddress,
     strategyName,
-    sellStrategy
+    sellStrategy,
   );
 
   console.log(`✅ Sell strategy "${strategyName}" created successfully!`);
@@ -232,7 +232,7 @@ async function listStrategies() {
     console.log(`\n${index + 1}. ✨ ${strategy.name} (${strategy.type})`);
     console.log(`   👤 Target Wallet: ${strategy.targetWallet}`);
     console.log(
-      `   ⚙️  Configuration: ${JSON.stringify(strategy.config, null, 2)}`
+      `   ⚙️  Configuration: ${JSON.stringify(strategy.config, null, 2)}`,
     );
   });
 }
@@ -268,7 +268,7 @@ async function displayStatus() {
   console.log(
     `🔌 WebSocket Connection: ${
       wsStatus.connected ? "✅ Connected" : "❌ Disconnected"
-    }`
+    }`,
   );
   console.log(`📈 Active Strategies: ${activeStrategies}`);
   console.log(`⏱️ Last Activity: ${wsStatus.lastActivity || "N/A"}`);
@@ -287,7 +287,7 @@ async function displayLogHistory() {
 
   logs.forEach((log: any) => {
     console.log(
-      `\n${log.index}. ⏱️ ${new Date(log["_meta"].date).toLocaleString()}`
+      `\n${log.index}. ⏱️ ${new Date(log["_meta"].date).toLocaleString()}`,
     );
     console.log(`   📝 ${JSON.stringify(log["0"], null, 2)}`);
   });

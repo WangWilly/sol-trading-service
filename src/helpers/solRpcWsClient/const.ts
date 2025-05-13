@@ -11,4 +11,6 @@ export const BURNNER_RPC_ID = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // SOLANA WEB3 MINT CONSTANTS
-export const COIN_TYPE_WSOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
+export const COIN_TYPE_WSOL_MINT = new PublicKey(
+  "So11111111111111111111111111111111111111112",
+);

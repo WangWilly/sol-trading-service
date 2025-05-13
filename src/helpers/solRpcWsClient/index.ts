@@ -1,7 +1,3 @@
-import {
-  SolRpcWsHelper,
-} from "./client";
+import { SolRpcWsHelper } from "./client";
 
-export {
-  SolRpcWsHelper,
-};
+export { SolRpcWsHelper };

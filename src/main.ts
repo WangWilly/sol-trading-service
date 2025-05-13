@@ -20,43 +20,47 @@ import { transportFunc } from "./helpers/logHistoryHelper/helper";
 ////////////////////////////////////////////////////////////////////////////////
 
 // Export the initialization function for CLI usage
-export async function initializeCopyTradingService(playerKeypair: Keypair): Promise<{
+export async function initializeCopyTradingService(
+  playerKeypair: Keypair,
+): Promise<{
   copyTradeHelper: CopyTradeHelper;
   solRpcWsHelper: SolRpcWsHelper;
   solRpcWsSubscribeManager: SolRpcWsSubscribeManager;
   jupSwapClient: JupSwapClient;
   jitoClient: JitoClient;
 }> {
-  const rootLogger = new TsLogLogger({ 
+  const rootLogger = new TsLogLogger({
     name: "copy-trade-service",
     type: LOG_TYPE,
     overwrite: {
-      transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
-        transportFunc(json);
-      }
+      transportJSON: NOT_USE_CLI
+        ? undefined
+        : (json: unknown) => {
+            transportFunc(json);
+          },
     },
   });
 
   //////////////////////////////////////////////////////////////////////////////
 
   const solWeb3Conn = new Connection(
-    "https://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607"
+    "https://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607",
   );
   const jupSwapClient = new JupSwapClient(
     "https://api.jup.ag",
     "",
-    rootLogger.getSubLogger({ name: "JupSwapClient" })
+    rootLogger.getSubLogger({ name: "JupSwapClient" }),
   );
   const jitoClient = new JitoClient(
     "https://mainnet.block-engine.jito.wtf",
     "https://bundles.jito.wtf",
     "",
-    rootLogger.getSubLogger({ name: "JitoClient" })
+    rootLogger.getSubLogger({ name: "JitoClient" }),
   );
   // FIXME:
   const feeHelper = new FeeHelper(
     100_000,
-    new PublicKey("81v6neWF9XPArSSeHoUqc49Zb6npuK4cWsErQ8TiA5Rh")
+    new PublicKey("81v6neWF9XPArSSeHoUqc49Zb6npuK4cWsErQ8TiA5Rh"),
   );
   const copyTradeHelper = new CopyTradeHelper(
     playerKeypair,
@@ -64,17 +68,17 @@ export async function initializeCopyTradingService(playerKeypair: Keypair): Prom
     jupSwapClient,
     jitoClient,
     feeHelper,
-    rootLogger.getSubLogger({ name: "CopyTradeHelper" })
+    rootLogger.getSubLogger({ name: "CopyTradeHelper" }),
   );
   const solRpcWsHelper = new SolRpcWsHelper(
     "wss://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607",
     copyTradeHelper,
-    rootLogger.getSubLogger({ name: "SolRpcWsHelper" })
+    rootLogger.getSubLogger({ name: "SolRpcWsHelper" }),
   );
   const solRpcWsSubscribeManager = new SolRpcWsSubscribeManager(
     solRpcWsHelper,
     copyTradeHelper,
-    rootLogger.getSubLogger({ name: "SolRpcWsSubscribeHelper" })
+    rootLogger.getSubLogger({ name: "SolRpcWsSubscribeHelper" }),
   );
   solRpcWsHelper.start();
 
@@ -84,7 +88,7 @@ export async function initializeCopyTradingService(playerKeypair: Keypair): Prom
     solRpcWsHelper,
     solRpcWsSubscribeManager,
     jupSwapClient,
-    jitoClient
+    jitoClient,
   };
 }
 
@@ -92,7 +96,8 @@ export async function initializeCopyTradingService(playerKeypair: Keypair): Prom
 if (require.main === module) {
   async function main(): Promise<void> {
     const playerKeypair = loadPrivateKeyBase58(PRIVATE_KEY_BASE58);
-    const { solRpcWsSubscribeManager } = await initializeCopyTradingService(playerKeypair);
+    const { solRpcWsSubscribeManager } =
+      await initializeCopyTradingService(playerKeypair);
 
     //////////////////////////////////////////////////////////////////////////////
 

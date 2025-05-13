@@ -76,7 +76,7 @@ export const printGetQuoteV1Result = (quote: GetQuoteV1ResultDto): void => {
   console.log(`  outputMint: ${quote.outputMint}`);
   console.log(`  outAmount: ${quote.outAmount.toString()}`);
   console.log(
-    `  otherAmountThreshold: ${quote.otherAmountThreshold.toString()}`
+    `  otherAmountThreshold: ${quote.otherAmountThreshold.toString()}`,
   );
   console.log(`  swapMode: ${quote.swapMode}`);
   console.log(`  slippageBps: ${quote.slippageBps}`);
@@ -244,7 +244,7 @@ export const BuildSwapWithIxsV1IxDtoSchema = zod.object({
       pubkey: zod.string(),
       isSigner: zod.boolean(),
       isWritable: zod.boolean(),
-    })
+    }),
   ),
   data: zod.string(),
 });
@@ -267,7 +267,7 @@ export type BuildSwapWithIxsV1ResultDto = zod.infer<
 >;
 
 export const printBuildSwapWithIxsV1Result = (
-  result: BuildSwapWithIxsV1ResultDto
+  result: BuildSwapWithIxsV1ResultDto,
 ): void => {
   console.log("🚀 ==> buildSwapWithIxsV1Result: {");
   if (result.otherInstructions) {
@@ -363,7 +363,7 @@ export const printBuildSwapWithIxsV1Result = (
 // helpers
 
 const deserializeInstruction = (
-  instruction: BuildSwapWithIxsV1IxDto
+  instruction: BuildSwapWithIxsV1IxDto,
 ): TransactionInstruction => {
   return new TransactionInstruction({
     programId: new PublicKey(instruction.programId),
@@ -378,10 +378,10 @@ const deserializeInstruction = (
 
 const getAddressLookupTableAccounts = async (
   conn: Connection,
-  keys: string[]
+  keys: string[],
 ): Promise<AddressLookupTableAccount[]> => {
   const addressLookupTableAccountInfos = await conn.getMultipleAccountsInfo(
-    keys.map((key) => new PublicKey(key))
+    keys.map((key) => new PublicKey(key)),
   );
 
   return addressLookupTableAccountInfos.reduce((acc, accountInfo, index) => {
@@ -399,7 +399,7 @@ const getAddressLookupTableAccounts = async (
 };
 
 export const getComputeBudgetFromBuildSwapWithIxsV1Result = (
-  result: BuildSwapWithIxsV1ResultDto
+  result: BuildSwapWithIxsV1ResultDto,
 ): ComputeBudgetInfo => {
   const computeBudgetIxs = result.computeBudgetInstructions
     .filter((ix) => ix.programId === ComputeBudgetProgram.programId.toBase58())
@@ -409,7 +409,7 @@ export const getComputeBudgetFromBuildSwapWithIxsV1Result = (
   }
 
   const unitLimitIx = computeBudgetIxs.find(
-    (ix) => ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX
+    (ix) => ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_LIMIT_IX,
   );
   if (!unitLimitIx) {
     throw new Error("ComputeBudgetProgram unit limit instruction not found");
@@ -418,7 +418,7 @@ export const getComputeBudgetFromBuildSwapWithIxsV1Result = (
     ComputeBudgetInstruction.decodeSetComputeUnitLimit(unitLimitIx);
 
   const unitPriceIx = computeBudgetIxs.find(
-    (ix) => ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX
+    (ix) => ix.data[0] === COMPUTE_BUDGET_PROGRAM_UNIT_PRICE_IX,
   );
   if (!unitPriceIx) {
     // throw new Error("ComputeBudgetProgram unit price instruction not found");
@@ -437,7 +437,7 @@ export const getComputeBudgetFromBuildSwapWithIxsV1Result = (
 };
 
 export const filterOutFeeInstructions = (
-  instructions: BuildSwapWithIxsV1IxDto[]
+  instructions: BuildSwapWithIxsV1IxDto[],
 ): TransferParams[] => {
   return instructions
     .filter((ix) => ix.programId === SystemProgram.programId.toBase58())
@@ -459,7 +459,7 @@ export const getTxFromBuildSwapWithIxsV1Result = async (
   payerPublicKey: PublicKey,
   result: BuildSwapWithIxsV1ResultDto,
   customComputeBudget?: ComputeBudgetInfo,
-  customIxs?: TransactionInstruction[]
+  customIxs?: TransactionInstruction[],
 ): Promise<VersionedTransaction> => {
   const ixs: TransactionInstruction[] = [];
 
@@ -496,7 +496,7 @@ export const getTxFromBuildSwapWithIxsV1Result = async (
 
   const addressLookupTableAccounts = await getAddressLookupTableAccounts(
     conn,
-    result.addressLookupTableAddresses
+    result.addressLookupTableAddresses,
   );
 
   // https://station.jup.ag/docs/swap-api/build-swap-transaction

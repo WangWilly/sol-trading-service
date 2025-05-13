@@ -15,7 +15,7 @@ import { transportFunc } from "./logHistoryHelper/helper";
 interface CopyTradeStrategy {
   id: string;
   name: string;
-  type: 'Buy' | 'Sell';
+  type: "Buy" | "Sell";
   targetWallet: string;
   config: any;
 }
@@ -30,11 +30,13 @@ export class SolRpcWsSubscribeManager {
       name: "SolRpcWsSubscribe",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
-          transportFunc(json);
-        }
+        transportJSON: NOT_USE_CLI
+          ? undefined
+          : (json: unknown) => {
+              transportFunc(json);
+            },
       },
-    })
+    }),
   ) {}
 
   //////////////////////////////////////////////////////////////////////////////
@@ -42,13 +44,13 @@ export class SolRpcWsSubscribeManager {
   async createCopyTradeRecordOnBuyStrategy(
     targetPublicKey: string,
     strategyName: string,
-    strategy: CopyTradeRecordOnBuyStrategy
+    strategy: CopyTradeRecordOnBuyStrategy,
   ): Promise<void> {
     this.logger.info(`Creating CopyTradeRecordOnBuyStrategy: ${strategyName}`);
     this.copyTradeHelper.createCopyTradeRecordOnBuyStrategy(
       targetPublicKey,
       strategyName,
-      strategy
+      strategy,
     );
     this.solRpcWsHelper.updateLogsSubscription();
   }
@@ -56,13 +58,13 @@ export class SolRpcWsSubscribeManager {
   async createCopyTradeRecordOnSellStrategy(
     targetPublicKey: string,
     strategyName: string,
-    strategy: CopyTradeRecordOnSellStrategy
+    strategy: CopyTradeRecordOnSellStrategy,
   ): Promise<void> {
     this.logger.info(`Create CopyTradeRecordOnSellStrategy: ${strategyName}`);
     this.copyTradeHelper.createCopyTradeRecordOnSellStrategy(
       targetPublicKey,
       strategyName,
-      strategy
+      strategy,
     );
     this.solRpcWsHelper.updateLogsSubscription();
   }
@@ -70,72 +72,79 @@ export class SolRpcWsSubscribeManager {
   // Get all copy trade records for CLI display
   getAllCopyTradeRecords(): CopyTradeStrategy[] {
     const strategies: CopyTradeStrategy[] = [];
-    const targetPublicKeys = this.copyTradeHelper.getCopyTradeTargetPublicKeys();
-    
+    const targetPublicKeys =
+      this.copyTradeHelper.getCopyTradeTargetPublicKeys();
+
     // Access the private copyTradeRecordMap through a special accessor method
-    const copyTradeRecordMap = this.copyTradeHelper['copyTradeRecordMap'];
-    
+    const copyTradeRecordMap = this.copyTradeHelper["copyTradeRecordMap"];
+
     if (!copyTradeRecordMap) {
-      this.logger.error('Unable to access copyTradeRecordMap');
+      this.logger.error("Unable to access copyTradeRecordMap");
       return [];
     }
-    
+
     for (const targetPublicKey of targetPublicKeys) {
       const record = copyTradeRecordMap.get(targetPublicKey);
-      
+
       if (!record) continue;
-      
+
       // Process buy strategies
       record.onBuyStrategiesMap.forEach((config, name) => {
         strategies.push({
           id: `${targetPublicKey}-buy-${name}`,
           name,
-          type: 'Buy',
+          type: "Buy",
           targetWallet: targetPublicKey,
           config: {
             sellCoinType: config.sellCoinType.toString(),
             sellCoinAmount: config.sellCoinAmount.toString(),
-            slippageBps: config.slippageBps
-          }
+            slippageBps: config.slippageBps,
+          },
         });
       });
-      
+
       // Process sell strategies
       record.onSellStrategiesMap.forEach((config, name) => {
         strategies.push({
           id: `${targetPublicKey}-sell-${name}`,
           name,
-          type: 'Sell',
+          type: "Sell",
           targetWallet: targetPublicKey,
           config: {
             fixedSellingBps: config.fixedSellingBps,
-            slippageBps: config.slippageBps
-          }
+            slippageBps: config.slippageBps,
+          },
         });
       });
     }
-    
+
     return strategies;
   }
-  
+
   // Remove a strategy by its ID
   async removeCopyTradeRecord(id: string): Promise<boolean> {
-    const [targetWallet, type, strategyName] = id.split('-');
-    
-    if (type === 'buy') {
-      const result = this.copyTradeHelper.removeCopyTradeOnBuyStrategy(targetWallet, strategyName);
+    const [targetWallet, type, strategyName] = id.split("-");
+
+    if (type === "buy") {
+      const result = this.copyTradeHelper.removeCopyTradeOnBuyStrategy(
+        targetWallet,
+        strategyName,
+      );
       if (result) {
         this.solRpcWsHelper.updateLogsSubscription();
       }
       return result;
-    } else if (type === 'sell') {
-      const result = this.copyTradeHelper.removeCopyTradeOnSellStrategy(targetWallet, strategyName);
+    } else if (type === "sell") {
+      const result = this.copyTradeHelper.removeCopyTradeOnSellStrategy(
+        targetWallet,
+        strategyName,
+      );
       if (result) {
         this.solRpcWsHelper.updateLogsSubscription();
       }
       return result;
     }
-    
+
     return false;
   }
 

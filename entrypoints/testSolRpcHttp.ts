@@ -13,10 +13,12 @@ async function main() {
 
   const tic = Date.now();
 
-  const txRes = await safe(conn.getParsedTransaction(txSignature, {
-    commitment: "confirmed",
-    maxSupportedTransactionVersion: 0,
-  }));
+  const txRes = await safe(
+    conn.getParsedTransaction(txSignature, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    }),
+  );
   if (!txRes.success) {
     console.info(`Failed to get tx: ${txRes.error}`);
     return;

@@ -1,8 +1,8 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 
 export class LogHistoryHelper {
-  static logFilePath = path.join(process.cwd(), 'logs', 'logHistory.json');
+  static logFilePath = path.join(process.cwd(), "logs", "logHistory.json");
   static inMemoryLogs: any[] = [];
 
   static ensureLogDirectory() {
@@ -18,11 +18,11 @@ export class LogHistoryHelper {
       this.ensureLogDirectory();
       try {
         if (fs.existsSync(this.logFilePath)) {
-          const logData = fs.readFileSync(this.logFilePath, 'utf8');
+          const logData = fs.readFileSync(this.logFilePath, "utf8");
           this.inMemoryLogs = JSON.parse(logData);
         }
       } catch (error) {
-        console.error('Error reading log history:', error);
+        console.error("Error reading log history:", error);
       }
     }
     return this.inMemoryLogs;
@@ -36,10 +36,14 @@ export class LogHistoryHelper {
   static saveLogsToFile() {
     this.ensureLogDirectory();
     try {
-      fs.writeFileSync(this.logFilePath, JSON.stringify(this.inMemoryLogs, null, 2), 'utf8');
-      console.log('Log history saved to file');
+      fs.writeFileSync(
+        this.logFilePath,
+        JSON.stringify(this.inMemoryLogs, null, 2),
+        "utf8",
+      );
+      console.log("Log history saved to file");
     } catch (error) {
-      console.error('Error saving log history to file:', error);
+      console.error("Error saving log history to file:", error);
     }
   }
 
@@ -54,12 +58,10 @@ export class LogHistoryHelper {
   static clearLogHistory() {
     this.inMemoryLogs = [];
     this.ensureLogDirectory();
-    fs.writeFileSync(this.logFilePath, JSON.stringify([]), 'utf8');
+    fs.writeFileSync(this.logFilePath, JSON.stringify([]), "utf8");
   }
 }
 
-export const transportFunc = (
-  logObj: any
-): void => {
+export const transportFunc = (logObj: any): void => {
   LogHistoryHelper.addLogEntry(logObj);
-}
+};

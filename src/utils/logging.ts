@@ -31,7 +31,7 @@ export class ConsoleLogger implements Logger {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type Logger = TsLogger<ILogObj>;
-export const TsLogLogger = (TsLogger<ILogObj> as any) as new (options?: {
+export const TsLogLogger = TsLogger<ILogObj> as any as new (options?: {
   name?: string;
   type?: "pretty" | "json" | "hidden";
   minLevel?: number;
@@ -53,7 +53,12 @@ export const TsLogLogger = (TsLogger<ILogObj> as any) as new (options?: {
   attachTransport?: (transportLogger: ILogObj & { [key: string]: any }) => void;
   transportJSON?: (json: unknown) => void;
   overwrite?: {
-    transportFormatted?: (logMetaMarkup: string, logArgs: unknown[], logErrors: string[], settings: ISettings<ILogObj>) => void;
+    transportFormatted?: (
+      logMetaMarkup: string,
+      logArgs: unknown[],
+      logErrors: string[],
+      settings: ISettings<ILogObj>,
+    ) => void;
     transportJSON?: (json: unknown) => void;
   };
 }) => Logger;

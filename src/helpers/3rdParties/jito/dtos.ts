@@ -10,7 +10,9 @@ export const SendTransactionV1ResultDtoSchema = zod.object({
   id: zod.number(),
 });
 
-export type SendTransactionV1ResultDto = zod.infer<typeof SendTransactionV1ResultDtoSchema>;
+export type SendTransactionV1ResultDto = zod.infer<
+  typeof SendTransactionV1ResultDtoSchema
+>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,14 +27,19 @@ export const GetTipInfoV1ResultDtoSchema = zod.array(
     landed_tips_95th_percentile: zod.number(),
     landed_tips_99th_percentile: zod.number(),
     ema_landed_tips_50th_percentile: zod.number(),
-  })
+  }),
 );
 
 /**
  * _th_percentile -> sol
  */
-export type GetTipInfoV1ResultDto = zod.infer<typeof GetTipInfoV1ResultDtoSchema>;
+export type GetTipInfoV1ResultDto = zod.infer<
+  typeof GetTipInfoV1ResultDtoSchema
+>;
 
-export const GetPercentileTip = (tipInfo: GetTipInfoV1ResultDto, percentile: string): number => {
+export const GetPercentileTip = (
+  tipInfo: GetTipInfoV1ResultDto,
+  percentile: string,
+): number => {
   return (tipInfo[0] as any)[percentile];
-}
+};

@@ -46,11 +46,13 @@ export class CopyTradeHelper {
       name: "CopyTradeHelper",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
-          transportFunc(json);
-        }
+        transportJSON: NOT_USE_CLI
+          ? undefined
+          : (json: unknown) => {
+              transportFunc(json);
+            },
       },
-    })
+    }),
   ) {}
 
   //////////////////////////////////////////////////////////////////////////////
@@ -61,14 +63,14 @@ export class CopyTradeHelper {
 
   public registerCopyTradeTargetPublicKey(
     subId: number,
-    targetPublicKey: string
+    targetPublicKey: string,
   ): void {
     if (this.copyTradeSubIdTarPubkeyMap.has(subId)) {
       this.logger.debug(`SubId ${subId} already exists`);
       return;
     }
     this.logger.debug(
-      `Registering subId ${subId} with target ${targetPublicKey}`
+      `Registering subId ${subId} with target ${targetPublicKey}`,
     );
     this.copyTradeSubIdTarPubkeyMap.set(subId, targetPublicKey);
   }
@@ -76,7 +78,7 @@ export class CopyTradeHelper {
   public createCopyTradeRecordOnBuyStrategy(
     targetPublicKey: string,
     strategyName: string,
-    strategy: CopyTradeRecordOnBuyStrategy
+    strategy: CopyTradeRecordOnBuyStrategy,
   ): boolean {
     if (!this.copyTradeRecordMap.get(targetPublicKey)) {
       this.copyTradeRecordMap.set(targetPublicKey, {
@@ -101,7 +103,7 @@ export class CopyTradeHelper {
 
   public removeCopyTradeOnBuyStrategy(
     targetPublicKey: string,
-    strategyName: string
+    strategyName: string,
   ): boolean {
     if (!this.copyTradeRecordMap.get(targetPublicKey)) {
       this.logger.warn(`Strategy ${strategyName} not found`);
@@ -127,8 +129,8 @@ export class CopyTradeHelper {
       this.copyTradeRecordMap.delete(targetPublicKey);
       this.copyTradeSubIdTarPubkeyMap = new Map(
         Array.from(this.copyTradeSubIdTarPubkeyMap.entries()).filter(
-          ([_, target]) => target !== targetPublicKey
-        )
+          ([_, target]) => target !== targetPublicKey,
+        ),
       );
     }
     return true;
@@ -137,7 +139,7 @@ export class CopyTradeHelper {
   public createCopyTradeRecordOnSellStrategy(
     targetPublicKey: string,
     strategyName: string,
-    strategy: CopyTradeRecordOnSellStrategy
+    strategy: CopyTradeRecordOnSellStrategy,
   ): boolean {
     if (!this.copyTradeRecordMap.get(targetPublicKey)) {
       this.copyTradeRecordMap.set(targetPublicKey, {
@@ -162,7 +164,7 @@ export class CopyTradeHelper {
 
   public removeCopyTradeOnSellStrategy(
     targetPublicKey: string,
-    strategyName: string
+    strategyName: string,
   ): boolean {
     if (!this.copyTradeRecordMap.get(targetPublicKey)) {
       this.logger.warn(`No target found: ${targetPublicKey}`);
@@ -188,8 +190,8 @@ export class CopyTradeHelper {
       this.copyTradeRecordMap.delete(targetPublicKey);
       this.copyTradeSubIdTarPubkeyMap = new Map(
         Array.from(this.copyTradeSubIdTarPubkeyMap.entries()).filter(
-          ([_, target]) => target !== targetPublicKey
-        )
+          ([_, target]) => target !== targetPublicKey,
+        ),
       );
     }
     return true;
@@ -204,7 +206,7 @@ export class CopyTradeHelper {
 
   // https://solana.com/developers/cookbook/tokens/create-token-account
   private async copyTradeHandleOnBuyStrategyWithWSOL(
-    swapInfo: txHelper.SwapInfoDto
+    swapInfo: txHelper.SwapInfoDto,
   ): Promise<void> {
     // Validate
     if (!swapInfo.toCoinType || swapInfo.toSol) {
@@ -216,25 +218,25 @@ export class CopyTradeHelper {
     const copyTradeRecord = SubHelper.getCopyTradeRecord(
       swapInfo.subId,
       this.copyTradeSubIdTarPubkeyMap,
-      this.copyTradeRecordMap
+      this.copyTradeRecordMap,
     );
     if (!copyTradeRecord) {
       this.logger.error(
-        `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`
+        `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`,
       );
       return;
     }
     const onBuyStrategiesWithSol = Array.from(
-      copyTradeRecord.onBuyStrategiesMap.entries()
+      copyTradeRecord.onBuyStrategiesMap.entries(),
     ).filter((strategy) => strategy[1].sellCoinType === COIN_TYPE_WSOL_MINT);
     if (onBuyStrategiesWithSol.length === 0) {
       this.logger.debug(
-        `[copyTradeHandleOnBuyStrategyWithSol] No strategy is applied to [Tx]${swapInfo.txSignature}`
+        `[copyTradeHandleOnBuyStrategyWithSol] No strategy is applied to [Tx]${swapInfo.txSignature}`,
       );
       return;
     }
     this.logger.debug(
-      `[copyTradeHandleOnBuyStrategyWithSol] onBuy w/ sol strategies processing: [Tx]${swapInfo.txSignature}`
+      `[copyTradeHandleOnBuyStrategyWithSol] onBuy w/ sol strategies processing: [Tx]${swapInfo.txSignature}`,
     );
 
     // TODO: parallelize this
@@ -248,22 +250,22 @@ export class CopyTradeHelper {
       });
       if (!getQuoteV1Res.success) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse strategy. Error: ${getQuoteV1Res.error}`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse strategy. Error: ${getQuoteV1Res.error}`,
         );
         continue;
       }
       const quoteRes = await safe(
-        this.jupSwapClient.getQuote(getQuoteV1Res.data)
+        this.jupSwapClient.getQuote(getQuoteV1Res.data),
       );
       if (!quoteRes.success) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get quote.`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get quote.`,
         );
         continue;
       }
       if (!quoteRes.data) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Quote data not found.`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Quote data not found.`,
         );
         continue;
       }
@@ -271,11 +273,11 @@ export class CopyTradeHelper {
       // Resolve: build swap transaction
       const jitoTipLamports =
         await this.jitoClient.getLatestXpercentileTipInLamportsV1(
-          strategy.jitoTipPercentile
+          strategy.jitoTipPercentile,
         );
       if (!jitoTipLamports) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get tips.`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get tips.`,
         );
         continue;
       }
@@ -290,41 +292,41 @@ export class CopyTradeHelper {
         });
       if (!buildSwapWithIxsV1BodyDtoRes.success) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse quote.`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse quote.`,
         );
         continue;
       }
       const buildSwapWithIxsRes = await safe(
-        this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data)
+        this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data),
       );
       if (!buildSwapWithIxsRes.success) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot build Swap.`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot build Swap.`,
         );
         continue;
       }
       if (!buildSwapWithIxsRes.data) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Swap data not found.`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Swap data not found.`,
         );
         continue;
       }
 
       // Arrange: replace fee/tip
       const computeBudget = getComputeBudgetFromBuildSwapWithIxsV1Result(
-        buildSwapWithIxsRes.data
+        buildSwapWithIxsRes.data,
       );
       const { transferFeeIx, newComputeBudget } =
         this.feeHelper.transferFeeIxProc(
           computeBudget,
-          this.playerKeypair.publicKey
+          this.playerKeypair.publicKey,
         );
       const builtTx = await getTxFromBuildSwapWithIxsV1Result(
         this.solWeb3Conn,
         this.playerKeypair.publicKey,
         buildSwapWithIxsRes.data,
         newComputeBudget,
-        [transferFeeIx]
+        [transferFeeIx],
       );
       try {
         builtTx.sign([this.playerKeypair]);
@@ -335,16 +337,16 @@ export class CopyTradeHelper {
 
       // Resolve: send transaction
       const sendTxRes = await this.jitoClient.sendTransactionV1(
-        versionedTxToSerializedBase64(builtTx)
+        versionedTxToSerializedBase64(builtTx),
       );
       if (!sendTxRes) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot send transaction.`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot send transaction.`,
         );
         continue;
       }
       this.logger.info(
-        `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} CopyTradeTransaction sent: ${sendTxRes.result}`
+        `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} CopyTradeTransaction sent: ${sendTxRes.result}`,
       );
     }
   }
@@ -352,7 +354,7 @@ export class CopyTradeHelper {
   //////////////////////////////////////////////////////////////////////////////
 
   private async copyTradeHandleOnSellStrategyWithWSOL(
-    swapInfo: txHelper.SwapInfoDto
+    swapInfo: txHelper.SwapInfoDto,
   ): Promise<void> {
     // Validate
     if (!swapInfo.fromCoinType || swapInfo.fromSol) {
@@ -364,25 +366,25 @@ export class CopyTradeHelper {
     const copyTradeRecord = SubHelper.getCopyTradeRecord(
       swapInfo.subId,
       this.copyTradeSubIdTarPubkeyMap,
-      this.copyTradeRecordMap
+      this.copyTradeRecordMap,
     );
     if (!copyTradeRecord) {
       this.logger.debug(
-        `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`
+        `[copyTradeHandleOnBuyStrategyWithSol] No strategy matchs the signer on [Tx]${swapInfo.txSignature}`,
       );
       return;
     }
     const onSellStrategiesWithSol = Array.from(
-      copyTradeRecord.onSellStrategiesMap.entries()
+      copyTradeRecord.onSellStrategiesMap.entries(),
     );
     if (onSellStrategiesWithSol.length === 0) {
       this.logger.debug(
-        `[copyTradeHandleOnSellStrategyWithSol] No strategy is applied to [Tx]${swapInfo.txSignature}`
+        `[copyTradeHandleOnSellStrategyWithSol] No strategy is applied to [Tx]${swapInfo.txSignature}`,
       );
       return;
     }
     this.logger.debug(
-      `[copyTradeHandleOnSellStrategyWithSol] onSell w/ sol strategies processing: [Tx]${swapInfo.txSignature}`
+      `[copyTradeHandleOnSellStrategyWithSol] onSell w/ sol strategies processing: [Tx]${swapInfo.txSignature}`,
     );
 
     // TODO: parallelize this
@@ -392,19 +394,19 @@ export class CopyTradeHelper {
         this.solWeb3Conn,
         this.playerKeypair.publicKey,
         swapInfo.fromCoinType,
-        swapInfo.fromCoinOwnerProgramId
+        swapInfo.fromCoinOwnerProgramId,
       );
       if (!amount || amount.lte(new BN(0))) {
         this.logger.error(
           `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${
             swapInfo.txSignature
-          } Cannot get enough amount for sell from [Mint]${swapInfo.fromCoinType.toBase58()}`
+          } Cannot get enough amount for sell from [Mint]${swapInfo.fromCoinType.toBase58()}`,
         );
         continue;
       }
       if (swapInfo.fromCoinPreBalance.isZero()) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Nonsence fromCoinPreBalance`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Nonsence fromCoinPreBalance`,
         );
       }
       let sellAmount = new BN(0);
@@ -419,7 +421,7 @@ export class CopyTradeHelper {
       }
       if (sellAmount.lte(new BN(0))) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Sell amount is zero.`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Sell amount is zero.`,
         );
         continue;
       }
@@ -431,22 +433,22 @@ export class CopyTradeHelper {
       });
       if (!getQuoteV1Res.success) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse strategy.`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse strategy.`,
         );
         continue;
       }
       const quoteRes = await safe(
-        this.jupSwapClient.getQuote(getQuoteV1Res.data)
+        this.jupSwapClient.getQuote(getQuoteV1Res.data),
       );
       if (!quoteRes.success) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get quote.`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get quote.`,
         );
         continue;
       }
       if (!quoteRes.data) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Quote data not found.`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Quote data not found.`,
         );
         continue;
       }
@@ -454,11 +456,11 @@ export class CopyTradeHelper {
       // Resolve: build swap transaction
       const jitoTipLamports =
         await this.jitoClient.getLatestXpercentileTipInLamportsV1(
-          strategy.jitoTipPercentile
+          strategy.jitoTipPercentile,
         );
       if (!jitoTipLamports) {
         this.logger.error(
-          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get tips.`
+          `[copyTradeHandleOnBuyStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot get tips.`,
         );
         continue;
       }
@@ -473,41 +475,41 @@ export class CopyTradeHelper {
         });
       if (!buildSwapWithIxsV1BodyDtoRes.success) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse quote.`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot parse quote.`,
         );
         continue;
       }
       const buildSwapWithIxsRes = await safe(
-        this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data)
+        this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data),
       );
       if (!buildSwapWithIxsRes.success) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot build Swap.`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot build Swap.`,
         );
         continue;
       }
       if (!buildSwapWithIxsRes.data) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Swap data not found.`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Swap data not found.`,
         );
         continue;
       }
 
       // Arrange: replace fee/tip
       const computeBudget = getComputeBudgetFromBuildSwapWithIxsV1Result(
-        buildSwapWithIxsRes.data
+        buildSwapWithIxsRes.data,
       );
       const { transferFeeIx, newComputeBudget } =
         this.feeHelper.transferFeeIxProc(
           computeBudget,
-          this.playerKeypair.publicKey
+          this.playerKeypair.publicKey,
         );
       const builtTx = await getTxFromBuildSwapWithIxsV1Result(
         this.solWeb3Conn,
         this.playerKeypair.publicKey,
         buildSwapWithIxsRes.data,
         newComputeBudget,
-        [transferFeeIx]
+        [transferFeeIx],
       );
       try {
         builtTx.sign([this.playerKeypair]);
@@ -518,16 +520,16 @@ export class CopyTradeHelper {
 
       // Resolve: send transaction
       const sendTxRes = await this.jitoClient.sendTransactionV1(
-        versionedTxToSerializedBase64(builtTx)
+        versionedTxToSerializedBase64(builtTx),
       );
       if (!sendTxRes) {
         this.logger.error(
-          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot send transaction.`
+          `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} Cannot send transaction.`,
         );
         continue;
       }
       this.logger.info(
-        `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} CopyTradeTransaction sent: ${sendTxRes.result}`
+        `[copyTradeHandleOnSellStrategyWithSol][${strategyName}][Tx]${swapInfo.txSignature} CopyTradeTransaction sent: ${sendTxRes.result}`,
       );
     }
   }
@@ -559,7 +561,7 @@ export class CopyTradeHelper {
       this.solWeb3Conn.getParsedTransaction(signature, {
         commitment: "confirmed",
         maxSupportedTransactionVersion: 0,
-      })
+      }),
     );
     if (!txRes.success) {
       this.logger.debug(`[copyTradeHandler] Failed to get tx: ${signature}`);
@@ -572,18 +574,18 @@ export class CopyTradeHelper {
     }
 
     const swapInfoRes = await safe(
-      txHelper.toSwapInfoDto(this.solWeb3Conn, subId, signature, txRes.data)
+      txHelper.toSwapInfoDto(this.solWeb3Conn, subId, signature, txRes.data),
     );
     if (!swapInfoRes.success) {
       this.logger.error(
-        `[copyTradeHandler] Failed to get swap info: ${signature}, ${swapInfoRes.error}`
+        `[copyTradeHandler] Failed to get swap info: ${signature}, ${swapInfoRes.error}`,
       );
       return;
     }
     const swapInfo = swapInfoRes.data;
     if (!swapInfo.fromSol && !swapInfo.toSol) {
       this.logger.warn(
-        `[copyTradeHandler] No SOL involved in swap: ${signature}`
+        `[copyTradeHandler] No SOL involved in swap: ${signature}`,
       );
       return;
     }

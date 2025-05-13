@@ -40,6 +40,7 @@ Run the following test scripts to ensure everything is working properly:
 ### 🚀 Running the Service
 
 #### Step 1: Configure environment
+
 Create a `.env` file in the project root with the following content:
 
 ```env
@@ -47,6 +48,7 @@ PRIVATE_KEY_BASE58=<private_key_base58>  # Your private key in Base58 format
 ```
 
 #### Step 2: Start the service
+
 Use the `solRpcWsSubscribeManager` in the main function to subscribe to the target account:
 
 ```bash
@@ -101,6 +103,7 @@ The CLI provides the following functionality:
 #### Example Workflows
 
 **Creating a Buy Strategy:**
+
 1. Select "Create buy strategy" from the main menu
 2. Enter the target wallet address to copy trades from
 3. Provide a name for your strategy
@@ -108,6 +111,7 @@ The CLI provides the following functionality:
 5. Set your desired slippage tolerance in basis points (e.g., 100 = 1%)
 
 **Creating a Sell Strategy:**
+
 1. Select "Create sell strategy" from the main menu
 2. Enter the target wallet address to copy trades from
 3. Provide a name for your strategy
@@ -115,6 +119,7 @@ The CLI provides the following functionality:
 5. Set your desired slippage tolerance in basis points
 
 **Managing Strategies:**
+
 - Use "List active strategies" to view all current strategies
 - Use "Remove strategy" to delete a strategy that's no longer needed
 - Use "View service status" to check the connection and activity status

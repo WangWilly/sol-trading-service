@@ -1,7 +1,3 @@
-import {
-  TokenHelper
-} from "./helper";
+import { TokenHelper } from "./helper";
 
-export {
-  TokenHelper
-};
+export { TokenHelper };

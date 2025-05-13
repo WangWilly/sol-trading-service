@@ -22,18 +22,18 @@ export class TokenHelper {
   static async getIxsPlayerAmpleWsolForSell(
     solWeb3Conn: Connection,
     playerPublicKey: PublicKey,
-    sellAmount: BN
+    sellAmount: BN,
   ): Promise<TransactionInstruction[]> {
     const tokenAccountPubkey = getAssociatedTokenAddressSync(
       COIN_TYPE_WSOL_MINT,
       playerPublicKey,
-      false
+      false,
     );
 
     let ifInstallAcc = false;
     const depositWsol = new BN(0);
     const getAccRes = await safe(
-      getAccount(solWeb3Conn, tokenAccountPubkey, "confirmed")
+      getAccount(solWeb3Conn, tokenAccountPubkey, "confirmed"),
     );
     if (!getAccRes.success) {
       ifInstallAcc = true;
@@ -55,7 +55,7 @@ export class TokenHelper {
         playerPublicKey,
         tokenAccountPubkey,
         playerPublicKey,
-        COIN_TYPE_WSOL_MINT
+        COIN_TYPE_WSOL_MINT,
       );
       ixs.push(createAtaIx);
     }
@@ -68,7 +68,7 @@ export class TokenHelper {
           toPubkey: tokenAccountPubkey,
           lamports: depositWsol.toNumber(),
         }),
-        createSyncNativeInstruction(tokenAccountPubkey)
+        createSyncNativeInstruction(tokenAccountPubkey),
       );
     }
     return ixs;
@@ -78,20 +78,20 @@ export class TokenHelper {
     solWeb3Conn: Connection,
     playerPublicKey: PublicKey,
     mintAccountPubkey: PublicKey,
-    mintOwnerProgramId: PublicKey
+    mintOwnerProgramId: PublicKey,
   ): Promise<TransactionInstruction | null> {
     const tokenAccountPubkey = getAssociatedTokenAddressSync(
       mintAccountPubkey,
       playerPublicKey,
       false,
-      mintOwnerProgramId
+      mintOwnerProgramId,
     );
     const createAtaIx = createAssociatedTokenAccountInstruction(
       playerPublicKey,
       tokenAccountPubkey,
       playerPublicKey,
       mintAccountPubkey,
-      mintOwnerProgramId
+      mintOwnerProgramId,
     );
 
     const getAccRes = await safe(
@@ -99,15 +99,15 @@ export class TokenHelper {
         solWeb3Conn,
         tokenAccountPubkey,
         "confirmed",
-        mintOwnerProgramId
-      )
+        mintOwnerProgramId,
+      ),
     );
     if (!getAccRes.success) {
       return createAtaIx;
     }
     if (getAccRes.data.owner.toBase58() !== playerPublicKey.toBase58()) {
       throw new Error(
-        `Invalid token account owner: ${getAccRes.data.owner.toBase58()}`
+        `Invalid token account owner: ${getAccRes.data.owner.toBase58()}`,
       );
     }
 
@@ -116,29 +116,29 @@ export class TokenHelper {
 
   static async getCreateIxPlayerWsolForDeposit(
     solWeb3Conn: Connection,
-    playerPublicKey: PublicKey
+    playerPublicKey: PublicKey,
   ): Promise<TransactionInstruction | null> {
     const tokenAccountPubkey = getAssociatedTokenAddressSync(
       COIN_TYPE_WSOL_MINT,
       playerPublicKey,
-      false
+      false,
     );
     const createAtaIx = createAssociatedTokenAccountInstruction(
       playerPublicKey,
       tokenAccountPubkey,
       playerPublicKey,
-      COIN_TYPE_WSOL_MINT
+      COIN_TYPE_WSOL_MINT,
     );
 
     const getAccRes = await safe(
-      getAccount(solWeb3Conn, tokenAccountPubkey, "confirmed")
+      getAccount(solWeb3Conn, tokenAccountPubkey, "confirmed"),
     );
     if (!getAccRes.success) {
       return createAtaIx;
     }
     if (getAccRes.data.owner.toBase58() !== playerPublicKey.toBase58()) {
       throw new Error(
-        `Invalid token account owner: ${getAccRes.data.owner.toBase58()}`
+        `Invalid token account owner: ${getAccRes.data.owner.toBase58()}`,
       );
     }
 
@@ -153,13 +153,13 @@ export class TokenHelper {
     solWeb3Conn: Connection,
     playerPublicKey: PublicKey,
     mintAccountPubkey: PublicKey,
-    mintOwnerProgramId: PublicKey
+    mintOwnerProgramId: PublicKey,
   ): Promise<BN> {
     const tokenAccountPubkey = getAssociatedTokenAddressSync(
       mintAccountPubkey,
       playerPublicKey,
       false,
-      mintOwnerProgramId
+      mintOwnerProgramId,
     );
 
     const getAccRes = await safe(
@@ -167,8 +167,8 @@ export class TokenHelper {
         solWeb3Conn,
         tokenAccountPubkey,
         "confirmed",
-        mintOwnerProgramId
-      )
+        mintOwnerProgramId,
+      ),
     );
     if (!getAccRes.success) {
       // throw new Error(`Cannot get token account: ${tokenAccountPubkey}`);

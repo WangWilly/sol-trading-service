@@ -36,7 +36,7 @@ export class SolRpcWsHelper {
   private rpcIdGen4Sub: RpcIdGenerator = buildRpcIdGenerator(
     this.rpcIdRange4Sub,
     this.rpcIdpubKeyMap4Sub,
-    this.currRpcId4SubUnsub
+    this.currRpcId4SubUnsub,
   );
 
   private rpcIdpubKeyMap4Unsub: RpcIdpubKeyMap4SubUnsub = new Map();
@@ -45,7 +45,7 @@ export class SolRpcWsHelper {
   private rpcIdGen4Unsub: RpcIdGenerator = buildRpcIdGenerator(
     this.rpcIdRange4Unsub,
     this.rpcIdpubKeyMap4Unsub,
-    this.currRpcId4Unsub
+    this.currRpcId4Unsub,
   );
 
   //////////////////////////////////////////////////////////////////////////////
@@ -57,11 +57,13 @@ export class SolRpcWsHelper {
       name: "SolRpcWsHelper",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
-          transportFunc(json);
-        }
+        transportJSON: NOT_USE_CLI
+          ? undefined
+          : (json: unknown) => {
+              transportFunc(json);
+            },
       },
-    })
+    }),
   ) {}
 
   //////////////////////////////////////////////////////////////////////////////
@@ -88,10 +90,10 @@ export class SolRpcWsHelper {
     // this.logger.debug("[updateLogsSubscription] WebSocket is ready for logs subscription");
 
     const currTargetPublicKeySet = new Set(
-      this.copyTradeHelper.getCopyTradeTargetPublicKeys()
+      this.copyTradeHelper.getCopyTradeTargetPublicKeys(),
     );
     const prevPublicKeySubIdEntries = Array.from(
-      this.publicKeySubIdMap.entries()
+      this.publicKeySubIdMap.entries(),
     );
     for (const [publicKey, subId] of prevPublicKeySubIdEntries) {
       if (currTargetPublicKeySet.has(publicKey)) {
@@ -102,7 +104,7 @@ export class SolRpcWsHelper {
         this.rpcIdGen4Unsub,
         subId,
         publicKey,
-        this.publicKeySubIdMap
+        this.publicKeySubIdMap,
       );
     }
     for (const publicKey of this.copyTradeHelper.getCopyTradeTargetPublicKeys()) {
@@ -113,7 +115,7 @@ export class SolRpcWsHelper {
         this.ws,
         this.rpcIdGen4Sub,
         publicKey,
-        this.publicKeySubIdMap
+        this.publicKeySubIdMap,
       );
     }
   }
@@ -122,13 +124,15 @@ export class SolRpcWsHelper {
     const now = new Date();
     const uptimeMs = now.getTime() - this.startTime.getTime();
     const uptime = this.formatUptime(uptimeMs);
-    
+
     return {
       connected: this.ws && this.ws.readyState === WebSocket.OPEN,
-      lastActivity: this.lastActivityTime ? this.lastActivityTime.toLocaleString() : null,
+      lastActivity: this.lastActivityTime
+        ? this.lastActivityTime.toLocaleString()
+        : null,
       uptime: uptime,
       subscriptions: this.publicKeySubIdMap.size,
-      wsUrl: this.wsRpcUrl
+      wsUrl: this.wsRpcUrl,
     };
   }
 
@@ -137,7 +141,7 @@ export class SolRpcWsHelper {
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     if (days > 0) {
       return `${days}d ${hours % 24}h ${minutes % 60}m`;
     } else if (hours > 0) {
@@ -167,7 +171,7 @@ export class SolRpcWsHelper {
   private connect(): void {
     if (this.ws) {
       this.logger.info(
-        "Closing existing WebSocket connection and reconnecting..."
+        "Closing existing WebSocket connection and reconnecting...",
       );
       this.ws.close();
     }
@@ -213,7 +217,7 @@ export class SolRpcWsHelper {
         this.ws,
         this.rpcIdGen4Sub,
         publicKey,
-        this.publicKeySubIdMap
+        this.publicKeySubIdMap,
       );
     }
   }
@@ -232,7 +236,7 @@ export class SolRpcWsHelper {
       }
       const subId = message.result;
       this.logger.info(
-        `Subscription success for ${publicKey} w/ msgId ${message.id}, subId: ${subId}`
+        `Subscription success for ${publicKey} w/ msgId ${message.id}, subId: ${subId}`,
       );
       this.publicKeySubIdMap.set(publicKey, subId);
       this.copyTradeHelper.registerCopyTradeTargetPublicKey(subId, publicKey);
@@ -247,7 +251,7 @@ export class SolRpcWsHelper {
         return;
       }
       this.logger.info(
-        `Unsubscription success for ${publicKey} w/ msgId: ${message.id}`
+        `Unsubscription success for ${publicKey} w/ msgId: ${message.id}`,
       );
       this.publicKeySubIdMap.delete(publicKey);
       this.rpcIdpubKeyMap4Unsub.delete(message.id);
@@ -257,22 +261,22 @@ export class SolRpcWsHelper {
     if (message.method === "logsNotification") {
       if (
         !new Set(this.publicKeySubIdMap.values()).has(
-          message.params.subscription
+          message.params.subscription,
         )
       ) {
         this.logger.warn(
-          `Unknown subscriptionId ${message.params.subscription}`
+          `Unknown subscriptionId ${message.params.subscription}`,
         );
         logsUnsubscribe(
           this.ws!,
           this.rpcIdGen4Unsub,
-          message.params.subscription
+          message.params.subscription,
         );
         return;
       }
       this.onLogs(
         message.params.subscription,
-        message.params.result.value as Logs
+        message.params.result.value as Logs,
       );
       return;
     }
@@ -285,7 +289,7 @@ export class SolRpcWsHelper {
       await this.copyTradeHelper.copyTradeHandler(subId, logs);
     } catch (error) {
       this.logger.error(
-        `[onLogs] Copy trade error occurred: ${error} when handling tx: ${logs.signature}`
+        `[onLogs] Copy trade error occurred: ${error} when handling tx: ${logs.signature}`,
       );
     }
   }

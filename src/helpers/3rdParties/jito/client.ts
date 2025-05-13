@@ -15,10 +15,7 @@ import {
   SendTransactionV1ResultDtoSchema,
 } from "./dtos";
 
-import type {
-  GetTipInfoV1ResultDto,
-  SendTransactionV1ResultDto,
-} from "./dtos";
+import type { GetTipInfoV1ResultDto, SendTransactionV1ResultDto } from "./dtos";
 import { transportFunc } from "../../logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,14 +35,17 @@ export class JitoClient {
     blockEngineBaseUrl: string = "https://mainnet.block-engine.jito.wtf",
     bundleBaseUrl: string = "https://bundles.jito.wtf",
     uuid: string = "",
-    private readonly logger: Logger = new TsLogLogger({ name: "JitoClient",
+    private readonly logger: Logger = new TsLogLogger({
+      name: "JitoClient",
       type: LOG_TYPE,
       overwrite: {
-        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
-          transportFunc(json);
-        }
+        transportJSON: NOT_USE_CLI
+          ? undefined
+          : (json: unknown) => {
+              transportFunc(json);
+            },
       },
-     })
+    }),
   ) {
     const blockEngineHeaders: Record<string, string> = {
       [CONTENT_TYPE_KEY]: CONTENT_TYPE_VAL_JSON,
@@ -58,7 +58,7 @@ export class JitoClient {
         baseURL: blockEngineBaseUrl,
         headers: blockEngineHeaders,
       },
-      logger
+      logger,
     );
 
     const bundleHeaders: Record<string, string> = {
@@ -72,14 +72,14 @@ export class JitoClient {
         baseURL: bundleBaseUrl,
         headers: bundleHeaders,
       },
-      logger
+      logger,
     );
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   async sendTransactionV1(
-    serializedTxBase64: string
+    serializedTxBase64: string,
   ): Promise<SendTransactionV1ResultDto | null> {
     const resultRes = await safe(
       this.blockEngineBaseClient.post(
@@ -96,19 +96,19 @@ export class JitoClient {
           ],
         },
         undefined,
-        true
-      )
+        true,
+      ),
     );
     if (!resultRes.success) {
       this.logger.error(
-        `[sendTransactionV1] Failed to get response: ${resultRes.error}`
+        `[sendTransactionV1] Failed to get response: ${resultRes.error}`,
       );
       return null;
     }
     const parseRes = SendTransactionV1ResultDtoSchema.safeParse(resultRes.data);
     if (!parseRes.success) {
       this.logger.error(
-        `[sendTransactionV1] Failed to parse response: ${parseRes.error.toString()}`
+        `[sendTransactionV1] Failed to parse response: ${parseRes.error.toString()}`,
       );
       return null;
     }
@@ -123,18 +123,18 @@ export class JitoClient {
    */
   async getTipInfoV1(): Promise<GetTipInfoV1ResultDto | null> {
     const resultRes = await safe(
-      this.bundleBaseClient.get(this.bundleGetTipInfoV1Path, undefined, true)
+      this.bundleBaseClient.get(this.bundleGetTipInfoV1Path, undefined, true),
     );
     if (!resultRes.success) {
       this.logger.error(
-        `[getBundleTipInfoV1] Failed to get response: ${resultRes.error}`
+        `[getBundleTipInfoV1] Failed to get response: ${resultRes.error}`,
       );
       return null;
     }
     const parseRes = GetTipInfoV1ResultDtoSchema.safeParse(resultRes.data);
     if (!parseRes.success) {
       this.logger.error(
-        `[getBundleTipInfoV1] Failed to parse response: ${parseRes.error.toString()}`
+        `[getBundleTipInfoV1] Failed to parse response: ${parseRes.error.toString()}`,
       );
       return null;
     }
@@ -143,12 +143,12 @@ export class JitoClient {
   }
 
   async getLatestXpercentileTipInLamportsV1(
-    jitoTipPercentile: string
+    jitoTipPercentile: string,
   ): Promise<number | null> {
     const tipInfo = await this.getTipInfoV1();
     if (!tipInfo) {
       this.logger.error(
-        `[getLatestXpercentileTipInfoV1] Failed to get tip info`
+        `[getLatestXpercentileTipInfoV1] Failed to get tip info`,
       );
       return null;
     }
@@ -159,7 +159,7 @@ export class JitoClient {
       !GetPercentileTip(tipInfo, jitoTipPercentile)
     ) {
       this.logger.error(
-        `[getLatestXpercentileTipInfoV1] Failed to get tip info for percentile: ${jitoTipPercentile}`
+        `[getLatestXpercentileTipInfoV1] Failed to get tip info for percentile: ${jitoTipPercentile}`,
       );
       return null;
     }

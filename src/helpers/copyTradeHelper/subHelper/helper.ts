@@ -6,7 +6,7 @@ export class SubHelper {
   static getCopyTradeRecord(
     subId: number,
     copyTradeSubIdTarPubkeyMap: SubIdTarPubkeyMap,
-    copyTradeRecordMap: RecordMap
+    copyTradeRecordMap: RecordMap,
   ): CopyTradeRecord | null {
     const targetPublicKey = copyTradeSubIdTarPubkeyMap.get(subId);
     if (!targetPublicKey) {

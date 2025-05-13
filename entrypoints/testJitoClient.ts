@@ -14,7 +14,6 @@ async function main() {
     return;
   }
   console.log(resultRes);
-
 }
 
 main();

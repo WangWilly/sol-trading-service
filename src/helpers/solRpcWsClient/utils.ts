@@ -22,7 +22,7 @@ export type RpcIdGenerator = (publicKey: string) => number;
 export function buildRpcIdGenerator(
   rpcIdRange: RpcIdRange,
   rpcIdpubKeyMap: RpcIdpubKeyMap4SubUnsub,
-  curr: RpcId
+  curr: RpcId,
 ): RpcIdGenerator {
   return (publicKey: string): number => {
     while (rpcIdpubKeyMap.has(curr.curr)) {
@@ -42,7 +42,7 @@ export function logsSubscribe(
   wsConn: WebSocket,
   rpcIdGen: RpcIdGenerator,
   publicKey: string,
-  publicKeySubIdMap: PublicKeySubIdMap
+  publicKeySubIdMap: PublicKeySubIdMap,
 ): void {
   // https://solana.com/docs/rpc/websocket/logssubscribe
   const subscribeMsg = {
@@ -61,7 +61,7 @@ export function logsUnsubscribe(
   rpcIdGen: RpcIdGenerator,
   subId: number,
   publicKey: string | null = null,
-  publicKeySubIdMap: PublicKeySubIdMap | null = null
+  publicKeySubIdMap: PublicKeySubIdMap | null = null,
 ): void {
   // https://solana.com/docs/rpc/websocket/logsunsubscribe
   const unsubscribeMsg = {

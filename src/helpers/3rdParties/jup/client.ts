@@ -37,14 +37,17 @@ export class JupSwapClient {
   constructor(
     jupSwapBaseEndpoint: string = "https://api.jup.ag",
     apiKey: string = "",
-    private readonly logger: Logger = new TsLogLogger({ name: "JupSwapClient"
-      , type: LOG_TYPE,
+    private readonly logger: Logger = new TsLogLogger({
+      name: "JupSwapClient",
+      type: LOG_TYPE,
       overwrite: {
-        transportJSON: NOT_USE_CLI ? undefined : (json: unknown) => {
-          transportFunc(json);
-        }
+        transportJSON: NOT_USE_CLI
+          ? undefined
+          : (json: unknown) => {
+              transportFunc(json);
+            },
       },
-     })
+    }),
   ) {
     this.baseClient = new HttpClient(
       {
@@ -54,21 +57,21 @@ export class JupSwapClient {
           [API_TOKEN_KEY]: apiKey,
         },
       },
-      this.logger
+      this.logger,
     );
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   async getQuote(
-    params: GetQuoteV1ParamDto
+    params: GetQuoteV1ParamDto,
   ): Promise<GetQuoteV1ResultDto | null> {
     const resultRes = await safe(
-      this.baseClient.get(this.quoteV1Path, params, true)
+      this.baseClient.get(this.quoteV1Path, params, true),
     );
     if (!resultRes.success) {
       this.logger.error(
-        `[getQuote] Failed to get response: ${resultRes.error}`
+        `[getQuote] Failed to get response: ${resultRes.error}`,
       );
       return null;
     }
@@ -76,7 +79,7 @@ export class JupSwapClient {
     const parseRes = GetQuoteV1ResultDtoSchema.safeParse(resultRes.data);
     if (!parseRes.success) {
       this.logger.error(
-        `[getQuote] Failed to parse response: ${parseRes.error.toString()}`
+        `[getQuote] Failed to parse response: ${parseRes.error.toString()}`,
       );
       return null;
     }
@@ -87,14 +90,14 @@ export class JupSwapClient {
   //////////////////////////////////////////////////////////////////////////////
 
   async buildSwapTx(
-    body: BuildSwapV1BodyDto
+    body: BuildSwapV1BodyDto,
   ): Promise<BuildSwapV1ResultDto | null> {
     const resultRes = await safe(
-      this.baseClient.post(this.buildSwapTxV1Path, body, undefined, true)
+      this.baseClient.post(this.buildSwapTxV1Path, body, undefined, true),
     );
     if (!resultRes.success) {
       this.logger.error(
-        `[buildSwapTx] Failed to get response: ${resultRes.error}`
+        `[buildSwapTx] Failed to get response: ${resultRes.error}`,
       );
       return null;
     }
@@ -102,7 +105,7 @@ export class JupSwapClient {
     const parseRes = BuildSwapV1ResultDtoSchema.safeParse(resultRes.data);
     if (!parseRes.success) {
       this.logger.error(
-        `[buildSwapTx] Failed to parse response: ${parseRes.error.toString()}`
+        `[buildSwapTx] Failed to parse response: ${parseRes.error.toString()}`,
       );
       return null;
     }
@@ -110,7 +113,7 @@ export class JupSwapClient {
     const { data } = parseRes;
     if (data.simulationError !== null) {
       this.logger.error(
-        `[buildSwapTx] Error response: ${data.simulationError.errorCode} - ${data.simulationError.error}`
+        `[buildSwapTx] Error response: ${data.simulationError.errorCode} - ${data.simulationError.error}`,
       );
       return null;
     }
@@ -119,24 +122,24 @@ export class JupSwapClient {
   }
 
   async buildSwapWithIxs(
-    body: BuildSwapWithIxsV1BodyDto
+    body: BuildSwapWithIxsV1BodyDto,
   ): Promise<BuildSwapWithIxsV1ResultDto | null> {
     const resultRes = await safe(
-      this.baseClient.post(this.buildSwapWithIxsPath, body, undefined, true)
+      this.baseClient.post(this.buildSwapWithIxsPath, body, undefined, true),
     );
     if (!resultRes.success) {
       this.logger.error(
-        `[buildSwapWithIxs] Failed to get response: ${resultRes.error}`
+        `[buildSwapWithIxs] Failed to get response: ${resultRes.error}`,
       );
       return null;
     }
 
     const parseRes = BuildSwapWithIxsV1ResultDtoSchema.safeParse(
-      resultRes.data
+      resultRes.data,
     );
     if (!parseRes.success) {
       this.logger.error(
-        `[buildSwapWithIxs] Failed to parse response: ${parseRes.error.toString()}`
+        `[buildSwapWithIxs] Failed to parse response: ${parseRes.error.toString()}`,
       );
       return null;
     }

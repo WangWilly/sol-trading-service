@@ -1,7 +1,7 @@
-import zod from 'zod';
+import zod from "zod";
 
-import BN from 'bn.js';
-import { PublicKey } from '@solana/web3.js';
+import BN from "bn.js";
+import { PublicKey } from "@solana/web3.js";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +28,7 @@ export const SwapInfoSchema = zod.object({
 export type SwapInfoDto = zod.infer<typeof SwapInfoSchema>;
 
 export const printSwapInfoDto = (swapInfo: SwapInfoDto) => {
-  console.log('{');
+  console.log("{");
   console.log(`  subId: ${swapInfo.subId},`);
   console.log(`  txSignature: ${swapInfo.txSignature},`);
   console.log(`  msg_hash: ${swapInfo.msg_hash},`);
@@ -39,14 +39,18 @@ export const printSwapInfoDto = (swapInfo: SwapInfoDto) => {
   console.log(`  fromSol: ${swapInfo.fromSol},`);
   console.log(`  fromCoinType: ${swapInfo.fromCoinType},`);
   console.log(`  fromCoinAmount: ${swapInfo.fromCoinAmount.toString()},`);
-  console.log(`  fromCoinPreBalance: ${swapInfo.fromCoinPreBalance.toString()},`);
-  console.log(`  fromCoinPostBalance: ${swapInfo.fromCoinPostBalance.toString()},`);
+  console.log(
+    `  fromCoinPreBalance: ${swapInfo.fromCoinPreBalance.toString()},`,
+  );
+  console.log(
+    `  fromCoinPostBalance: ${swapInfo.fromCoinPostBalance.toString()},`,
+  );
   console.log(`  fromCoinOwnerProgram: ${swapInfo.fromCoinOwnerProgramId},`);
   console.log(`  toSol: ${swapInfo.toSol},`);
   console.log(`  toCoinType: ${swapInfo.toCoinType},`);
   console.log(`  toCoinAmount: ${swapInfo.toCoinAmount.toString()},`);
   console.log(`  toCoinOwnerProgram: ${swapInfo.toCoinOwnerProgramId}`);
-  console.log('}');
+  console.log("}");
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -35,7 +35,7 @@ export async function toSwapInfoDto(
   conn: Connection,
   subId: number,
   txSignature: string,
-  txRes: ParsedTransactionWithMeta
+  txRes: ParsedTransactionWithMeta,
 ): Promise<SwapInfoDto> {
   const signerTokenBalanceChanges = getSignerTokenBalanceChanges(txRes);
   if (signerTokenBalanceChanges.length === 1) {
@@ -44,7 +44,7 @@ export async function toSwapInfoDto(
       subId,
       txSignature,
       txRes,
-      signerTokenBalanceChanges[0]
+      signerTokenBalanceChanges[0],
     );
   }
   if (signerTokenBalanceChanges.length === 2) {
@@ -54,7 +54,7 @@ export async function toSwapInfoDto(
       txSignature,
       txRes,
       signerTokenBalanceChanges[0],
-      signerTokenBalanceChanges[1]
+      signerTokenBalanceChanges[1],
     );
   }
   throw new Error("Invalid number of token balance changes");
@@ -65,7 +65,7 @@ async function fromSol2TknTx(
   subId: number,
   txSignature: string,
   txRes: ParsedTransactionWithMeta,
-  signerTokenBalanceChange: TokenBalanceChange
+  signerTokenBalanceChange: TokenBalanceChange,
 ): Promise<SwapInfoDto> {
   const signer = getSigner(txRes);
   if (!signer) {
@@ -90,7 +90,7 @@ async function fromSol2TknTx(
     .sub(signerTokenBalanceChange.pre)
     .abs();
   const mintAccInfo = await conn.getAccountInfo(
-    new PublicKey(signerTokenBalanceChange.mint)
+    new PublicKey(signerTokenBalanceChange.mint),
   );
   if (!mintAccInfo) {
     throw new Error("Mint account info not found");
@@ -147,18 +147,18 @@ async function fromTkn2TknTx(
   txSignature: string,
   txRes: ParsedTransactionWithMeta,
   signerTokenBalanceChange1AsFrom: TokenBalanceChange,
-  signerTokenBalanceChange2AsTo: TokenBalanceChange
+  signerTokenBalanceChange2AsTo: TokenBalanceChange,
 ): Promise<SwapInfoDto> {
   if (
     signerTokenBalanceChange2AsTo.post.lt(signerTokenBalanceChange2AsTo.pre)
   ) {
     if (
       signerTokenBalanceChange1AsFrom.post.lt(
-        signerTokenBalanceChange1AsFrom.pre
+        signerTokenBalanceChange1AsFrom.pre,
       )
     ) {
       throw new Error(
-        `Invalid token balance changes mint1: {${signerTokenBalanceChange1AsFrom.mint}, ${signerTokenBalanceChange1AsFrom.pre}, ${signerTokenBalanceChange1AsFrom.post}}, mint2: {${signerTokenBalanceChange2AsTo.mint}, ${signerTokenBalanceChange2AsTo.pre}, ${signerTokenBalanceChange2AsTo.post}}`
+        `Invalid token balance changes mint1: {${signerTokenBalanceChange1AsFrom.mint}, ${signerTokenBalanceChange1AsFrom.pre}, ${signerTokenBalanceChange1AsFrom.post}}, mint2: {${signerTokenBalanceChange2AsTo.mint}, ${signerTokenBalanceChange2AsTo.pre}, ${signerTokenBalanceChange2AsTo.post}}`,
       );
     }
     return fromTkn2TknTx(
@@ -167,7 +167,7 @@ async function fromTkn2TknTx(
       txSignature,
       txRes,
       signerTokenBalanceChange2AsTo,
-      signerTokenBalanceChange1AsFrom
+      signerTokenBalanceChange1AsFrom,
     );
   }
 
@@ -177,7 +177,7 @@ async function fromTkn2TknTx(
   }
 
   const mint1AccInfo = await conn.getAccountInfo(
-    new PublicKey(signerTokenBalanceChange1AsFrom.mint)
+    new PublicKey(signerTokenBalanceChange1AsFrom.mint),
   );
   if (!mint1AccInfo) {
     throw new Error("Mint1 account info not found");
@@ -185,7 +185,7 @@ async function fromTkn2TknTx(
   const mint1OwnerProgramId = mint1AccInfo.owner;
 
   const mint2AccInfo = await conn.getAccountInfo(
-    new PublicKey(signerTokenBalanceChange2AsTo.mint)
+    new PublicKey(signerTokenBalanceChange2AsTo.mint),
   );
   if (!mint2AccInfo) {
     throw new Error("Mint2 account info not found");
@@ -226,7 +226,7 @@ function getSigner(txRes: ParsedTransactionWithMeta): PublicKey {
   }
   // TODO: signer is the first account key?
   const signers = txRes.transaction.message.accountKeys.filter(
-    (account) => account.signer
+    (account) => account.signer,
   );
 
   if (signers.length === 0) {
@@ -243,7 +243,7 @@ function getSigner(txRes: ParsedTransactionWithMeta): PublicKey {
 ////////////////////////////////////////////////////////////////////////////////
 // native sol
 function getSignerBalanceChange(
-  txRes: ParsedTransactionWithMeta
+  txRes: ParsedTransactionWithMeta,
 ): BalanceChange {
   if (!txRes.meta) {
     throw new Error("Transaction meta not found");
@@ -281,15 +281,15 @@ function getCreateAccountFeesSum(txRes: ParsedTransactionWithMeta): BN {
 }
 
 function getSolTransferIxs(
-  txRes: ParsedTransactionWithMeta
+  txRes: ParsedTransactionWithMeta,
 ): (ParsedInstruction | PartiallyDecodedInstruction)[] {
   return txRes.transaction.message.instructions.filter(
-    (instruction) => instruction.programId.toBase58() === TRANSFER_PROGRAM_ID
+    (instruction) => instruction.programId.toBase58() === TRANSFER_PROGRAM_ID,
   );
 }
 
 function getTipsSum(
-  ixs: (ParsedInstruction | PartiallyDecodedInstruction)[]
+  ixs: (ParsedInstruction | PartiallyDecodedInstruction)[],
 ): BN {
   return ixs
     .filter((ix) => {
@@ -313,7 +313,7 @@ function getTipsSum(
 
 // TokenBalance
 function getSignerTokenBalanceChanges(
-  txRes: ParsedTransactionWithMeta
+  txRes: ParsedTransactionWithMeta,
 ): TokenBalanceChange[] {
   const signer = getSigner(txRes);
   if (!signer) {
@@ -329,7 +329,7 @@ function getSignerTokenBalanceChanges(
   const preTokenBalances = new Map(
     txRes.meta.preTokenBalances
       .filter((token) => token.owner === signer.toBase58())
-      .map((token) => [token.mint, token.uiTokenAmount.amount])
+      .map((token) => [token.mint, token.uiTokenAmount.amount]),
   );
   return txRes.meta.postTokenBalances
     .filter((token) => token.owner === signer.toBase58())
