@@ -7,7 +7,7 @@ import {
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
 import { Logger, TsLogLogger } from "../../../utils/logging";
-import { LOG_HIDDEN } from "../../../config";
+import { LOG_TYPE, USE_CLI } from "../../../config";
 
 import {
   GetPercentileTip,
@@ -19,6 +19,7 @@ import type {
   GetTipInfoV1ResultDto,
   SendTransactionV1ResultDto,
 } from "./dtos";
+import { transportFunc } from "../../logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +39,12 @@ export class JitoClient {
     bundleBaseUrl: string = "https://bundles.jito.wtf",
     uuid: string = "",
     private readonly logger: Logger = new TsLogLogger({ name: "JitoClient",
-      type: LOG_HIDDEN,
+      type: LOG_TYPE,
+      overwrite: {
+        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+          transportFunc(json);
+        }
+      },
      })
   ) {
     const blockEngineHeaders: Record<string, string> = {

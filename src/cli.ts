@@ -12,6 +12,8 @@ import {
 import { CopyTradeHelper } from './helpers/copyTradeHelper';
 import { SolRpcWsHelper } from './helpers/solRpcWsClient';
 import { SolRpcWsSubscribeManager } from './helpers/solRpcWsSubscribeManager';
+import { sleep } from 'bun';
+import { LogHistoryHelper } from './helpers/logHistoryHelper/helper';
 
 // Wrapper functions to handle validation re-prompting
 async function validateInput(options: any): Promise<string> {
@@ -88,7 +90,7 @@ async function createBuyStrategy() {
         new PublicKey(input);
         return true;
       } catch (error) {
-        throw new Error('Please enter a valid Solana wallet address');
+        return 'Please enter a valid Solana wallet address';
       }
     }
   });
@@ -96,10 +98,10 @@ async function createBuyStrategy() {
   const strategyName = await validateInput({
     message: 'Enter a name for this strategy:',
     validate: (input: string) => {
-      if (input.trim() === '') {
-        throw new Error('Strategy name cannot be empty');
+      if (input.trim() !== '') {
+        return true;
       }
-      return true;
+      return 'Strategy name cannot be empty';
     }
   });
 
@@ -108,9 +110,8 @@ async function createBuyStrategy() {
     validate: (input: number) => {
       if (input !== undefined && input > 0) {
         return true;
-      } else {
-        throw new Error('Please enter a valid number greater than 0');
       }
+      return 'Please enter a valid number greater than 0';
     }
   });
 
@@ -119,9 +120,8 @@ async function createBuyStrategy() {
     validate: (input: number) => {
       if (input !== undefined && input > 0 && input <= 10000) {
         return true;
-      } else {
-        throw new Error('Please enter a valid number between 1 and 10000');
       }
+      return 'Please enter a valid number between 1 and 10000';
     }
   });
 
@@ -159,7 +159,7 @@ async function createSellStrategy() {
       if (input.trim() !== '') {
         return true;
       }
-      throw new Error('Strategy name cannot be empty');
+      return 'Strategy name cannot be empty';
     }
   });
 
@@ -169,7 +169,7 @@ async function createSellStrategy() {
       if (num !== undefined && num > 0 && num <= 10000) {
         return true;
       }
-      throw new Error('Please enter a valid number between 1 and 10000');
+      return 'Please enter a valid number between 1 and 10000';
     }
   });
 
@@ -179,7 +179,7 @@ async function createSellStrategy() {
       if (input !== undefined && input > 0 && input <= 10000) {
         return true;
       }
-      throw new Error('Please enter a valid number between 1 and 10000');
+      return 'Please enter a valid number between 1 and 10000';
     }
   });
 
@@ -247,6 +247,24 @@ async function displayStatus() {
   console.log(`⏰ Uptime: ${wsStatus.uptime || 'N/A'}`);
 }
 
+async function displayLogHistory() {
+  const logs = LogHistoryHelper.listLogHistory();
+  
+  if (logs.length === 0) {
+    console.log(`⚠️ No logs found in history`);
+    return;
+  }
+  
+  console.log(`\n📋 ====== Log History ======`);
+  
+  logs.forEach((log: any) => {
+    console.log(`\n${log.index}. ⏱️ ${new Date(log["_meta"].date).toLocaleString()}`);
+    console.log(`   📝 ${JSON.stringify(log["0"], null, 2)}`);
+  });
+  
+  console.log(`\nTotal logs: ${logs.length}`);
+}
+
 // Function to refresh the console
 function refreshConsole() {
   // Clear the console using the cross-platform method
@@ -262,6 +280,8 @@ async function main() {
   console.log(`==============================================\n`);
   
   await initialize();
+
+  await sleep(1000); // Wait for 1 second before showing the menu
   
   program
     .version('1.0.0')
@@ -278,6 +298,7 @@ async function main() {
         { name: '🟢 Create buy strategy', value: 'buy' },
         { name: '🔴 Create sell strategy', value: 'sell' },
         { name: '🗑️  Remove strategy', value: 'remove' },
+        { name: '📜 View log history', value: 'logs' },
         { name: '❌ Exit', value: 'exit' }
       ]
     });
@@ -300,14 +321,19 @@ async function main() {
         case 'remove':
           await removeStrategy();
           break;
+        case 'logs':
+          await displayLogHistory();
+          break;
         case 'exit':
           console.log(`👋 Exiting service gracefully...`);
           await solRpcWsSubscribeManager.gracefulStop();
+          LogHistoryHelper.saveLogsToFile();
           process.exit(0);
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'ExitPromptError') {
         // back to main menu
+        refreshConsole();
         console.log(`\n🔙 Back to main menu...`);
       } else {
         console.log(`❌ Error: ${error}`);
@@ -330,6 +356,8 @@ process.on('SIGINT', async () => {
   if (solRpcWsSubscribeManager) {
     await solRpcWsSubscribeManager.gracefulStop();
   }
+  // Save logs before exiting
+  LogHistoryHelper.saveLogsToFile();
   process.exit(0);
 });
 
@@ -338,6 +366,8 @@ process.on('SIGTERM', async () => {
   if (solRpcWsSubscribeManager) {
     await solRpcWsSubscribeManager.gracefulStop();
   }
+  // Save logs before exiting
+  LogHistoryHelper.saveLogsToFile();
   process.exit(0);
 });
 

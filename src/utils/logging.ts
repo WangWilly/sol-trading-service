@@ -1,4 +1,4 @@
-import { Logger as TsLogger, ILogObj } from "tslog";
+import { Logger as TsLogger, ILogObj, ISettings } from "tslog";
 
 /**
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,4 +52,8 @@ export const TsLogLogger = (TsLogger<ILogObj> as any) as new (options?: {
   dateTimeTimezone?: string;
   attachTransport?: (transportLogger: ILogObj & { [key: string]: any }) => void;
   transportJSON?: (json: unknown) => void;
+  overwrite?: {
+    transportFormatted?: (logMetaMarkup: string, logArgs: unknown[], logErrors: string[], settings: ISettings<ILogObj>) => void;
+    transportJSON?: (json: unknown) => void;
+  };
 }) => Logger;

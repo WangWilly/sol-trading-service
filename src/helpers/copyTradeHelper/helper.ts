@@ -11,7 +11,7 @@ import BN from "bn.js";
 
 import { safe } from "../../utils/exceptions";
 import { TsLogLogger } from "../../utils/logging";
-import { LOG_HIDDEN } from "../../config";
+import { LOG_TYPE, USE_CLI } from "../../config";
 import type { Logger } from "../../utils/logging";
 import * as txHelper from "../transactionHelper";
 import { TokenHelper } from "./tokenHelper";
@@ -28,6 +28,7 @@ import { FeeHelper } from "./feeHelper/helper";
 import { versionedTxToSerializedBase64 } from "../../utils/transaction";
 import { SubHelper } from "./subHelper";
 import { FULL_SELLING_BPS } from "../../utils/constants";
+import { transportFunc } from "../logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +44,12 @@ export class CopyTradeHelper {
     private readonly feeHelper: FeeHelper,
     private readonly logger: Logger = new TsLogLogger({
       name: "CopyTradeHelper",
-      type: LOG_HIDDEN,
+      type: LOG_TYPE,
+      overwrite: {
+        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+          transportFunc(json);
+        }
+      },
     })
   ) {}
 

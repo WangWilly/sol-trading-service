@@ -6,7 +6,8 @@ import {
 } from "./copyTradeHelper/dtos";
 import { CopyTradeHelper } from "./copyTradeHelper";
 import { SolRpcWsHelper } from "./solRpcWsClient/client";
-import { LOG_HIDDEN } from "../config";
+import { LOG_TYPE, USE_CLI } from "../config";
+import { transportFunc } from "./logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,7 +28,12 @@ export class SolRpcWsSubscribeManager {
     private readonly copyTradeHelper: CopyTradeHelper,
     private readonly logger: Logger = new TsLogLogger({
       name: "SolRpcWsSubscribe",
-      type: LOG_HIDDEN,
+      type: LOG_TYPE,
+      overwrite: {
+        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+          transportFunc(json);
+        }
+      },
     })
   ) {}
 

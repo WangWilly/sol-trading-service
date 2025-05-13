@@ -14,7 +14,8 @@ import { TsLogLogger } from "./utils/logging";
 import { CopyTradeHelper } from "./helpers/copyTradeHelper";
 import { FeeHelper } from "./helpers/copyTradeHelper/feeHelper/helper";
 import { loadPrivateKeyBase58 } from "./utils/privateKey";
-import { PRIVATE_KEY_BASE58, LOG_HIDDEN } from "./config";
+import { PRIVATE_KEY_BASE58, LOG_TYPE, USE_CLI } from "./config";
+import { transportFunc } from "./helpers/logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,8 +27,13 @@ export async function initializeCopyTradingService() {
 
   const rootLogger = new TsLogLogger({ 
     name: "copy-trade-service",
-    type: LOG_HIDDEN,
-   });
+    type: LOG_TYPE,
+    overwrite: {
+      transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+        transportFunc(json);
+      }
+    },
+  });
 
   //////////////////////////////////////////////////////////////////////////////
 

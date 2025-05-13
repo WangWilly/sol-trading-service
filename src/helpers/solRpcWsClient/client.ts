@@ -14,9 +14,10 @@ import {
 } from "./utils";
 
 import { TsLogLogger } from "../../utils/logging";
-import { LOG_HIDDEN } from "../../config";
+import { LOG_TYPE, USE_CLI } from "../../config";
 import type { Logger } from "../../utils/logging";
 import { CopyTradeHelper } from "../copyTradeHelper";
+import { transportFunc } from "../logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +55,12 @@ export class SolRpcWsHelper {
     private readonly copyTradeHelper: CopyTradeHelper,
     private readonly logger: Logger = new TsLogLogger({
       name: "SolRpcWsHelper",
-      type: LOG_HIDDEN,
+      type: LOG_TYPE,
+      overwrite: {
+        transportJSON: !USE_CLI ? undefined : (json: unknown) => {
+          transportFunc(json);
+        }
+      },
     })
   ) {}
 
