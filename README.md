@@ -28,15 +28,6 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 ```
 
-### 🧪 Testing
-
-Run the following test scripts to ensure everything is working properly:
-
-```bash
-./scripts/test-jup-client.sh        # Test Jupiter client integration
-./scripts/test-parse-swap-transaction.sh  # Test swap transaction parsing
-```
-
 ### 🚀 Running the Service
 
 #### Step 1: Configure environment
