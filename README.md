@@ -1,6 +1,10 @@
-# Core (service) for copy trading
+# Solana Trading Bot
 
-This module will be frequently updated. Serve as listener for the target account and copy the trades to the source account.
+## Overview
+
+This repository contains the core service for copy trading on the Solana blockchain. It is designed to facilitate the creation and management of copy trading strategies, allowing users to automatically replicate trades from a target wallet.
+
+![](./docs/demo.gif)
 
 ## Development
 
