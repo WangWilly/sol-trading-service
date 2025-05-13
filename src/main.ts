@@ -14,16 +14,20 @@ import { TsLogLogger } from "./utils/logging";
 import { CopyTradeHelper } from "./helpers/copyTradeHelper";
 import { FeeHelper } from "./helpers/copyTradeHelper/feeHelper/helper";
 import { loadPrivateKeyBase58 } from "./utils/privateKey";
-import { PRIVATE_KEY_BASE58 } from "./config";
+import { PRIVATE_KEY_BASE58, LOG_HIDDEN } from "./config";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-async function main(): Promise<void> {
+// Export the initialization function for CLI usage
+export async function initializeCopyTradingService() {
   const playerKeypair = loadPrivateKeyBase58(PRIVATE_KEY_BASE58);
 
   //////////////////////////////////////////////////////////////////////////////
 
-  const rootLogger = new TsLogLogger({ name: "copy-trade-service" });
+  const rootLogger = new TsLogLogger({ 
+    name: "copy-trade-service",
+    type: LOG_HIDDEN,
+   });
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -66,39 +70,56 @@ async function main(): Promise<void> {
   );
   solRpcWsHelper.start();
 
-  //////////////////////////////////////////////////////////////////////////////
-
-  // solRpcWsSubscribeManager.createCopyTradeRecordOnBuyStrategy(
-  //   "Ey2zXiwP4Kaytz76e28TfhYx2n8QWx4KajmoZK1w623C",
-  //   "OnBuyTest",
-  //   CopyTradeRecordOnBuyStrategySchema.parse({
-  //     sellCoinType: COIN_TYPE_WSOL_MINT,
-  //     sellCoinAmount: new BN(1_000),
-  //     slippageBps: 100,
-  //   })
-  // );
-  // solRpcWsSubscribeManager.createCopyTradeRecordOnSellStrategy(
-  //   "Ey2zXiwP4Kaytz76e28TfhYx2n8QWx4KajmoZK1w623C",
-  //   "OnSellTest",
-  //   CopyTradeRecordOnSellStrategySchema.parse({
-  //     fixedSellingBps: 500,
-  //     slippageBps: 100,
-  //   })
-  // );
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  // https://nairihar.medium.com/graceful-shutdown-in-nodejs-2f8f59d1c357
-  const exitFunc = async (): Promise<void> => {
-    await solRpcWsSubscribeManager.gracefulStop();
-    process.exit(0);
+  // Return service components
+  return {
+    copyTradeHelper,
+    solRpcWsHelper,
+    solRpcWsSubscribeManager,
+    jupSwapClient,
+    jitoClient
   };
-  process.on("SIGTERM", async () => {
-    await exitFunc();
-  });
-  process.on("SIGINT", async () => {
-    await exitFunc();
-  });
 }
 
-main();
+// If file is run directly (not imported), start the service
+if (require.main === module) {
+  async function main(): Promise<void> {
+    const { solRpcWsSubscribeManager } = await initializeCopyTradingService();
+
+    //////////////////////////////////////////////////////////////////////////////
+
+    // Example usage (commented out)
+    // solRpcWsSubscribeManager.createCopyTradeRecordOnBuyStrategy(
+    //   "Ey2zXiwP4Kaytz76e28TfhYx2n8QWx4KajmoZK1w623C",
+    //   "OnBuyTest",
+    //   CopyTradeRecordOnBuyStrategySchema.parse({
+    //     sellCoinType: COIN_TYPE_WSOL_MINT,
+    //     sellCoinAmount: new BN(1_000),
+    //     slippageBps: 100,
+    //   })
+    // );
+    // solRpcWsSubscribeManager.createCopyTradeRecordOnSellStrategy(
+    //   "Ey2zXiwP4Kaytz76e28TfhYx2n8QWx4KajmoZK1w623C",
+    //   "OnSellTest",
+    //   CopyTradeRecordOnSellStrategySchema.parse({
+    //     fixedSellingBps: 500,
+    //     slippageBps: 100,
+    //   })
+    // );
+
+    //////////////////////////////////////////////////////////////////////////////
+
+    // https://nairihar.medium.com/graceful-shutdown-in-nodejs-2f8f59d1c357
+    const exitFunc = async (): Promise<void> => {
+      await solRpcWsSubscribeManager.gracefulStop();
+      process.exit(0);
+    };
+    process.on("SIGTERM", async () => {
+      await exitFunc();
+    });
+    process.on("SIGINT", async () => {
+      await exitFunc();
+    });
+  }
+
+  main();
+}

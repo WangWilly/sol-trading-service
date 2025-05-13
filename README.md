@@ -65,6 +65,56 @@ To run the compiled application:
 ./scripts/start-trade-serve.sh
 ```
 
+### 🖥️ Using the CLI Interface
+
+The service comes with an interactive CLI for managing copy trading strategies.
+
+#### Starting the CLI
+
+To launch the CLI interface:
+
+```bash
+bun run src/cli.ts
+```
+
+Or from the compiled version:
+
+```bash
+node dist/cli.js
+```
+
+#### Available Features
+
+The CLI provides the following functionality:
+
+1. **View Service Status** - Check the WebSocket connection status and active strategies
+2. **List Active Strategies** - View all configured copy trading strategies
+3. **Create Buy Strategy** - Set up a new strategy to copy buy trades from a target wallet
+4. **Create Sell Strategy** - Set up a new strategy to copy sell trades from a target wallet
+5. **Remove Strategy** - Delete an existing strategy
+6. **Exit** - Gracefully shut down the service
+
+#### Example Workflows
+
+**Creating a Buy Strategy:**
+1. Select "Create buy strategy" from the main menu
+2. Enter the target wallet address to copy trades from
+3. Provide a name for your strategy
+4. Enter the amount of SOL to use for trades (in lamports)
+5. Set your desired slippage tolerance in basis points (e.g., 100 = 1%)
+
+**Creating a Sell Strategy:**
+1. Select "Create sell strategy" from the main menu
+2. Enter the target wallet address to copy trades from
+3. Provide a name for your strategy
+4. Set the fixed selling percentage in basis points (e.g., 500 = 5%)
+5. Set your desired slippage tolerance in basis points
+
+**Managing Strategies:**
+- Use "List active strategies" to view all current strategies
+- Use "Remove strategy" to delete a strategy that's no longer needed
+- Use "View service status" to check the connection and activity status
+
 ---
 
 ## References

@@ -11,6 +11,7 @@ import BN from "bn.js";
 
 import { safe } from "../../utils/exceptions";
 import { TsLogLogger } from "../../utils/logging";
+import { LOG_HIDDEN } from "../../config";
 import type { Logger } from "../../utils/logging";
 import * as txHelper from "../transactionHelper";
 import { TokenHelper } from "./tokenHelper";
@@ -42,6 +43,7 @@ export class CopyTradeHelper {
     private readonly feeHelper: FeeHelper,
     private readonly logger: Logger = new TsLogLogger({
       name: "CopyTradeHelper",
+      type: LOG_HIDDEN,
     })
   ) {}
 

@@ -14,6 +14,7 @@ import {
 } from "./utils";
 
 import { TsLogLogger } from "../../utils/logging";
+import { LOG_HIDDEN } from "../../config";
 import type { Logger } from "../../utils/logging";
 import { CopyTradeHelper } from "../copyTradeHelper";
 
@@ -21,6 +22,8 @@ import { CopyTradeHelper } from "../copyTradeHelper";
 
 export class SolRpcWsHelper {
   private ws: WebSocket | null = null;
+  private startTime: Date = new Date();
+  private lastActivityTime: Date | null = null;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +54,7 @@ export class SolRpcWsHelper {
     private readonly copyTradeHelper: CopyTradeHelper,
     private readonly logger: Logger = new TsLogLogger({
       name: "SolRpcWsHelper",
+      type: LOG_HIDDEN,
     })
   ) {}
 
@@ -60,6 +64,7 @@ export class SolRpcWsHelper {
     if (this.ws) {
       return;
     }
+    this.startTime = new Date();
     this.connect();
   }
 
@@ -104,6 +109,37 @@ export class SolRpcWsHelper {
         publicKey,
         this.publicKeySubIdMap
       );
+    }
+  }
+
+  public getStatus() {
+    const now = new Date();
+    const uptimeMs = now.getTime() - this.startTime.getTime();
+    const uptime = this.formatUptime(uptimeMs);
+    
+    return {
+      connected: this.ws && this.ws.readyState === WebSocket.OPEN,
+      lastActivity: this.lastActivityTime ? this.lastActivityTime.toLocaleString() : null,
+      uptime: uptime,
+      subscriptions: this.publicKeySubIdMap.size,
+      wsUrl: this.wsRpcUrl
+    };
+  }
+
+  private formatUptime(ms: number): string {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) {
+      return `${days}d ${hours % 24}h ${minutes % 60}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
     }
   }
 
@@ -163,6 +199,7 @@ export class SolRpcWsHelper {
       return;
     }
     this.logger.info(`WebSocket connected to ${this.wsRpcUrl}`);
+    this.lastActivityTime = new Date();
 
     this.publicKeySubIdMap.clear();
     for (const publicKey of this.copyTradeHelper.getCopyTradeTargetPublicKeys()) {
@@ -178,6 +215,7 @@ export class SolRpcWsHelper {
   //////////////////////////////////////////////////////////////////////////////
 
   private async onMessage(data: WebSocket.Data): Promise<void> {
+    this.lastActivityTime = new Date();
     const message = JSON.parse(data.toString());
 
     if (this.rpcIdpubKeyMap4Sub.has(message.id)) {
@@ -235,7 +273,7 @@ export class SolRpcWsHelper {
   }
 
   private async onLogs(subId: number, logs: Logs): Promise<void> {
-    // this.logger.debug("[onLogs] Processing incoming logs...");
+    this.lastActivityTime = new Date();
 
     try {
       await this.copyTradeHelper.copyTradeHandler(subId, logs);

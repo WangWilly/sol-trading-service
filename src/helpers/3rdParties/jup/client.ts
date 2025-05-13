@@ -6,6 +6,7 @@ import {
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
 import { TsLogLogger } from "../../../utils/logging";
+import { LOG_HIDDEN } from "../../../config";
 import type { Logger } from "../../../utils/logging";
 import {
   GetQuoteV1ResultDtoSchema,
@@ -35,7 +36,9 @@ export class JupSwapClient {
   constructor(
     jupSwapBaseEndpoint: string = "https://api.jup.ag",
     apiKey: string = "",
-    private readonly logger: Logger = new TsLogLogger({ name: "JupSwapClient" })
+    private readonly logger: Logger = new TsLogLogger({ name: "JupSwapClient"
+      , type: LOG_HIDDEN,
+     })
   ) {
     this.baseClient = new HttpClient(
       {

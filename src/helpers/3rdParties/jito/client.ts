@@ -7,6 +7,7 @@ import {
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
 import { Logger, TsLogLogger } from "../../../utils/logging";
+import { LOG_HIDDEN } from "../../../config";
 
 import {
   GetPercentileTip,
@@ -36,7 +37,9 @@ export class JitoClient {
     blockEngineBaseUrl: string = "https://mainnet.block-engine.jito.wtf",
     bundleBaseUrl: string = "https://bundles.jito.wtf",
     uuid: string = "",
-    private readonly logger: Logger = new TsLogLogger({ name: "JitoClient" })
+    private readonly logger: Logger = new TsLogLogger({ name: "JitoClient",
+      type: LOG_HIDDEN,
+     })
   ) {
     const blockEngineHeaders: Record<string, string> = {
       [CONTENT_TYPE_KEY]: CONTENT_TYPE_VAL_JSON,
