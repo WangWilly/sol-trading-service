@@ -13,7 +13,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "OSNC-1.0",
   "description": "",
   "dependencies": {
     "@inquirer/prompts": "^7.5.1",
