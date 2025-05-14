@@ -324,7 +324,7 @@ async function displayWalletAssets() {
     console.log(`\n💰 ====== Your Wallet Token Assets ======`);
     
     assets.forEach((asset, index) => {
-      console.log(`\n${index + 1}. Token: ${asset.mint}`);
+      console.log(`\n${index + 1}. ${asset.name} (${asset.mint.slice(0, 6)}...${asset.mint.slice(-4)})`);
       console.log(`   • Amount: ${asset.uiAmount} (${asset.amount} raw)`);
       console.log(`   • Decimals: ${asset.decimals}`);
     });
