@@ -68,6 +68,17 @@ export async function getWalletTokenAssets(
   walletAddress: PublicKey, 
   connection: Connection
 ): Promise<TokenAsset[]> {
+  // Get native SOL balance
+  const solBalance = await connection.getBalance(walletAddress);
+  const solAsset: TokenAsset = {
+    mint: 'NATIVE-SOL',
+    owner: walletAddress.toString(),
+    amount: solBalance.toString(),
+    decimals: 9, // SOL has 9 decimal places
+    uiAmount: solBalance / 10**9, // Convert lamports to SOL
+    name: 'SOL (Native)'
+  };
+  
   // Get all token accounts owned by the wallet
   const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
     walletAddress,
@@ -100,5 +111,6 @@ export async function getWalletTokenAssets(
 
   // Wait for all promises to resolve
   const assets = await Promise.all(assetsPromises);
-  return assets;
+  // Include native SOL at the beginning of the assets array
+  return [solAsset, ...assets];
 }

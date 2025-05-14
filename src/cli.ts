@@ -323,13 +323,27 @@ async function displayWalletAssets() {
 
     console.log(`\n💰 ====== Your Wallet Token Assets ======`);
     
-    assets.forEach((asset, index) => {
-      console.log(`\n${index + 1}. ${asset.name} (${asset.mint.slice(0, 6)}...${asset.mint.slice(-4)})`);
-      console.log(`   • Amount: ${asset.uiAmount} (${asset.amount} raw)`);
-      console.log(`   • Decimals: ${asset.decimals}`);
-    });
+    // First display the native SOL balance prominently
+    const nativeSol = assets.find(asset => asset.mint === 'NATIVE-SOL');
+    if (nativeSol) {
+      console.log(`\n💎 Native SOL Balance: ${nativeSol.uiAmount} SOL (${nativeSol.amount} lamports)`);
+    }
     
-    console.log(`\nTotal tokens: ${assets.length}`);
+    // Then list all SPL tokens
+    console.log(`\n----- SPL Tokens -----`);
+    const splTokens = assets.filter(asset => asset.mint !== 'NATIVE-SOL');
+    
+    if (splTokens.length === 0) {
+      console.log(`  No SPL tokens found in wallet`);
+    } else {
+      splTokens.forEach((asset, index) => {
+        console.log(`\n${index + 1}. ${asset.name} (${asset.mint.slice(0, 6)}...${asset.mint.slice(-4)})`);
+        console.log(`   • Amount: ${asset.uiAmount} (${asset.amount} raw)`);
+        console.log(`   • Decimals: ${asset.decimals}`);
+      });
+    }
+    
+    console.log(`\nTotal SPL tokens: ${splTokens.length}`);
   } catch (error) {
     console.error(`❌ Error fetching token assets: ${error}`);
   }
