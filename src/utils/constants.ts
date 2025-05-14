@@ -22,7 +22,7 @@ export const SOLANA_RPC_HTTP_URL = "https://newest-icy-isle.solana-mainnet.quikn
 export const SOLANA_RPC_WS_URL = "wss://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607";
 
 // Jupiter API
-export const JUPITER_API_URL = "https://api.jup.ag";
+export const JUPITER_API_URL = "https://lite-api.jup.ag";
 
 // Jito API
 export const JITO_BLOCK_ENGINE_URL = "https://mainnet.block-engine.jito.wtf";
