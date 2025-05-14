@@ -1,20 +1,29 @@
+// Third-party library imports
 import { Command } from "commander";
 import { input, select, number } from "@inquirer/prompts";
 import BN from "bn.js";
 import { PublicKey } from "@solana/web3.js";
+import { sleep } from "bun";
 
+// Service imports
 import { initializeCopyTradingService } from "./main";
+import { CopyTradeHelper } from "./helpers/copyTradeHelper";
+import { SolRpcWsHelper } from "./helpers/solRpcWsClient";
+import { SolRpcWsSubscribeManager } from "./helpers/solRpcWsSubscribeManager";
+
+// Constants and DTOs
 import { COIN_TYPE_WSOL_MINT } from "./helpers/solRpcWsClient/const";
 import {
   CopyTradeRecordOnBuyStrategySchema,
   CopyTradeRecordOnSellStrategySchema,
 } from "./helpers/copyTradeHelper/dtos";
-import { CopyTradeHelper } from "./helpers/copyTradeHelper";
-import { SolRpcWsHelper } from "./helpers/solRpcWsClient";
-import { SolRpcWsSubscribeManager } from "./helpers/solRpcWsSubscribeManager";
-import { sleep } from "bun";
+
+// Utility helpers
 import { LogHistoryHelper } from "./helpers/logHistoryHelper/helper";
 import { loadPrivateKeyBase58 } from "./utils/privateKey";
+import { getWalletTokenAssets } from "./utils/tokenAsset";
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Wrapper functions to handle validation re-prompting
 async function validateInput(options: any): Promise<string> {
@@ -70,6 +79,8 @@ const program = new Command();
 let solRpcWsSubscribeManager: SolRpcWsSubscribeManager;
 let copyTradeHelper: CopyTradeHelper;
 let solRpcWsHelper: SolRpcWsHelper;
+let playerKeypair: any;
+let solWeb3Conn: any;
 
 async function initialize() {
   console.log(`🚀 Initializing Copy Trading Service...`);
@@ -91,13 +102,14 @@ async function initialize() {
     );
     process.exit(1);
   }
-  const pk = loadPrivateKeyBase58(options.privateKey);
+  playerKeypair = loadPrivateKeyBase58(options.privateKey);
 
-  const services = await initializeCopyTradingService(pk);
+  const services = await initializeCopyTradingService(playerKeypair);
 
   solRpcWsSubscribeManager = services.solRpcWsSubscribeManager;
   copyTradeHelper = services.copyTradeHelper;
   solRpcWsHelper = services.solRpcWsHelper;
+  solWeb3Conn = services.solWeb3Conn;
 
   console.log(`✅ Service initialized successfully!`);
 }
@@ -295,6 +307,34 @@ async function displayLogHistory() {
   console.log(`\nTotal logs: ${logs.length}`);
 }
 
+async function displayWalletAssets() {
+  console.log(`🔍 Fetching your wallet token assets...`);
+  
+  try {
+    const assets = await getWalletTokenAssets(
+      playerKeypair.publicKey,
+      solWeb3Conn
+    );
+
+    if (assets.length === 0) {
+      console.log(`⚠️ No token assets found in your wallet`);
+      return;
+    }
+
+    console.log(`\n💰 ====== Your Wallet Token Assets ======`);
+    
+    assets.forEach((asset, index) => {
+      console.log(`\n${index + 1}. Token: ${asset.mint}`);
+      console.log(`   • Amount: ${asset.uiAmount} (${asset.amount} raw)`);
+      console.log(`   • Decimals: ${asset.decimals}`);
+    });
+    
+    console.log(`\nTotal tokens: ${assets.length}`);
+  } catch (error) {
+    console.error(`❌ Error fetching token assets: ${error}`);
+  }
+}
+
 // Function to refresh the console
 function refreshConsole() {
   // Clear the console using the cross-platform method
@@ -325,6 +365,7 @@ async function main() {
         { name: "🔴 Create sell strategy", value: "sell" },
         { name: "🗑️  Remove strategy", value: "remove" },
         { name: "📜 View log history", value: "logs" },
+        { name: "💰 View wallet token assets", value: "assets" },
         { name: "❌ Exit", value: "exit" },
       ],
     });
@@ -349,6 +390,9 @@ async function main() {
           break;
         case "logs":
           await displayLogHistory();
+          break;
+        case "assets":
+          await displayWalletAssets();
           break;
         case "exit":
           console.log(`👋 Exiting service gracefully...`);

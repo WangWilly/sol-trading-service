@@ -171,6 +171,7 @@ The service utilizes [Jupiter](https://jup.ag/) for transaction processing on th
 - [ARB Protocol Jupiter Bot Implementation](https://github.com/ARBProtocol/solana-jupiter-bot)
 - [Copy Trading Implementation Guide](https://www.quicknode.com/guides/solana-development/defi/pump-fun-copy-trade)
 - [Failed Swap Transaction Analysis](https://www.reddit.com/r/solana/comments/1i5czkh/phantom_wallet_failed_swap_but_still_had_to_pay/)
+- [How to get all tokens held by a wallet in solana](https://www.quicknode.com/guides/solana-development/spl-tokens/how-to-get-all-tokens-held-by-a-wallet-in-solana)
 
 ### Bun Runtime Integration
 
