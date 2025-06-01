@@ -1,5 +1,7 @@
 # Solana Trading Bot
 
+[中文版本 (Chinese Version)](./README.zh-CN.md) | [📦 Latest Release](https://github.com/WangWilly/solana-trading-bot/releases)
+
 ## Overview
 
 This repository contains the core service for copy trading on the Solana blockchain. It is designed to facilitate the creation and management of copy trading strategies, allowing users to automatically replicate trades from a target wallet.
