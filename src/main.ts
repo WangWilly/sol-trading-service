@@ -1,5 +1,5 @@
 import { TsLogLogger } from "./utils/logging";
-import { PRIVATE_KEY_BASE58, LOG_TYPE, NOT_USE_CLI } from "./config";
+import { PRIVATE_KEY_BASE58, LOG_TYPE, NOT_USE_CLI, ENABLE_PERSISTENCE, PERSISTENCE_DATA_PATH } from "./config";
 import { transportFunc } from "./helpers/logHistoryHelper/helper";
 import { 
   SOLANA_RPC_HTTP_URL, 
@@ -71,8 +71,13 @@ export async function initializeCopyTradingService(
     jupSwapClient,
     jitoClient,
     feeHelper,
-    rootLogger.getSubLogger({ name: "CopyTradeHelper" })
+    rootLogger.getSubLogger({ name: "CopyTradeHelper" }),
+    ENABLE_PERSISTENCE,
+    PERSISTENCE_DATA_PATH,
   );
+  
+  // Initialize the copy trade helper (loads persisted strategies)
+  await copyTradeHelper.initialize();
   const solRpcWsHelper = new SolRpcWsHelper(
     SOLANA_RPC_WS_URL,
     copyTradeHelper,
@@ -100,7 +105,7 @@ export async function initializeCopyTradingService(
 if (require.main === module) {
   async function main(): Promise<void> {
     const playerKeypair = loadPrivateKeyBase58(PRIVATE_KEY_BASE58);
-    const { solRpcWsSubscribeManager } = await initializeCopyTradingService(
+    const { copyTradeHelper, solRpcWsSubscribeManager } = await initializeCopyTradingService(
       playerKeypair
     );
 
@@ -129,8 +134,15 @@ if (require.main === module) {
 
     // https://nairihar.medium.com/graceful-shutdown-in-nodejs-2f8f59d1c357
     const exitFunc = async (): Promise<void> => {
-      await solRpcWsSubscribeManager.gracefulStop();
-      process.exit(0);
+      try {
+        // Save strategies before shutting down
+        await copyTradeHelper.gracefulShutdown();
+        await solRpcWsSubscribeManager.gracefulStop();
+        process.exit(0);
+      } catch (error) {
+        console.error("Error during graceful shutdown:", error);
+        process.exit(1);
+      }
     };
     process.on("SIGTERM", async () => {
       await exitFunc();

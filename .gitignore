@@ -1,5 +1,6 @@
 playground/
 logs/
+data/
 
 # Node.js 
 node_modules/

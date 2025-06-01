@@ -14,7 +14,7 @@ import { JupSwapClient } from "../3rdParties/jup";
 import { JitoClient } from "../3rdParties/jito";
 import { FeeHelper } from "./feeHelper/helper";
 import { transportFunc } from "../logHistoryHelper/helper";
-import { StrategyManager, CopyTradeOrchestrator } from "./utils";
+import { StrategyManager, CopyTradeOrchestrator, JsonStrategyPersistence } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,11 +41,19 @@ export class CopyTradeHelper {
             },
       },
     }),
+    enablePersistence: boolean,
+    persistenceDataPath: string,
   ) {
+    // Initialize persistence if enabled
+    const persistence = enablePersistence 
+      ? new JsonStrategyPersistence(persistenceDataPath, this.logger)
+      : undefined;
+
     this.strategyManager = new StrategyManager(
       this.copyTradeSubIdTarPubkeyMap,
       this.copyTradeRecordMap,
       this.logger,
+      persistence,
     );
 
     this.orchestrator = new CopyTradeOrchestrator(
@@ -72,39 +80,71 @@ export class CopyTradeHelper {
     this.strategyManager.registerSubscription(subId, targetPublicKey);
   }
 
-  public createCopyTradeRecordOnBuyStrategy(
+  public async createCopyTradeRecordOnBuyStrategy(
     targetPublicKey: string,
     strategyName: string,
     strategy: CopyTradeRecordOnBuyStrategy,
-  ): boolean {
-    return this.strategyManager.addBuyStrategy(targetPublicKey, strategyName, strategy);
+  ): Promise<boolean> {
+    return await this.strategyManager.addBuyStrategy(targetPublicKey, strategyName, strategy);
   }
 
-  public removeCopyTradeOnBuyStrategy(
+  public async removeCopyTradeOnBuyStrategy(
     targetPublicKey: string,
     strategyName: string,
-  ): boolean {
-    return this.strategyManager.removeBuyStrategy(targetPublicKey, strategyName);
+  ): Promise<boolean> {
+    return await this.strategyManager.removeBuyStrategy(targetPublicKey, strategyName);
   }
 
-  public createCopyTradeRecordOnSellStrategy(
+  public async createCopyTradeRecordOnSellStrategy(
     targetPublicKey: string,
     strategyName: string,
     strategy: CopyTradeRecordOnSellStrategy,
-  ): boolean {
-    return this.strategyManager.addSellStrategy(targetPublicKey, strategyName, strategy);
+  ): Promise<boolean> {
+    return await this.strategyManager.addSellStrategy(targetPublicKey, strategyName, strategy);
   }
 
-  public removeCopyTradeOnSellStrategy(
+  public async removeCopyTradeOnSellStrategy(
     targetPublicKey: string,
     strategyName: string,
-  ): boolean {
-    return this.strategyManager.removeSellStrategy(targetPublicKey, strategyName);
+  ): Promise<boolean> {
+    return await this.strategyManager.removeSellStrategy(targetPublicKey, strategyName);
   }
 
   public clearAll4GracefulStop(): void {
     this.logger.info("Clearing all copy trade records");
     this.strategyManager.clearAll();
+  }
+
+  /**
+   * Initialize the service by loading persisted strategies
+   */
+  public async initialize(): Promise<void> {
+    if (this.strategyManager.hasPersistence()) {
+      this.logger.info("Loading persisted strategies...");
+      await this.strategyManager.loadStrategies();
+    } else {
+      this.logger.info("Persistence disabled, starting with empty strategies");
+    }
+  }
+
+  /**
+   * Graceful shutdown with strategy persistence
+   */
+  public async gracefulShutdown(): Promise<void> {
+    this.logger.info("Starting graceful shutdown...");
+    
+    try {
+      if (this.strategyManager.hasPersistence()) {
+        this.logger.info("Saving strategies before shutdown...");
+        await this.strategyManager.saveStrategies();
+      }
+      
+      this.clearAll4GracefulStop();
+      this.logger.info("Graceful shutdown completed");
+    } catch (error) {
+      this.logger.error(`Error during graceful shutdown: ${error}`);
+      throw error;
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////

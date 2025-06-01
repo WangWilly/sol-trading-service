@@ -47,7 +47,7 @@ export class SolRpcWsSubscribeManager {
     strategy: CopyTradeRecordOnBuyStrategy,
   ): Promise<void> {
     this.logger.info(`Creating CopyTradeRecordOnBuyStrategy: ${strategyName}`);
-    this.copyTradeHelper.createCopyTradeRecordOnBuyStrategy(
+    await this.copyTradeHelper.createCopyTradeRecordOnBuyStrategy(
       targetPublicKey,
       strategyName,
       strategy,
@@ -61,7 +61,7 @@ export class SolRpcWsSubscribeManager {
     strategy: CopyTradeRecordOnSellStrategy,
   ): Promise<void> {
     this.logger.info(`Create CopyTradeRecordOnSellStrategy: ${strategyName}`);
-    this.copyTradeHelper.createCopyTradeRecordOnSellStrategy(
+    await this.copyTradeHelper.createCopyTradeRecordOnSellStrategy(
       targetPublicKey,
       strategyName,
       strategy,
@@ -126,7 +126,7 @@ export class SolRpcWsSubscribeManager {
     const [targetWallet, type, strategyName] = id.split("-");
 
     if (type === "buy") {
-      const result = this.copyTradeHelper.removeCopyTradeOnBuyStrategy(
+      const result = await this.copyTradeHelper.removeCopyTradeOnBuyStrategy(
         targetWallet,
         strategyName,
       );
@@ -135,7 +135,7 @@ export class SolRpcWsSubscribeManager {
       }
       return result;
     } else if (type === "sell") {
-      const result = this.copyTradeHelper.removeCopyTradeOnSellStrategy(
+      const result = await this.copyTradeHelper.removeCopyTradeOnSellStrategy(
         targetWallet,
         strategyName,
       );

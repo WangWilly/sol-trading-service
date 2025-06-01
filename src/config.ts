@@ -9,3 +9,7 @@ export const NOT_USE_CLI = process.env.NOT_USE_CLI === "true";
 export const LOG_TYPE = NOT_USE_CLI ? "pretty" : "json";
 export const LOG_LEVEL = process.env.LOG_LEVEL || "info";
 // export const LOG_FILE = process.env.LOG_FILE || "copy-trade-service.log";
+
+// Persistence configuration
+export const ENABLE_PERSISTENCE = process.env.ENABLE_PERSISTENCE !== "false"; // Default to true
+export const PERSISTENCE_DATA_PATH = process.env.PERSISTENCE_DATA_PATH || "data/strategies.json";

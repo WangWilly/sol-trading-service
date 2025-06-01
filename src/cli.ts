@@ -437,22 +437,42 @@ async function main() {
 // Handle SIGINT and SIGTERM for graceful exit
 process.on("SIGINT", async () => {
   console.log(`\n⚠️ SIGINT received. Exiting gracefully...`);
-  if (solRpcWsSubscribeManager) {
-    await solRpcWsSubscribeManager.gracefulStop();
+  try {
+    if (copyTradeHelper) {
+      console.log(`💾 Saving strategies...`);
+      await copyTradeHelper.gracefulShutdown();
+    }
+    if (solRpcWsSubscribeManager) {
+      await solRpcWsSubscribeManager.gracefulStop();
+    }
+    // Save logs before exiting
+    LogHistoryHelper.saveLogsToFile();
+    console.log(`✅ Graceful exit completed`);
+    process.exit(0);
+  } catch (error) {
+    console.error(`❌ Error during graceful exit: ${error}`);
+    process.exit(1);
   }
-  // Save logs before exiting
-  LogHistoryHelper.saveLogsToFile();
-  process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
   console.log(`\n⚠️ SIGTERM received. Exiting gracefully...`);
-  if (solRpcWsSubscribeManager) {
-    await solRpcWsSubscribeManager.gracefulStop();
+  try {
+    if (copyTradeHelper) {
+      console.log(`💾 Saving strategies...`);
+      await copyTradeHelper.gracefulShutdown();
+    }
+    if (solRpcWsSubscribeManager) {
+      await solRpcWsSubscribeManager.gracefulStop();
+    }
+    // Save logs before exiting
+    LogHistoryHelper.saveLogsToFile();
+    console.log(`✅ Graceful exit completed`);
+    process.exit(0);
+  } catch (error) {
+    console.error(`❌ Error during graceful exit: ${error}`);
+    process.exit(1);
   }
-  // Save logs before exiting
-  LogHistoryHelper.saveLogsToFile();
-  process.exit(0);
 });
 
 // Start the CLI
