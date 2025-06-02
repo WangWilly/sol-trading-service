@@ -11,16 +11,20 @@ import { ComputeBudgetInfo } from "../../../utils/dtos";
 export class FeeHelper {
   constructor(
     private readonly fixedFeeLamports: number | bigint,
-    private readonly receiver: PublicKey,
+    private readonly receiver: PublicKey
   ) {}
 
-  transferFeeIxProc = (
+  transferFeeIxProc(
     computeBudget: ComputeBudgetInfo,
-    payerKey: PublicKey,
+    payerKey: PublicKey
   ): {
     transferFeeIx: TransactionInstruction;
     newComputeBudget: ComputeBudgetInfo;
-  } => {
+  } | null {
+    if (!this.fixedFeeLamports || this.fixedFeeLamports <= 0) {
+      return null;
+    }
+
     const transferFeeIx = SystemProgram.transfer({
       fromPubkey: payerKey,
       toPubkey: this.receiver,
@@ -37,5 +41,5 @@ export class FeeHelper {
       transferFeeIx,
       newComputeBudget,
     };
-  };
+  }
 }

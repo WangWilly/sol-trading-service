@@ -197,18 +197,17 @@ export class SwapExecutor {
       this.logger.error(`${contextInfo} Compute budget data is empty`);
       return null;
     }
-    const { transferFeeIx, newComputeBudget } =
-      this.feeHelper.transferFeeIxProc(
-        computeBudget.data,
-        this.playerKeypair.publicKey
-      );
+    const feeInfo = this.feeHelper.transferFeeIxProc(
+      computeBudget.data,
+      this.playerKeypair.publicKey
+    );
 
     const builtTx = await getTxFromBuildSwapWithIxsV1Result(
       this.connection,
       this.playerKeypair.publicKey,
       buildSwapWithIxsRes.data,
-      newComputeBudget,
-      [transferFeeIx]
+      feeInfo?.newComputeBudget,
+      feeInfo?.transferFeeIx ? [feeInfo.transferFeeIx] : undefined
     );
 
     const res = ResultUtils.wrapSync(() => builtTx.sign([this.playerKeypair]));
