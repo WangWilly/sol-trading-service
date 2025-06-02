@@ -1,16 +1,24 @@
-import { Connection, Keypair, PublicKey, VersionedTransaction } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import type { Logger } from "../../../utils/logging";
-import { safe } from "../../../utils/exceptions";
 import { JupSwapClient, GetQuoteV1ParamDtoSchema } from "../../3rdParties/jup";
 import {
   BuildSwapWithIxsV1BodyDtoSchema,
   getComputeBudgetFromBuildSwapWithIxsV1Result,
+  GetQuoteV1ResultDto,
   getTxFromBuildSwapWithIxsV1Result,
 } from "../../3rdParties/jup/dtos";
 import { JitoClient } from "../../3rdParties/jito";
 import { FeeHelper } from "../feeHelper/helper";
 import { versionedTxToSerializedBase64 } from "../../../utils/transaction";
+import { ResultUtils } from "../../../utils/result";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export interface SwapParams {
   fromMint: PublicKey;
@@ -25,6 +33,8 @@ export interface SwapResult {
   success: boolean;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Handles swap transaction execution with Jupiter and Jito
  */
@@ -35,7 +45,7 @@ export class SwapExecutor {
     private readonly jupSwapClient: JupSwapClient,
     private readonly jitoClient: JitoClient,
     private readonly feeHelper: FeeHelper,
-    private readonly logger: Logger,
+    private readonly logger: Logger
   ) {}
 
   /**
@@ -43,26 +53,59 @@ export class SwapExecutor {
    */
   async executeSwap(
     params: SwapParams,
-    contextInfo: string = "",
+    contextInfo: string
   ): Promise<SwapResult | null> {
-    try {
-      // Get quote
-      const quoteResult = await this.getQuote(params, contextInfo);
-      if (!quoteResult) return null;
-
-      // Build transaction
-      const transaction = await this.buildTransaction(params, quoteResult, contextInfo);
-      if (!transaction) return null;
-
-      // Send transaction
-      return await this.sendTransaction(transaction, contextInfo);
-    } catch (error) {
-      this.logger.error(`${contextInfo} Unexpected error: ${error}`);
+    // Get quote
+    const quoteResult = await ResultUtils.wrap(
+      this.getQuote(params, contextInfo)
+    );
+    if (ResultUtils.isErr(quoteResult)) {
+      this.logger.error(
+        `${contextInfo} Failed to get quote: ${quoteResult.error}`
+      );
       return null;
     }
+    if (!quoteResult.data) {
+      this.logger.error(`${contextInfo} Quote data is empty`);
+      return null;
+    }
+
+    // Build transaction
+    const transaction = await ResultUtils.wrap(
+      this.buildTransaction(params, quoteResult.data, contextInfo)
+    );
+    if (ResultUtils.isErr(transaction)) {
+      this.logger.error(
+        `${contextInfo} Failed to build transaction: ${transaction.error}`
+      );
+      return null;
+    }
+    if (!transaction.data) {
+      this.logger.error(`${contextInfo} Built transaction is empty`);
+      return null;
+    }
+
+    // Send transaction
+    const res = await ResultUtils.wrap(
+      this.sendTransaction(transaction.data, contextInfo)
+    );
+    if (!ResultUtils.isOk(res)) {
+      this.logger.error(
+        `${contextInfo} Failed to send transaction: ${res.error}`
+      );
+      return null;
+    }
+    if (!res.data) {
+      this.logger.error(`${contextInfo} Transaction result is empty`);
+      return null;
+    }
+    return res.data;
   }
 
-  private async getQuote(params: SwapParams, contextInfo: string) {
+  private async getQuote(
+    params: SwapParams,
+    contextInfo: string
+  ): Promise<GetQuoteV1ResultDto | null> {
     const getQuoteV1Res = GetQuoteV1ParamDtoSchema.safeParse({
       inputMint: params.fromMint,
       outputMint: params.toMint,
@@ -71,12 +114,16 @@ export class SwapExecutor {
     });
 
     if (!getQuoteV1Res.success) {
-      this.logger.error(`${contextInfo} Cannot parse quote parameters: ${getQuoteV1Res.error}`);
+      this.logger.error(
+        `${contextInfo} Cannot parse quote parameters: ${getQuoteV1Res.error}`
+      );
       return null;
     }
 
-    const quoteRes = await safe(this.jupSwapClient.getQuote(getQuoteV1Res.data));
-    if (!quoteRes.success) {
+    const quoteRes = await ResultUtils.wrap(
+      this.jupSwapClient.getQuote(getQuoteV1Res.data)
+    );
+    if (!ResultUtils.isOk(quoteRes)) {
       this.logger.error(`${contextInfo} Cannot get quote`);
       return null;
     }
@@ -91,79 +138,114 @@ export class SwapExecutor {
 
   private async buildTransaction(
     params: SwapParams,
-    quoteResponse: any,
-    contextInfo: string,
+    quoteResponse: GetQuoteV1ResultDto,
+    contextInfo: string
   ): Promise<VersionedTransaction | null> {
     // Get Jito tip
-    const jitoTipLamports = await this.jitoClient.getLatestXpercentileTipInLamportsV1(
-      params.jitoTipPercentile,
-    );
+    const jitoTipLamports =
+      await this.jitoClient.getLatestXpercentileTipInLamportsV1(
+        params.jitoTipPercentile
+      );
     if (!jitoTipLamports) {
       this.logger.error(`${contextInfo} Cannot get Jito tips`);
       return null;
     }
 
+    // Check if this involves Simple AMMs (like Pump.fun) which don't support shared accounts
+    const isSimpleAMM = this.isSimpleAMM(quoteResponse);
+    this.logger.info(`${contextInfo} Simple AMM detected: ${isSimpleAMM}`);
+
     // Build swap with instructions
-    const buildSwapWithIxsV1BodyDtoRes = BuildSwapWithIxsV1BodyDtoSchema.safeParse({
-      userPublicKey: this.playerKeypair.publicKey,
-      wrapAndUnwrapSol: true,
-      prioritizationFeeLamports: {
-        jitoTipLamports,
-      },
-      quoteResponse,
-    });
+    const buildSwapWithIxsV1BodyDtoRes =
+      BuildSwapWithIxsV1BodyDtoSchema.safeParse({
+        userPublicKey: this.playerKeypair.publicKey,
+        wrapAndUnwrapSol: true,
+        useSharedAccounts: !isSimpleAMM, // Disable shared accounts for Simple AMMs
+        prioritizationFeeLamports: {
+          jitoTipLamports,
+        },
+        quoteResponse,
+      });
 
     if (!buildSwapWithIxsV1BodyDtoRes.success) {
       this.logger.error(`${contextInfo} Cannot parse swap build parameters`);
       return null;
     }
 
-    const buildSwapWithIxsRes = await safe(
-      this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data),
+    const buildSwapWithIxsRes = await ResultUtils.wrap(
+      this.jupSwapClient.buildSwapWithIxs(buildSwapWithIxsV1BodyDtoRes.data)
     );
 
-    if (!buildSwapWithIxsRes.success) {
+    if (ResultUtils.isErr(buildSwapWithIxsRes)) {
       this.logger.error(`${contextInfo} Cannot build swap`);
       return null;
     }
 
-    if (!buildSwapWithIxsRes.data) {
-      this.logger.error(`${contextInfo} Swap data not found`);
+    // Replace fee/tip
+    const computeBudget = ResultUtils.wrapSync(() =>
+      getComputeBudgetFromBuildSwapWithIxsV1Result(
+        ResultUtils.unwrap(buildSwapWithIxsRes)
+      )
+    );
+    if (ResultUtils.isErr(computeBudget)) {
+      this.logger.error(
+        `${contextInfo} Cannot get compute budget: ${computeBudget.error}`
+      );
       return null;
     }
-
-    // Replace fee/tip
-    const computeBudget = getComputeBudgetFromBuildSwapWithIxsV1Result(
-      buildSwapWithIxsRes.data,
-    );
-    const { transferFeeIx, newComputeBudget } = this.feeHelper.transferFeeIxProc(
-      computeBudget,
-      this.playerKeypair.publicKey,
-    );
+    if (!computeBudget.data) {
+      this.logger.error(`${contextInfo} Compute budget data is empty`);
+      return null;
+    }
+    const { transferFeeIx, newComputeBudget } =
+      this.feeHelper.transferFeeIxProc(
+        computeBudget.data,
+        this.playerKeypair.publicKey
+      );
 
     const builtTx = await getTxFromBuildSwapWithIxsV1Result(
       this.connection,
       this.playerKeypair.publicKey,
       buildSwapWithIxsRes.data,
       newComputeBudget,
-      [transferFeeIx],
+      [transferFeeIx]
     );
 
-    try {
-      builtTx.sign([this.playerKeypair]);
-      return builtTx;
-    } catch (error) {
-      this.logger.error(`${contextInfo} Cannot sign transaction: ${error}`);
+    const res = ResultUtils.wrapSync(() => builtTx.sign([this.playerKeypair]));
+    if (ResultUtils.isErr(res)) {
+      this.logger.error(`${contextInfo} Cannot sign transaction: ${res.error}`);
       return null;
     }
+    return builtTx;
+  }
+
+  /**
+   * Check if the quote response involves Simple AMMs that don't support shared accounts
+   */
+  private isSimpleAMM(quoteResponse: GetQuoteV1ResultDto): boolean {
+    if (!quoteResponse.routePlan.length) {
+      return false;
+    }
+
+    // Simple AMMs that don't support shared accounts
+    const simpleAMMs = [
+      "Pump.fun",
+      "Raydium CP", // Constant Product pools might also have issues
+      // Add other Simple AMMs as needed
+    ];
+
+    return quoteResponse.routePlan.some(
+      (route) =>
+        route.swapInfo.label && simpleAMMs.includes(route.swapInfo.label)
+    );
   }
 
   private async sendTransaction(
     transaction: VersionedTransaction,
-    contextInfo: string,
+    contextInfo: string
   ): Promise<SwapResult | null> {
     const sendTxRes = await this.jitoClient.sendTransactionV1(
-      versionedTxToSerializedBase64(transaction),
+      versionedTxToSerializedBase64(transaction)
     );
 
     if (!sendTxRes) {

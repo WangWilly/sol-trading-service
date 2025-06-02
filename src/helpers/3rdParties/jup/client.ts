@@ -123,7 +123,7 @@ export class JupSwapClient {
 
   async buildSwapWithIxs(
     body: BuildSwapWithIxsV1BodyDto,
-  ): Promise<BuildSwapWithIxsV1ResultDto | null> {
+  ): Promise<BuildSwapWithIxsV1ResultDto> {
     const resultRes = await safe(
       this.baseClient.post(this.buildSwapWithIxsPath, body, undefined, true),
     );
@@ -131,7 +131,9 @@ export class JupSwapClient {
       this.logger.error(
         `[buildSwapWithIxs] Failed to get response: ${resultRes.error}`,
       );
-      return null;
+      throw new Error(
+        `Failed to get response from JupSwap: ${resultRes.error}`,
+      );
     }
 
     const parseRes = BuildSwapWithIxsV1ResultDtoSchema.safeParse(
@@ -141,7 +143,9 @@ export class JupSwapClient {
       this.logger.error(
         `[buildSwapWithIxs] Failed to parse response: ${parseRes.error.toString()}`,
       );
-      return null;
+      throw new Error(
+        `Failed to parse response from JupSwap: ${parseRes.error.toString()}`,
+      );
     }
 
     const { data } = parseRes;
