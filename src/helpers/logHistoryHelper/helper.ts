@@ -1,8 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
+import { LOG_FILE_PATH } from "../../config";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LogHistoryHelper {
-  static logFilePath = path.join(process.cwd(), "logs", "logHistory.json");
+  static logFilePath = LOG_FILE_PATH;
   static inMemoryLogs: any[] = [];
 
   static ensureLogDirectory() {
@@ -33,6 +36,21 @@ export class LogHistoryHelper {
     this.inMemoryLogs.push(entry);
   }
 
+  static loadLogHistory() {
+    this.ensureLogDirectory();
+    try {
+      if (fs.existsSync(this.logFilePath)) {
+        const logData = fs.readFileSync(this.logFilePath, "utf8");
+        this.inMemoryLogs = JSON.parse(logData);
+      } else {
+        this.inMemoryLogs = [];
+      }
+    } catch (error) {
+      console.error("Error loading log history:", error);
+      this.inMemoryLogs = [];
+    }
+  }
+
   static saveLogsToFile() {
     this.ensureLogDirectory();
     try {
@@ -54,13 +72,9 @@ export class LogHistoryHelper {
       index: index + 1,
     }));
   }
-
-  static clearLogHistory() {
-    this.inMemoryLogs = [];
-    this.ensureLogDirectory();
-    fs.writeFileSync(this.logFilePath, JSON.stringify([]), "utf8");
-  }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export const transportFunc = (logObj: any): void => {
   LogHistoryHelper.addLogEntry(logObj);

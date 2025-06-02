@@ -1,6 +1,6 @@
 import { TsLogLogger } from "./utils/logging";
 import { PRIVATE_KEY_BASE58, LOG_TYPE, NOT_USE_CLI, ENABLE_PERSISTENCE, PERSISTENCE_DATA_PATH } from "./config";
-import { transportFunc } from "./helpers/logHistoryHelper/helper";
+import { LogHistoryHelper, transportFunc } from "./helpers/logHistoryHelper/helper";
 import { 
   SOLANA_RPC_HTTP_URL, 
   SOLANA_RPC_WS_URL, 
@@ -35,6 +35,8 @@ export async function initializeCopyTradingService(
   jupSwapClient: JupSwapClient;
   jitoClient: JitoClient;
 }> {
+  LogHistoryHelper.loadLogHistory();
+
   const rootLogger = new TsLogLogger({
     name: "copy-trade-service",
     type: LOG_TYPE,
