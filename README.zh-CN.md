@@ -1,184 +1,147 @@
-# Solana 交易机器人
+# 🚀 Solana 跟单交易服务
 
-[English Version](./README.md) | [📦 最新版本下载](https://github.com/WangWilly/solana-trading-bot/releases)
+[English document](README.md)
 
-## 概述
+**先进的多语言跟单交易平台，具备智能 CLI 界面，专为 Solana 代币自动化策略设计**
 
-本仓库包含了 Solana 区块链上跟单交易的核心服务。它旨在促进跟单交易策略的创建和管理，允许用户自动复制目标钱包的交易。
+## ✨ 核心功能
 
-![](./docs/demo.gif)
+### 🌐 **多语言界面**
+- **🔄 实时语言切换** - 中英文之间即时切换，无需重启
+- **📝 完整本地化** - 60+ 界面字符串完全翻译
+- **⚡ 实时更新** - 语言更改立即生效
 
-## 开发
+### 🎯 **智能跟单交易**
+- **👥 钱包跟踪** - 监控并复制成功交易者策略
+- **💰 自动买卖** - 根据目标钱包活动执行交易
+- **🛡️ 风险管理** - 内置仓位控制和安全保护
+- **📊 策略分析** - 跟踪性能和交易模式
 
-### 🔧 前置条件：Bun 安装
+### 🖥️ **专业 CLI 体验**
+- **🎨 交互式菜单系统** - 9 个综合交易选项
+- **📱 实时监控** - 实时服务状态和策略跟踪
+- **📈 投资组合管理** - 完整的钱包和资产概览
+- **📋 交易历史** - 详细日志记录和可搜索记录
 
-按照以下说明安装 Bun JavaScript 运行时（[官方文档](https://bun.sh/docs/installation)）：
+### ⚙️ **企业级管理**
+- **🔐 安全密钥处理** - 军用级私钥保护
+- **🔧 策略配置** - 灵活的买卖规则自定义
+- **🚨 服务控制** - 完整的启动/停止/重启功能
+- **💾 数据持久化** - 可靠的策略和日志存储
 
-```bash
-# 适用于 macOS 操作系统
-brew install oven-sh/bun/bun
-
-# 通过检查版本来验证安装
-bun --version
-
-# 配置 shell 环境
-# 首先，确定您当前的 shell 环境：
-echo $SHELL
-
-# 将以下配置添加到您的 shell 配置文件中（例如，~/.zshrc）：
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-```
-
-### 🚀 运行服务
-
-#### 步骤 1：配置环境
-
-在项目根目录创建一个 `.env` 文件，内容如下：
-
-```env
-PRIVATE_KEY_BASE58=<private_key_base58>  # 您的私钥（Base58 格式）
-```
-
-#### 步骤 2：启动服务
-
-在主函数中使用 `solRpcWsSubscribeManager` 来订阅目标账户：
+## 🏃‍♂️ 快速启动
 
 ```bash
-./scripts/run-sol-trade-dev.sh
+# 1. 安装依赖
+npm install
 
-# 或者
+# 2. 配置环境
+cp .env.example .env
+# 编辑 .env 文件，添加您的 Solana 私钥和设置
 
-# 在环境变量中设置 NOT_USE_CLI 为 false
-bun run ./src/cli.ts -k <private_key_base58>
+# 3. 启动 CLI（中文）
+npm run cli:zh
+
+# 3a. 启动 CLI（英文）
+npm run cli
 ```
 
-### 📦 生产环境构建
+## 🎛️ CLI 导航
 
-为生产环境部署构建项目：
+### 主菜单选项：
 
-```bash
-./scripts/build-sol-trade.sh
+| 选项 | 功能 | 描述 |
+|------|------|------|
+| 1️⃣ | **📊 服务状态** | 实时监控跟单交易服务健康状况 |
+| 2️⃣ | **📋 活跃策略** | 查看和管理所有运行中的交易策略 |
+| 3️⃣ | **💰 创建买入策略** | 基于目标钱包设置自动买入 |
+| 4️⃣ | **🔄 创建卖出策略** | 配置智能卖出规则和触发器 |
+| 5️⃣ | **🗑️ 移除策略** | 安全删除现有交易策略 |
+| 6️⃣ | **📜 交易日志** | 全面的交易历史和分析 |
+| 7️⃣ | **💼 钱包资产** | 完整的投资组合概览和代币余额 |
+| 8️⃣ | **🌐 语言设置** | 切换界面语言（中文 ↔ EN） |
+| 9️⃣ | **❌ 退出应用** | 优雅关闭并保存数据 |
+
+### 🌍 支持的语言：
+- **🇨🇳 中文** - 完整功能集和详细帮助
+- **🇺🇸 English** - 全英文本地化和原生用户体验
+- **🔄 动态切换** - 无需重启即可更改语言
+
+## 🏗️ 技术架构
+
+### 核心技术：
+- **⚡ TypeScript** - 类型安全开发和现代 ES 特性
+- **🔗 Solana Web3.js** - 原生区块链集成
+- **🎨 Inquirer.js** - 丰富的交互式 CLI 组件
+- **🌐 i18n 系统** - 专业国际化框架
+
+### 项目结构：
+```
+src/
+├── 🖥️  cli/                    # 高级 CLI 应用程序
+│   ├── app.ts             # 主应用程序控制器
+│   ├── commands/          # 功能命令模块
+│   ├── i18n/              # 多语言支持系统
+│   │   ├── en.ts          # 英文翻译
+│   │   ├── zh.ts          # 中文翻译
+│   │   └── types.ts       # 翻译接口
+│   └── utils/             # CLI 工具和助手
+├── 🎯 core/                   # 跟单交易引擎
+├── 📝 types/                  # TypeScript 定义
+└── 🔧 utils/                  # 共享工具
 ```
 
-### 🖥️ 使用 CLI 界面
+## 🛡️ 安全性与可靠性
 
-该服务配备了用于管理跟单交易策略的交互式 CLI。
+- **🔐 私钥保护** - 安全密钥处理，永不记录或暴露
+- **✅ 交易验证** - 执行前多层验证
+- **🚨 错误恢复** - 全面错误处理和用户指导
+- **💾 数据完整性** - 可靠的策略和交易数据存储
 
-#### 步骤 1：构建 CLI
+## 📚 入门指南
 
-确保您已如上所述为生产环境构建了项目。
-CLI 位于 `dist` 目录中。
-
-#### 步骤 2：运行 CLI
-
-CLI 使用 Bun 构建，位于 `dist` 目录中。要运行 CLI，您需要安装 Bun 运行时。
-
-您可以直接从 `dist` 目录运行 CLI：
-
-```bash
-./dist/sol-trade -k <private_key_base58>
-```
-
-#### 可用功能
-
-CLI 提供以下功能：
-
-1. **查看服务状态** - 检查 WebSocket 连接状态和活跃策略
-2. **列出活跃策略** - 查看所有已配置的跟单交易策略
-3. **创建买入策略** - 设置新策略以复制目标钱包的买入交易
-4. **创建卖出策略** - 设置新策略以复制目标钱包的卖出交易
-5. **移除策略** - 删除现有策略
-6. **退出** - 优雅地关闭服务
-
-#### 示例工作流程
-
-**创建买入策略：**
-
-1. 从主菜单选择"创建买入策略"
-2. 输入要复制交易的目标钱包地址
-3. 为您的策略提供名称
-4. 输入用于交易的 SOL 数量（以 lamports 为单位）
-5. 设置您所需的滑点容忍度（基点）（例如，100 = 1%）
-
-**创建卖出策略：**
-
-1. 从主菜单选择"创建卖出策略"
-2. 输入要复制交易的目标钱包地址
-3. 为您的策略提供名称
-4. 设置固定的卖出百分比（基点）（例如，500 = 5%）
-5. 设置您所需的滑点容忍度（基点）
-
-**管理策略：**
-
-- 使用"列出活跃策略"查看所有当前策略
-- 使用"移除策略"删除不再需要的策略
-- 使用"查看服务状态"检查连接和活动状态
+1. **环境设置**：配置您的 Solana RPC 端点和私钥
+2. **首次运行**：启动 CLI 并探索交互式菜单
+3. **策略创建**：设置您的第一个跟单交易策略
+4. **监控**：使用实时状态和日志功能
+5. **语言偏好**：切换到您偏好的界面语言
 
 ---
 
-## 参考资料
+**📄 许可证**: OSNC-1.0 | **🔧 Node.js**: 18+ 必需 | **⚡ 运行时**: Node.js/Bun 兼容
 
-### Jupiter Exchange 集成
+## 🔧 开发与技术参考
 
-该服务利用 [Jupiter](https://jup.ag/) 在 Solana 区块链上进行交易处理。
+### Jupiter 交易所集成
 
-#### 文档
+本服务使用 [Jupiter](https://jup.ag/) 进行 Solana 区块链上的交易处理。
 
+#### 文档资源
 - [通用文档](https://station.jup.ag/docs/)
-- [API 概述](https://station.jup.ag/docs/swap-api/get-quote)
+- [API 概览](https://station.jup.ag/docs/swap-api/get-quote)
 - [综合 API 文档](https://station.jup.ag/docs/api/introduction)
 - [支持的去中心化交易所](https://api.jup.ag/swap/v1/program-id-to-label)
 
 #### API 资源
-
 - [费用结构信息](https://station.jup.ag/guides/general/faq#does-jupiter-swap-charge-any-fees)
 - [平台费用说明](https://www.bbx.com/news-detail/1898146)
-- [遗留 API 文档](https://station.jup.ag/docs/old/apis/landing-transactions)
+- [传统 API 文档](https://station.jup.ag/docs/old/apis/landing-transactions)
 - [交换指令文档](https://station.jup.ag/docs/api/swap-instructions)
-- [Jupiter API 带优先费用的交换交易](https://solana.stackexchange.com/questions/19136/how-to-get-a-swap-transaction-from-jupiter-api-which-uses-a-priority-fee-and-jit)
-- [理解 Jupiter 交换的交易费用](https://www.reddit.com/r/solana/comments/1bjh2g5/understanding_the_transaction_fees_on_a_jupiter/)
 
 ### 费用和优先级优化
 
 #### 交易费用管理
-
 - [在 Solana 上实施优先费用](https://solana.com/developers/guides/advanced/how-to-use-priority-fees)
 - [Helius 优先费用 API 文档](https://docs.helius.dev/solana-apis/priority-fee-api)
 - [交易费用优化讨论](https://www.reddit.com/r/solana/comments/1hudi6t/how_do_you_only_get_a_transaction_fee_of_0000005/)
-- [交易速度优化](https://solana.stackexchange.com/questions/11860/how-to-optimize-transaction-speed)
-- [Solana 费用和销毁跟踪器](https://solanacompass.com/statistics/fees)
 
 #### 计算预算优化
-
 - [官方 Solana 交易费用文档](https://solana.com/docs/core/fees)
 - [请求最优计算预算](https://solana.com/developers/guides/advanced/how-to-request-optimal-compute)
-- [Solana 的 JavaScript/TypeScript 助手](https://github.com/solana-developers/helpers)
-- [优化智能合约的计算使用](https://solana.com/developers/guides/advanced/how-to-optimize-compute)
-
-#### Jito 提示和高级配置
-
-- [QuickNode 交易文档](https://www.quicknode.com/docs/solana/transactions)
-- [Jito 低延迟交易文档](https://docs.jito.wtf/lowlatencytxnsend/#tip-amount)
+- [Solana JavaScript/TypeScript 帮助工具](https://github.com/solana-developers/helpers)
 
 ### 其他资源
-
-- [Axen Sniper Bot 文档](https://documentation.axenai.com/axen-sniper-bot/settings-command)
-- [为 Jupiter 交换添加自定义费用](https://solana.stackexchange.com/questions/13356/how-to-add-my-own-fee-to-jupiter-swap)
+- [QuickNode 交易文档](https://www.quicknode.com/docs/solana/transactions)
+- [Jito 低延迟交易文档](https://docs.jito.wtf/lowlatencytxnsend/#tip-amount)
 - [Jupiter API 交易机器人指南](https://www.quicknode.com/guides/solana-development/3rd-party-integrations/jupiter-api-trading-bot)
-- [Solana 交易机器人讨论](https://www.reddit.com/r/solana/comments/1ghytve/safetrustworthy_sol_trading_bots/)
-- [自动化 Memecoin 交易机器人](https://www.reddit.com/r/solana/comments/1ikbulw/automated_memecoin_trading_bot/)
-- [交易机器人使用讨论](https://www.reddit.com/r/solana/comments/1idniwf/anyone_here_using_trading_bots/)
-- [构建 Solana 交易机器人指南](https://www.solulab.com/how-to-build-solana-trading-bots/)
-- [ARB Protocol Jupiter Bot 实现](https://github.com/ARBProtocol/solana-jupiter-bot)
-- [跟单交易实现指南](https://www.quicknode.com/guides/solana-development/defi/pump-fun-copy-trade)
-- [失败的交换交易分析](https://www.reddit.com/r/solana/comments/1i5czkh/phantom_wallet_failed_swap_but_still_had_to_pay/)
-- [如何获取 Solana 钱包持有的所有代币](https://www.quicknode.com/guides/solana-development/spl-tokens/how-to-get-all-tokens-held-by-a-wallet-in-solana)
-
-### Bun 运行时集成
-
-- [Bun 中的 Node.js 实验性功能](https://www.reddit.com/r/javascript/comments/1adwwht/an_example_of_how_to_use_nodes_experimental/)
-- [Bun 问题跟踪](https://github.com/oven-sh/bun/issues/7384)
-- [Bun Node.js API 兼容性](https://bun.sh/docs/runtime/nodejs-apis)
-- [Bun 可执行文件打包](https://bun.sh/docs/bundler/executables)
-- [Bun vs Node.js 优化比较](https://www.reddit.com/r/node/comments/1g1muz1/so_what_optimizations_does_bun_have_that_node/)
+- [跟单交易实施指南](https://www.quicknode.com/guides/solana-development/defi/pump-fun-copy-trade)

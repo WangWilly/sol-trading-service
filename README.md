@@ -1,184 +1,147 @@
-# Solana Trading Bot
+# 🚀 Solana Copy Trading Service
 
-[中文版本 (Chinese Version)](./README.zh-CN.md) | [📦 Latest Release](https://github.com/WangWilly/solana-trading-bot/releases)
+[中文說明](README.zh-CN.md)
 
-## Overview
+**Advanced multilingual copy trading platform with intelligent CLI interface for automated Solana token strategies**
 
-This repository contains the core service for copy trading on the Solana blockchain. It is designed to facilitate the creation and management of copy trading strategies, allowing users to automatically replicate trades from a target wallet.
+## ✨ Key Features
 
-![](./docs/demo.gif)
+### 🌐 **Multilingual Interface**
+- **🔄 Live Language Switching** - Change between English/Chinese instantly without restart
+- **📝 Complete Localization** - 60+ UI strings fully translated
+- **⚡ Real-time Updates** - Language changes apply immediately
 
-## Development
+### 🎯 **Intelligent Copy Trading**
+- **👥 Wallet Following** - Monitor and copy successful trader strategies
+- **💰 Automated Buy/Sell** - Execute trades based on target wallet activities  
+- **🛡️ Risk Management** - Built-in position sizing and safety controls
+- **📊 Strategy Analytics** - Track performance and trading patterns
 
-### 🔧 Prerequisite: Bun Installation
+### 🖥️ **Professional CLI Experience**
+- **🎨 Interactive Menu System** - 9 comprehensive trading options
+- **📱 Real-time Monitoring** - Live service status and strategy tracking
+- **📈 Portfolio Management** - Complete wallet and asset overview
+- **📋 Transaction History** - Detailed logging with searchable records
 
-Follow these instructions to install Bun JavaScript runtime ([official documentation](https://bun.sh/docs/installation)):
+### ⚙️ **Enterprise-Grade Management**
+- **🔐 Secure Key Handling** - Military-grade private key protection
+- **🔧 Strategy Configuration** - Flexible buy/sell rule customization
+- **🚨 Service Control** - Complete start/stop/restart capabilities
+- **💾 Data Persistence** - Reliable strategy and log storage
 
-```bash
-# For macOS operating systems
-brew install oven-sh/bun/bun
-
-# Verify the installation by checking the version
-bun --version
-
-# Configure shell environment
-# First, identify your current shell environment:
-echo $SHELL
-
-# Add the following configuration to your shell profile file (e.g., ~/.zshrc):
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-```
-
-### 🚀 Running the Service
-
-#### Step 1: Configure environment
-
-Create a `.env` file in the project root with the following content:
-
-```env
-PRIVATE_KEY_BASE58=<private_key_base58>  # Your private key in Base58 format
-```
-
-#### Step 2: Start the service
-
-Use the `solRpcWsSubscribeManager` in the main function to subscribe to the target account:
+## 🏃‍♂️ Quick Start
 
 ```bash
-./scripts/run-sol-trade-dev.sh
+# 1. Install dependencies
+npm install
 
-# or
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your Solana private key and settings
 
-# set NOT_USE_CLI to false in the env
-bun run ./src/cli.ts -k <private_key_base58>
+# 3. Launch CLI (English)
+npm run cli
+
+# 3a. Launch CLI (Chinese)
+npm run cli:zh
 ```
 
-### 📦 Building for Production
+## 🎛️ CLI Navigation
 
-Build the project for production deployment:
+### Main Menu Options:
 
-```bash
-./scripts/build-sol-trade.sh
+| Option | Feature | Description |
+|--------|---------|-------------|
+| 1️⃣ | **📊 Service Status** | Real-time monitoring of copy trading service health |
+| 2️⃣ | **📋 Active Strategies** | View and manage all running trading strategies |
+| 3️⃣ | **💰 Create Buy Strategy** | Set up automated buying based on target wallets |
+| 4️⃣ | **🔄 Create Sell Strategy** | Configure intelligent selling rules and triggers |
+| 5️⃣ | **🗑️ Remove Strategy** | Safely delete existing trading strategies |
+| 6️⃣ | **📜 Transaction Logs** | Comprehensive trading history and analytics |
+| 7️⃣ | **💼 Wallet Assets** | Complete portfolio overview and token balances |
+| 8️⃣ | **🌐 Language Settings** | Switch interface language (EN ↔ 中文) |
+| 9️⃣ | **❌ Exit Application** | Graceful shutdown with data persistence |
+
+### 🌍 Supported Languages:
+- **🇺🇸 English** - Complete feature set with detailed help
+- **🇨🇳 中文** - Full Chinese localization with native UX
+- **🔄 Dynamic Switching** - Change languages without restarting
+
+## 🏗️ Technical Architecture
+
+### Core Technologies:
+- **⚡ TypeScript** - Type-safe development with modern ES features
+- **🔗 Solana Web3.js** - Native blockchain integration
+- **🎨 Inquirer.js** - Rich interactive CLI components
+- **🌐 i18n System** - Professional internationalization framework
+
+### Project Structure:
+```
+src/
+├── 🖥️  cli/               # Advanced CLI application
+│   ├── app.ts             # Main application controller
+│   ├── commands/          # Feature command modules
+│   ├── i18n/              # Multilingual support system
+│   │   ├── en.ts          # English translations
+│   │   ├── zh.ts          # Chinese translations
+│   │   └── types.ts       # Translation interfaces
+│   └── utils/             # CLI utilities and helpers
+├── 🎯 core/                   # Copy trading engine
+├── 📝 types/                  # TypeScript definitions
+└── 🔧 utils/                  # Shared utilities
 ```
 
-### 🖥️ Using the CLI Interface
+## 🛡️ Security & Reliability
 
-The service comes with an interactive CLI for managing copy trading strategies.
+- **🔐 Private Key Protection** - Secure key handling, never logged or exposed
+- **✅ Transaction Validation** - Multi-layer verification before execution
+- **🚨 Error Recovery** - Comprehensive error handling with user guidance
+- **💾 Data Integrity** - Reliable strategy and transaction data storage
 
-#### Step 1: Build the CLI
+## 📚 Getting Started Guide
 
-Ensure you have built the project for production as described above.
-The CLI is located in the `dist` directory.
-
-#### Step 2: Run the CLI
-
-The CLI is built using Bun and is located in the `dist` directory. To run the CLI, you need to have the Bun runtime installed.
-
-You can run the CLI directly from the `dist` directory:
-
-```bash
-./dist/sol-trade -k <private_key_base58>
-```
-
-#### Available Features
-
-The CLI provides the following functionality:
-
-1. **View Service Status** - Check the WebSocket connection status and active strategies
-2. **List Active Strategies** - View all configured copy trading strategies
-3. **Create Buy Strategy** - Set up a new strategy to copy buy trades from a target wallet
-4. **Create Sell Strategy** - Set up a new strategy to copy sell trades from a target wallet
-5. **Remove Strategy** - Delete an existing strategy
-6. **Exit** - Gracefully shut down the service
-
-#### Example Workflows
-
-**Creating a Buy Strategy:**
-
-1. Select "Create buy strategy" from the main menu
-2. Enter the target wallet address to copy trades from
-3. Provide a name for your strategy
-4. Enter the amount of SOL to use for trades (in lamports)
-5. Set your desired slippage tolerance in basis points (e.g., 100 = 1%)
-
-**Creating a Sell Strategy:**
-
-1. Select "Create sell strategy" from the main menu
-2. Enter the target wallet address to copy trades from
-3. Provide a name for your strategy
-4. Set the fixed selling percentage in basis points (e.g., 500 = 5%)
-5. Set your desired slippage tolerance in basis points
-
-**Managing Strategies:**
-
-- Use "List active strategies" to view all current strategies
-- Use "Remove strategy" to delete a strategy that's no longer needed
-- Use "View service status" to check the connection and activity status
+1. **Environment Setup**: Configure your Solana RPC endpoint and private key
+2. **First Run**: Launch the CLI and explore the interactive menu
+3. **Strategy Creation**: Set up your first copy trading strategy
+4. **Monitoring**: Use real-time status and logging features
+5. **Language Preference**: Switch to your preferred interface language
 
 ---
 
-## References
+**📄 License**: OSNC-1.0 | **🔧 Node.js**: 18+ Required | **⚡ Runtime**: Node.js/Bun Compatible
+
+## 🔧 Development & Technical References
 
 ### Jupiter Exchange Integration
 
 The service utilizes [Jupiter](https://jup.ag/) for transaction processing on the Solana blockchain.
 
 #### Documentation
-
 - [General Documentation](https://station.jup.ag/docs/)
 - [API Overview](https://station.jup.ag/docs/swap-api/get-quote)
 - [Comprehensive API Documentation](https://station.jup.ag/docs/api/introduction)
 - [Supported Decentralized Exchanges](https://api.jup.ag/swap/v1/program-id-to-label)
 
 #### API Resources
-
 - [Fee Structure Information](https://station.jup.ag/guides/general/faq#does-jupiter-swap-charge-any-fees)
 - [Platform Fee Clarification](https://www.bbx.com/news-detail/1898146)
 - [Legacy API Documentation](https://station.jup.ag/docs/old/apis/landing-transactions)
 - [Swap Instructions Documentation](https://station.jup.ag/docs/api/swap-instructions)
-- [Jupiter API Swap Transaction with Priority Fee](https://solana.stackexchange.com/questions/19136/how-to-get-a-swap-transaction-from-jupiter-api-which-uses-a-priority-fee-and-jit)
-- [Understanding Transaction Fees on Jupiter Swaps](https://www.reddit.com/r/solana/comments/1bjh2g5/understanding_the_transaction_fees_on_a_jupiter/)
 
 ### Fee and Priority Optimization
 
 #### Transaction Fee Management
-
 - [Implementing Priority Fees on Solana](https://solana.com/developers/guides/advanced/how-to-use-priority-fees)
 - [Helius Priority Fee API Documentation](https://docs.helius.dev/solana-apis/priority-fee-api)
 - [Transaction Fee Optimization Discussion](https://www.reddit.com/r/solana/comments/1hudi6t/how_do_you_only_get_a_transaction_fee_of_0000005/)
-- [Transaction Speed Optimization](https://solana.stackexchange.com/questions/11860/how-to-optimize-transaction-speed)
-- [Solana Fees and Burn Tracker](https://solanacompass.com/statistics/fees)
 
 #### Compute Budget Optimization
-
 - [Official Solana Transaction Fee Documentation](https://solana.com/docs/core/fees)
 - [Requesting Optimal Compute Budget](https://solana.com/developers/guides/advanced/how-to-request-optimal-compute)
 - [JavaScript/TypeScript Helpers for Solana](https://github.com/solana-developers/helpers)
-- [Optimizing Compute Usage on Smart Contracts](https://solana.com/developers/guides/advanced/how-to-optimize-compute)
-
-#### Jito Tips and Advanced Configuration
-
-- [QuickNode Transaction Documentation](https://www.quicknode.com/docs/solana/transactions)
-- [Jito Low Latency Transaction Documentation](https://docs.jito.wtf/lowlatencytxnsend/#tip-amount)
 
 ### Additional Resources
-
-- [Axen Sniper Bot Documentation](https://documentation.axenai.com/axen-sniper-bot/settings-command)
-- [Adding Custom Fees to Jupiter Swaps](https://solana.stackexchange.com/questions/13356/how-to-add-my-own-fee-to-jupiter-swap)
+- [QuickNode Transaction Documentation](https://www.quicknode.com/docs/solana/transactions)
+- [Jito Low Latency Transaction Documentation](https://docs.jito.wtf/lowlatencytxnsend/#tip-amount)
 - [Jupiter API Trading Bot Guide](https://www.quicknode.com/guides/solana-development/3rd-party-integrations/jupiter-api-trading-bot)
-- [Solana Trading Bot Discussion](https://www.reddit.com/r/solana/comments/1ghytve/safetrustworthy_sol_trading_bots/)
-- [Automated Memecoin Trading Bot](https://www.reddit.com/r/solana/comments/1ikbulw/automated_memecoin_trading_bot/)
-- [Trading Bot Usage Discussion](https://www.reddit.com/r/solana/comments/1idniwf/anyone_here_using_trading_bots/)
-- [Building Solana Trading Bots Guide](https://www.solulab.com/how-to-build-solana-trading-bots/)
-- [ARB Protocol Jupiter Bot Implementation](https://github.com/ARBProtocol/solana-jupiter-bot)
 - [Copy Trading Implementation Guide](https://www.quicknode.com/guides/solana-development/defi/pump-fun-copy-trade)
-- [Failed Swap Transaction Analysis](https://www.reddit.com/r/solana/comments/1i5czkh/phantom_wallet_failed_swap_but_still_had_to_pay/)
-- [How to get all tokens held by a wallet in solana](https://www.quicknode.com/guides/solana-development/spl-tokens/how-to-get-all-tokens-held-by-a-wallet-in-solana)
-
-### Bun Runtime Integration
-
-- [Node.js Experimental Features in Bun](https://www.reddit.com/r/javascript/comments/1adwwht/an_example_of_how_to_use_nodes_experimental/)
-- [Bun Issue Tracking](https://github.com/oven-sh/bun/issues/7384)
-- [Bun Node.js API Compatibility](https://bun.sh/docs/runtime/nodejs-apis)
-- [Bun Executable Bundling](https://bun.sh/docs/bundler/executables)
-- [Bun vs Node.js Optimization Comparison](https://www.reddit.com/r/node/comments/1g1muz1/so_what_optimizations_does_bun_have_that_node/)

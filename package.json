@@ -4,8 +4,8 @@
   "main": "src/main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "cli": "ts-node src/main-cli.ts",
-    "cli:zh": "ts-node src/main-cli.ts --language zh"
+    "cli": "set -a && source .env && ts-node src/main-cli.ts -k $PRIVATE_KEY_BASE58",
+    "cli:zh": "set -a && source .env && ts-node src/main-cli.ts --language zh -k $PRIVATE_KEY_BASE58"
   },
   "keywords": [],
   "author": "",
