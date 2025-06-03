@@ -78,7 +78,7 @@ npm run cli
 ### 项目结构：
 ```
 src/
-├── 🖥️  cli/                    # 高级 CLI 应用程序
+├── 🖥️  cli/               # 高级 CLI 应用程序
 │   ├── app.ts             # 主应用程序控制器
 │   ├── commands/          # 功能命令模块
 │   ├── i18n/              # 多语言支持系统
@@ -86,9 +86,8 @@ src/
 │   │   ├── zh.ts          # 中文翻译
 │   │   └── types.ts       # 翻译接口
 │   └── utils/             # CLI 工具和助手
-├── 🎯 core/                   # 跟单交易引擎
-├── 📝 types/                  # TypeScript 定义
-└── 🔧 utils/                  # 共享工具
+├── 🎯 helpers/            # 跟单交易引擎
+└── 🔧 utils/              # 共享工具
 ```
 
 ## 🛡️ 安全性与可靠性

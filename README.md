@@ -86,9 +86,8 @@ src/
 │   │   ├── zh.ts          # Chinese translations
 │   │   └── types.ts       # Translation interfaces
 │   └── utils/             # CLI utilities and helpers
-├── 🎯 core/                   # Copy trading engine
-├── 📝 types/                  # TypeScript definitions
-└── 🔧 utils/                  # Shared utilities
+├── 🎯 helpers/            # Copy trading engine
+└── 🔧 utils/              # Shared utilities
 ```
 
 ## 🛡️ Security & Reliability
