@@ -56,12 +56,12 @@ jobs:
       - name: Build binary (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          bun build src/cli.ts --compile --outfile ${{ matrix.output }} --target bun-${{ matrix.target }}
+          bun build src/main-cli.ts --compile --outfile ${{ matrix.output }} --target bun-${{ matrix.target }}
 
       - name: Build binary (Windows)
         if: runner.os == 'Windows'
         run: |
-          bun build src/cli.ts --compile --outfile ${{ matrix.output }} --target bun-${{ matrix.target }}
+          bun build src/main-cli.ts --compile --outfile ${{ matrix.output }} --target bun-${{ matrix.target }}
 
       - name: Make binary executable (Linux/macOS)
         if: runner.os != 'Windows'
