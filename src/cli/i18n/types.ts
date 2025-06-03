@@ -72,6 +72,14 @@ export interface Messages {
   totalSplTokens: string;
   errorFetchingAssets: string;
   
+  // Language settings
+  changeLanguage: string;
+  selectLanguage: string;
+  languageChanged: string;
+  currentLanguage: string;
+  english: string;
+  chinese: string;
+  
   // Process signals
   sigintReceived: string;
   sigtermReceived: string;

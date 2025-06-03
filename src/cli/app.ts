@@ -75,6 +75,7 @@ export class CliApplication {
         { name: i18n.t('removeStrategy'), value: "remove" },
         { name: i18n.t('viewLogHistory'), value: "logs" },
         { name: i18n.t('viewWalletAssets'), value: "assets" },
+        { name: i18n.t('changeLanguage'), value: "language" },
         { name: i18n.t('exitApp'), value: "exit" },
       ],
     });
@@ -104,6 +105,9 @@ export class CliApplication {
         case "assets":
           await this.displayCommands.displayWalletAssets();
           break;
+        case "language":
+          await this.changeLanguage();
+          break;
         case "exit":
           console.log(i18n.t('exit'));
           await this.gracefulExit();
@@ -122,6 +126,28 @@ export class CliApplication {
     // Continue prompting unless exit was chosen
     if (action !== "exit") {
       await this.promptMainMenu();
+    }
+  }
+
+  private async changeLanguage(): Promise<void> {
+    console.log(`${i18n.t('currentLanguage')}: ${i18n.getCurrentLanguage() === 'en' ? i18n.t('english') : i18n.t('chinese')}`);
+    
+    const newLanguage = await validateSelect({
+      message: i18n.t('selectLanguage'),
+      choices: [
+        { name: i18n.t('english'), value: "en" },
+        { name: i18n.t('chinese'), value: "zh" },
+      ],
+    });
+
+    if (newLanguage !== i18n.getCurrentLanguage()) {
+      i18n.setLanguage(newLanguage as Language);
+      console.log(`✅ ${i18n.t('languageChanged')}`);
+      
+      // Refresh the console to show the change immediately for the menu
+      ConsoleUtils.refreshConsole();
+    } else {
+      console.log(`ℹ️ ${i18n.t('currentLanguage')}: ${newLanguage === 'en' ? i18n.t('english') : i18n.t('chinese')}`);
     }
   }
 

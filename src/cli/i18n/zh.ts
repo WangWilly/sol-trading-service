@@ -72,6 +72,14 @@ export const chineseMessages: Messages = {
   totalSplTokens: 'SPL代币总数',
   errorFetchingAssets: '❌ 获取代币资产时出错',
   
+  // Language settings
+  changeLanguage: '🌐 更改语言',
+  selectLanguage: '请选择您的首选语言：',
+  languageChanged: '语言更改成功！请重新启动CLI以查看完整效果。',
+  currentLanguage: '当前语言',
+  english: 'English (英语)',
+  chinese: '中文',
+  
   // Process signals
   sigintReceived: '⚠️ 收到SIGINT信号。正在优雅退出...',
   sigtermReceived: '⚠️ 收到SIGTERM信号。正在优雅退出...',

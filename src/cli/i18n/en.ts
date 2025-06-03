@@ -72,6 +72,14 @@ export const englishMessages: Messages = {
   totalSplTokens: 'Total SPL tokens',
   errorFetchingAssets: '❌ Error fetching token assets',
   
+  // Language settings
+  changeLanguage: '🌐 Change language',
+  selectLanguage: 'Select your preferred language:',
+  languageChanged: 'Language changed successfully! Please restart the CLI to see full effect.',
+  currentLanguage: 'Current language',
+  english: 'English',
+  chinese: '中文 (Chinese)',
+  
   // Process signals
   sigintReceived: '⚠️ SIGINT received. Exiting gracefully...',
   sigtermReceived: '⚠️ SIGTERM received. Exiting gracefully...',
