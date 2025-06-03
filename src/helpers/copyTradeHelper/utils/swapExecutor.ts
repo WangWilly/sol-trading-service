@@ -102,6 +102,8 @@ export class SwapExecutor {
     return res.data;
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   private async getQuote(
     params: SwapParams,
     contextInfo: string
@@ -229,7 +231,8 @@ export class SwapExecutor {
     // Simple AMMs that don't support shared accounts
     const simpleAMMs = [
       "Pump.fun",
-      "Raydium CP", // Constant Product pools might also have issues
+      "Raydium CP",   // Constant Product pools might also have issues
+      "Meteora DLMM", // Dynamic Liquidity Market Maker
       // Add other Simple AMMs as needed
     ];
 

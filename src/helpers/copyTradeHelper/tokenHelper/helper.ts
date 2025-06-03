@@ -12,8 +12,8 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 
-import { safe } from "../../../utils/exceptions";
 import { COIN_TYPE_WSOL_MINT } from "../../solRpcWsClient/const";
+import { ResultUtils } from "../../../utils/result";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,13 +32,13 @@ export class TokenHelper {
 
     let ifInstallAcc = false;
     const depositWsol = new BN(0);
-    const getAccRes = await safe(
+    const getAccRes = await ResultUtils.wrap(
       getAccount(solWeb3Conn, tokenAccountPubkey, "confirmed"),
     );
-    if (!getAccRes.success) {
+    if (ResultUtils.isErr(getAccRes)) {
       ifInstallAcc = true;
     }
-    if (getAccRes.success) {
+    if (ResultUtils.isOk(getAccRes)) {
       const ata = getAccRes.data;
       if (ata.owner.toBase58() !== playerPublicKey.toBase58()) {
         throw new Error(`Invalid token account owner: ${ata.owner.toBase58()}`);
@@ -86,6 +86,22 @@ export class TokenHelper {
       false,
       mintOwnerProgramId,
     );
+    const getAccRes = await ResultUtils.wrap(
+      getAccount(
+        solWeb3Conn,
+        tokenAccountPubkey,
+        "confirmed",
+        mintOwnerProgramId,
+      ),
+    );
+    if (ResultUtils.isOk(getAccRes)) {
+      if (getAccRes.data.owner.toBase58() !== playerPublicKey.toBase58()) {
+        throw new Error(
+          `Invalid token account owner: ${getAccRes.data.owner.toBase58()}`,
+        );
+      }
+    }
+
     const createAtaIx = createAssociatedTokenAccountInstruction(
       playerPublicKey,
       tokenAccountPubkey,
@@ -94,24 +110,7 @@ export class TokenHelper {
       mintOwnerProgramId,
     );
 
-    const getAccRes = await safe(
-      getAccount(
-        solWeb3Conn,
-        tokenAccountPubkey,
-        "confirmed",
-        mintOwnerProgramId,
-      ),
-    );
-    if (!getAccRes.success) {
-      return createAtaIx;
-    }
-    if (getAccRes.data.owner.toBase58() !== playerPublicKey.toBase58()) {
-      throw new Error(
-        `Invalid token account owner: ${getAccRes.data.owner.toBase58()}`,
-      );
-    }
-
-    return null;
+    return createAtaIx;
   }
 
   static async getCreateIxPlayerWsolForDeposit(
@@ -130,10 +129,10 @@ export class TokenHelper {
       COIN_TYPE_WSOL_MINT,
     );
 
-    const getAccRes = await safe(
+    const getAccRes = await ResultUtils.wrap(
       getAccount(solWeb3Conn, tokenAccountPubkey, "confirmed"),
     );
-    if (!getAccRes.success) {
+    if (ResultUtils.isErr(getAccRes)) {
       return createAtaIx;
     }
     if (getAccRes.data.owner.toBase58() !== playerPublicKey.toBase58()) {
@@ -162,7 +161,7 @@ export class TokenHelper {
       mintOwnerProgramId,
     );
 
-    const getAccRes = await safe(
+    const getAccRes = await ResultUtils.wrap(
       getAccount(
         solWeb3Conn,
         tokenAccountPubkey,
@@ -170,11 +169,11 @@ export class TokenHelper {
         mintOwnerProgramId,
       ),
     );
-    if (!getAccRes.success) {
+    if (ResultUtils.isErr(getAccRes)) {
       // throw new Error(`Cannot get token account: ${tokenAccountPubkey}`);
       return new BN(0);
     }
-    const ata = getAccRes.data;
+    const ata = ResultUtils.unwrap(getAccRes);
     if (ata.owner.toBase58() !== playerPublicKey.toBase58()) {
       throw new Error(`Invalid token account owner: ${ata.owner.toBase58()}`);
     }

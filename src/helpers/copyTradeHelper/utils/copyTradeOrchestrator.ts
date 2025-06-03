@@ -11,6 +11,8 @@ import { TransactionProcessor } from "./transactionProcessor";
 import type * as txHelper from "../../transactionHelper";
 import { CopyTradeRecord } from "../dtos";
 
+//////////////////////////////////////////////////////////////////////////////
+
 /**
  * Orchestrates copy trading operations by coordinating all components
  */
@@ -44,6 +46,8 @@ export class CopyTradeOrchestrator {
     this.transactionProcessor = new TransactionProcessor(connection, logger);
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   /**
    * Process incoming transaction logs and execute copy trades
    */
@@ -71,6 +75,8 @@ export class CopyTradeOrchestrator {
       this.executeSellStrategies(swapInfo, copyTradeRecord),
     ]);
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
    * Execute buy strategies for WSOL
@@ -133,6 +139,8 @@ export class CopyTradeOrchestrator {
 
     await Promise.allSettled(promises);
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   private async executeBuyStrategy(strategyContext: BuyStrategyContext): Promise<void> {
     const { swapInfo, strategy, strategyName } = strategyContext;

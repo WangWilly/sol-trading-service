@@ -11,6 +11,8 @@ import { TokenHelper } from "../tokenHelper";
 import { FULL_SELLING_BPS } from "../../../utils/constants";
 import type { Logger } from "../../../utils/logging";
 
+////////////////////////////////////////////////////////////////////////////////
+
 export interface BuyStrategyContext {
   swapInfo: txHelper.SwapInfoDto;
   strategy: CopyTradeRecordOnBuyStrategy;
@@ -23,6 +25,8 @@ export interface SellStrategyContext {
   strategyName: string;
   sellAmount: BN;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Validates and prepares copy trade strategies for execution
@@ -110,7 +114,7 @@ export class StrategyValidator {
     const results: Array<SellStrategyContext> = [];
 
     for (const [strategyName, strategy] of strategies) {
-      const sellAmount = this.calculateSellAmount(
+      const sellAmount = StrategyValidator.calculateSellAmount(
         playerBalance,
         strategy,
         swapInfo,
@@ -134,17 +138,19 @@ export class StrategyValidator {
     return results;
   }
 
-  private calculateSellAmount(
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static calculateSellAmount(
     playerBalance: BN,
     strategy: CopyTradeRecordOnSellStrategy,
     swapInfo: txHelper.SwapInfoDto,
   ): BN {
     if (strategy.fixedSellingBps) {
       return playerBalance.muln(strategy.fixedSellingBps).divn(FULL_SELLING_BPS);
-    } else {
-      return playerBalance
-        .mul(swapInfo.fromCoinAmount)
-        .div(swapInfo.fromCoinPreBalance);
     }
+
+    return playerBalance
+      .mul(swapInfo.fromCoinAmount)
+      .div(swapInfo.fromCoinPreBalance);
   }
 }

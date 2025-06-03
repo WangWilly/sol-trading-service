@@ -1,13 +1,17 @@
 import { Connection, Logs } from "@solana/web3.js";
 import type { Logger } from "../../../utils/logging";
-import { safe } from "../../../utils/exceptions";
 import { COMMON_DEX_REGEX } from "../const";
 import * as txHelper from "../../transactionHelper";
+import { ResultUtils } from "../../../utils/result";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export interface TransactionProcessingResult {
   swapInfo: txHelper.SwapInfoDto;
   isValid: boolean;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Processes and validates Solana transactions for copy trading
@@ -15,7 +19,7 @@ export interface TransactionProcessingResult {
 export class TransactionProcessor {
   constructor(
     private readonly connection: Connection,
-    private readonly logger: Logger,
+    private readonly logger: Logger
   ) {}
 
   /**
@@ -23,7 +27,7 @@ export class TransactionProcessor {
    */
   async processLogs(
     subId: number,
-    logs: Logs,
+    logs: Logs
   ): Promise<TransactionProcessingResult | null> {
     // Validate transaction success
     if (logs.err) {
@@ -42,11 +46,16 @@ export class TransactionProcessor {
     }
 
     // Convert to swap info
-    const swapInfoResult = await this.extractSwapInfo(subId, logs.signature, txDetails);
+    const swapInfoResult = await this.extractSwapInfo(
+      subId,
+      logs.signature,
+      txDetails
+    );
     if (!swapInfoResult) {
       return null;
     }
 
+    /** TODO: deprecated
     // Validate SOL involvement
     if (!swapInfoResult.fromSol && !swapInfoResult.toSol) {
       this.logger.warn(
@@ -54,6 +63,7 @@ export class TransactionProcessor {
       );
       return null;
     }
+    */
 
     return {
       swapInfo: swapInfoResult,
@@ -61,19 +71,21 @@ export class TransactionProcessor {
     };
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   private isSwapTransaction(logs: string[]): boolean {
     return logs.some((log) => COMMON_DEX_REGEX.test(log));
   }
 
   private async getTransactionDetails(signature: string) {
-    const txRes = await safe(
+    const txRes = await ResultUtils.wrap(
       this.connection.getParsedTransaction(signature, {
         commitment: "confirmed",
         maxSupportedTransactionVersion: 0,
-      }),
+      })
     );
 
-    if (!txRes.success) {
+    if (ResultUtils.isErr(txRes)) {
       this.logger.debug(`Failed to get transaction: ${signature}`);
       return null;
     }
@@ -89,19 +101,22 @@ export class TransactionProcessor {
   private async extractSwapInfo(
     subId: number,
     signature: string,
-    txData: any,
+    txData: any
   ): Promise<txHelper.SwapInfoDto | null> {
-    const swapInfoRes = await safe(
-      txHelper.toSwapInfoDto(this.connection, subId, signature, txData),
+    const swapInfoRes = await txHelper.toSwapInfoDto(
+      this.connection,
+      subId,
+      signature,
+      txData
     );
 
     if (!swapInfoRes.success) {
       this.logger.error(
-        `Failed to extract swap info: ${signature}, ${swapInfoRes.error}`,
+        `Failed to extract swap info: ${signature}, ${swapInfoRes.error}`
       );
       return null;
     }
 
-    return swapInfoRes.data;
+    return ResultUtils.unwrap(swapInfoRes);
   }
 }
