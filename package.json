@@ -4,12 +4,8 @@
   "main": "src/main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "cli": "ts-node src/cli.ts",
-    "set-key": "ts-node src/cli.ts set-private-key",
-    "add-buy": "ts-node src/cli.ts add-buy-strategy",
-    "add-sell": "ts-node src/cli.ts add-sell-strategy",
-    "start": "ts-node src/cli.ts start",
-    "list": "ts-node src/cli.ts list-strategies"
+    "cli": "ts-node src/main-cli.ts",
+    "cli:zh": "ts-node src/main-cli.ts --language zh"
   },
   "keywords": [],
   "author": "",

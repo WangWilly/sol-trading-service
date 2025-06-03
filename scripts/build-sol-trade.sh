@@ -1,3 +1,3 @@
 #!/bin/sh
 
-bun build src/cli.ts --compile --outfile dist/sol-trade
+bun build src/main-cli.ts --compile --outfile dist/sol-trade
