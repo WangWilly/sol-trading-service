@@ -5,7 +5,11 @@ import { JitoClient } from "../../3rdParties/jito";
 import { FeeHelper } from "../feeHelper/helper";
 import { StrategyManager } from "./strategyManager";
 import { SwapExecutor } from "./swapExecutor";
-import { BuyStrategyContext, SellStrategyContext, StrategyValidator } from "./strategyValidator";
+import {
+  BuyStrategyContext,
+  SellStrategyContext,
+  StrategyValidator,
+} from "./strategyValidator";
 import { TransactionProcessor } from "./transactionProcessor";
 import type * as txHelper from "../../transactionHelper";
 import { CopyTradeRecord } from "../dtos";
@@ -28,12 +32,12 @@ export class CopyTradeOrchestrator {
     readonly jupSwapClient: JupSwapClient,
     readonly jitoClient: JitoClient,
     readonly feeHelper: FeeHelper,
-    private readonly logger: Logger,
+    private readonly logger: Logger
   ) {
     this.strategyValidator = new StrategyValidator(
       connection,
       playerKeypair.publicKey,
-      logger,
+      logger
     );
     this.swapExecutor = new SwapExecutor(
       connection,
@@ -41,7 +45,7 @@ export class CopyTradeOrchestrator {
       jupSwapClient,
       jitoClient,
       feeHelper,
-      logger,
+      logger
     );
     this.transactionProcessor = new TransactionProcessor(connection, logger);
   }
@@ -53,7 +57,10 @@ export class CopyTradeOrchestrator {
    */
   async processTransaction(subId: number, logs: Logs): Promise<void> {
     // Process and validate transaction
-    const processingResult = await this.transactionProcessor.processLogs(subId, logs);
+    const processingResult = await this.transactionProcessor.processLogs(
+      subId,
+      logs
+    );
     if (!processingResult?.isValid) {
       return;
     }
@@ -64,7 +71,7 @@ export class CopyTradeOrchestrator {
     const copyTradeRecord = this.strategyManager.getCopyTradeRecord(subId);
     if (!copyTradeRecord) {
       this.logger.error(
-        `No strategy matches the signer on tx: ${swapInfo.txSignature}`,
+        `No strategy matches the signer on tx: ${swapInfo.txSignature}`
       );
       return;
     }
@@ -83,27 +90,27 @@ export class CopyTradeOrchestrator {
    */
   private async executeBuyStrategies(
     swapInfo: txHelper.SwapInfoDto,
-    copyTradeRecord: CopyTradeRecord,
+    copyTradeRecord: CopyTradeRecord
   ): Promise<void> {
-    const buyStrategies = this.strategyValidator.getBuyStrategies(
+    const buyStrategies = await this.strategyValidator.getBuyStrategies(
       swapInfo,
-      copyTradeRecord,
+      copyTradeRecord
     );
 
     if (buyStrategies.length === 0) {
       this.logger.debug(
-        `No buy strategies applicable for tx: ${swapInfo.txSignature}`,
+        `No buy strategies applicable for tx: ${swapInfo.txSignature}`
       );
       return;
     }
 
     this.logger.debug(
-      `Processing ${buyStrategies.length} buy strategies for tx: ${swapInfo.txSignature}`,
+      `Processing ${buyStrategies.length} buy strategies for tx: ${swapInfo.txSignature}`
     );
 
     // Execute strategies in parallel for better performance
     const promises = buyStrategies.map((strategyContext) =>
-      this.executeBuyStrategy(strategyContext),
+      this.executeBuyStrategy(strategyContext)
     );
 
     await Promise.allSettled(promises);
@@ -114,27 +121,27 @@ export class CopyTradeOrchestrator {
    */
   private async executeSellStrategies(
     swapInfo: txHelper.SwapInfoDto,
-    copyTradeRecord: any,
+    copyTradeRecord: any
   ): Promise<void> {
     const sellStrategies = await this.strategyValidator.getSellStrategies(
       swapInfo,
-      copyTradeRecord,
+      copyTradeRecord
     );
 
     if (sellStrategies.length === 0) {
       this.logger.debug(
-        `No sell strategies applicable for tx: ${swapInfo.txSignature}`,
+        `No sell strategies applicable for tx: ${swapInfo.txSignature}`
       );
       return;
     }
 
     this.logger.debug(
-      `Processing ${sellStrategies.length} sell strategies for tx: ${swapInfo.txSignature}`,
+      `Processing ${sellStrategies.length} sell strategies for tx: ${swapInfo.txSignature}`
     );
 
     // Execute strategies in parallel for better performance
     const promises = sellStrategies.map((strategyContext) =>
-      this.executeSellStrategy(strategyContext),
+      this.executeSellStrategy(strategyContext)
     );
 
     await Promise.allSettled(promises);
@@ -142,14 +149,16 @@ export class CopyTradeOrchestrator {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  private async executeBuyStrategy(strategyContext: BuyStrategyContext): Promise<void> {
+  private async executeBuyStrategy(
+    strategyContext: BuyStrategyContext
+  ): Promise<void> {
     const { swapInfo, strategy, strategyName } = strategyContext;
     const contextInfo = `[BuyStrategy][${strategyName}][Tx]${swapInfo.txSignature}`;
 
     // TODO:
     if (swapInfo.toCoinType === null) {
       this.logger.warn(
-        `${contextInfo} No fromCoinType found in swap info, skipping sell strategy`,
+        `${contextInfo} No fromCoinType found in swap info, skipping sell strategy`
       );
       return;
     }
@@ -168,14 +177,16 @@ export class CopyTradeOrchestrator {
     }
   }
 
-  private async executeSellStrategy(strategyContext: SellStrategyContext): Promise<void> {
+  private async executeSellStrategy(
+    strategyContext: SellStrategyContext
+  ): Promise<void> {
     const { swapInfo, strategy, strategyName, sellAmount } = strategyContext;
     const contextInfo = `[SellStrategy][${strategyName}][Tx]${swapInfo.txSignature}`;
 
     // TODO:
     if (swapInfo.fromCoinType === null) {
       this.logger.warn(
-        `${contextInfo} No fromCoinType found in swap info, skipping sell strategy`,
+        `${contextInfo} No fromCoinType found in swap info, skipping sell strategy`
       );
       return;
     }

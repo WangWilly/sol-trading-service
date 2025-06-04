@@ -12,8 +12,12 @@ import {
   CopyTradeRecordOnBuyStrategySchema,
   CopyTradeRecordOnSellStrategySchema,
 } from "../../helpers/copyTradeHelper/dtos";
-import { COIN_TYPE_NAME_MAP, COIN_TYPE_USDC_MINT, COIN_TYPE_USDT_MINT, COIN_TYPE_WSOL_MINT } from "../../utils/constants";
-import { select } from "@inquirer/prompts";
+import {
+  COIN_TYPE_NAME_MAP,
+  COIN_TYPE_USDC_MINT,
+  COIN_TYPE_USDT_MINT,
+  COIN_TYPE_WSOL_MINT,
+} from "../../utils/constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +50,7 @@ export class StrategyCommands {
         {
           name: COIN_TYPE_NAME_MAP[COIN_TYPE_USDT_MINT.toBase58()],
           value: COIN_TYPE_USDT_MINT,
-        }
+        },
         // Add more coins here if needed
       ],
       required: true,
@@ -159,9 +163,10 @@ export class StrategyCommands {
     });
 
     const strategy = strategies[strategyIndex];
-    const ok = await this.services.solRpcWsSubscribeManager.removeCopyTradeRecord(
-      strategy.id
-    );
+    const ok =
+      await this.services.solRpcWsSubscribeManager.removeCopyTradeRecord(
+        strategy.id
+      );
     if (!ok) {
       console.log(i18n.strategyRemovalFailed(strategy.name));
       return;

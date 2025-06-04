@@ -17,6 +17,7 @@ import { JitoClient } from "../../3rdParties/jito";
 import { FeeHelper } from "../feeHelper/helper";
 import { versionedTxToSerializedBase64 } from "../../../utils/transaction";
 import { ResultUtils } from "../../../utils/result";
+import { COIN_TYPE_WSOL_MINT } from "../../../utils/constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -161,7 +162,9 @@ export class SwapExecutor {
     const buildSwapWithIxsV1BodyDtoRes =
       BuildSwapWithIxsV1BodyDtoSchema.safeParse({
         userPublicKey: this.playerKeypair.publicKey,
-        wrapAndUnwrapSol: true,
+        wrapAndUnwrapSol:
+          params.fromMint.equals(COIN_TYPE_WSOL_MINT) ||
+          params.toMint.equals(COIN_TYPE_WSOL_MINT),
         useSharedAccounts: !isSimpleAMM, // Disable shared accounts for Simple AMMs
         prioritizationFeeLamports: {
           jitoTipLamports,
@@ -231,7 +234,7 @@ export class SwapExecutor {
     // Simple AMMs that don't support shared accounts
     const simpleAMMs = [
       "Pump.fun",
-      "Raydium CP",   // Constant Product pools might also have issues
+      "Raydium CP", // Constant Product pools might also have issues
       "Meteora DLMM", // Dynamic Liquidity Market Maker
       // Add other Simple AMMs as needed
     ];

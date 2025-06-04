@@ -40,23 +40,25 @@ export class StrategyValidator {
   /**
    * Validate and get applicable buy strategies
    */
-  getBuyStrategies(
+  async getBuyStrategies(
     swapInfo: txHelper.SwapInfoDto,
     copyTradeRecord: CopyTradeRecord
-  ): BuyStrategyContext[] {
+  ): Promise<BuyStrategyContext[]> {
     // Validate swap info
     if (!swapInfo.toCoinType || swapInfo.toSol) {
       return [];
     }
+    if (!swapInfo.fromCoinType) {
+      this.logger.error(
+        `Invalid swap info for buy strategy, tx: ${swapInfo.txSignature}`
+      );
+      return [];
+    }
 
-    /** TODO: deprecated, no need to filter by WSOL selling
-    // Filter strategies that match WSOL selling
-    const applicableStrategies = Array.from(
-      copyTradeRecord.onBuyStrategiesMap.entries(),
-    ).filter(([_, strategy]) => strategy.sellCoinType.equals(COIN_TYPE_WSOL_MINT));
-    */
     const applicableStrategies = Array.from(
       copyTradeRecord.onBuyStrategiesMap.entries()
+    ).filter(([_, strategy]) =>
+      strategy.sellCoinType.equals(swapInfo.fromCoinType!)
     );
 
     if (applicableStrategies.length === 0) {
@@ -66,11 +68,46 @@ export class StrategyValidator {
       return [];
     }
 
-    return applicableStrategies.map(([strategyName, strategy]) => ({
-      swapInfo,
-      strategy,
-      strategyName,
-    }));
+    // Get player Quote token balance
+    let playerBalance = await TokenHelper.getUserQuoteBalance(
+      this.connection,
+      this.playerPublicKey,
+      swapInfo.fromCoinType,
+    );
+
+    if (!playerBalance || playerBalance.lte(new BN(0))) {
+      this.logger.error(
+        `No token balance for buy from mint: ${swapInfo.fromCoinType.toBase58()}`
+      );
+      return [];
+    }
+
+    if (swapInfo.fromCoinPreBalance.isZero()) {
+      this.logger.error(
+        `Invalid fromCoinPreBalance for tx: ${swapInfo.txSignature}`
+      );
+      return [];
+    }
+
+    const results: Array<BuyStrategyContext> = [];
+    for (const [strategyName, strategy] of applicableStrategies) {
+      // Calculate buy amount based on strategy
+      if (playerBalance.lt(strategy.sellCoinAmount)) {
+        this.logger.error(
+          `Insufficient balance for strategy ${strategyName}, tx: ${swapInfo.txSignature}`
+        );
+        continue;
+      }
+      playerBalance = playerBalance.sub(strategy.sellCoinAmount);
+
+      results.push({
+        swapInfo,
+        strategy,
+        strategyName,
+      });
+    }
+
+    return results;
   }
 
   /**
@@ -96,7 +133,7 @@ export class StrategyValidator {
     }
 
     // Get player token balance
-    const playerBalance = await TokenHelper.getPlayerTokenBalanceForSell(
+    let playerBalance = await TokenHelper.getUserTokenBalance(
       this.connection,
       this.playerPublicKey,
       swapInfo.fromCoinType,
@@ -118,7 +155,6 @@ export class StrategyValidator {
     }
 
     const results: Array<SellStrategyContext> = [];
-
     for (const [strategyName, strategy] of strategies) {
       const sellAmount = StrategyValidator.calculateSellAmount(
         playerBalance,
@@ -132,6 +168,14 @@ export class StrategyValidator {
         );
         continue;
       }
+
+      if (playerBalance.lt(sellAmount)) {
+        this.logger.error(
+          `Insufficient balance for strategy ${strategyName}, tx: ${swapInfo.txSignature}`
+        );
+        continue;
+      }
+      playerBalance = playerBalance.sub(sellAmount);
 
       results.push({
         swapInfo,
