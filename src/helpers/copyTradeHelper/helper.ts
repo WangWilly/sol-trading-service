@@ -4,7 +4,7 @@ import type {
   RecordMap,
   SubIdTarPubkeyMap,
 } from "./dtos";
-import { FeeHelper } from "./feeHelper/helper";
+import { FeeHelper } from "../feeHelper/helper";
 import {
   StrategyManager,
   CopyTradeOrchestrator,
@@ -129,6 +129,8 @@ export class CopyTradeHelper {
       strategyName
     );
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   public clearAll4GracefulStop(): void {
     this.logger.info("Clearing all copy trade records");

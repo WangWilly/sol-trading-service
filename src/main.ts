@@ -20,7 +20,7 @@ import { JitoClient } from "./helpers/3rdParties/jito";
 
 import { CopyTradeHelper } from "./helpers/copyTradeHelper";
 import { SolRpcWsSubscribeManager } from "./helpers/solRpcWsSubscribeManager";
-import { FeeHelper } from "./helpers/copyTradeHelper/feeHelper/helper";
+import { FeeHelper } from "./helpers/feeHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 

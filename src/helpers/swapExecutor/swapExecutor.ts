@@ -5,20 +5,22 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import BN from "bn.js";
-import type { Logger } from "../../../utils/logging";
-import { JupSwapClient, GetQuoteV1ParamDtoSchema } from "../../3rdParties/jup";
+
 import {
   BuildSwapWithIxsV1BodyDtoSchema,
   getComputeBudgetFromBuildSwapWithIxsV1Result,
   GetQuoteV1ResultDto,
   getQuoteV1ResultInStr,
   getTxFromBuildSwapWithIxsV1Result,
-} from "../../3rdParties/jup/dtos";
-import { JitoClient } from "../../3rdParties/jito";
+} from "../3rdParties/jup/dtos";
+import { JupSwapClient, GetQuoteV1ParamDtoSchema } from "../3rdParties/jup";
+import { JitoClient } from "../3rdParties/jito";
 import { FeeHelper } from "../feeHelper/helper";
-import { versionedTxToSerializedBase64 } from "../../../utils/transaction";
-import { ResultUtils } from "../../../utils/result";
-import { COIN_TYPE_WSOL_MINT } from "../../../utils/constants";
+
+import { versionedTxToSerializedBase64 } from "../../utils/transaction";
+import type { Logger } from "../../utils/logging";
+import { ResultUtils } from "../../utils/result";
+import { COIN_TYPE_WSOL_MINT } from "../../utils/constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +51,8 @@ export class SwapExecutor {
     private readonly feeHelper: FeeHelper,
     private readonly logger: Logger
   ) {}
+
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
    * Execute a swap transaction
@@ -233,6 +237,28 @@ export class SwapExecutor {
     return builtTx;
   }
 
+  private async sendTransaction(
+    transaction: VersionedTransaction,
+    contextInfo: string
+  ): Promise<SwapResult | null> {
+    const sendTxRes = await this.jitoClient.sendTransactionV1(
+      versionedTxToSerializedBase64(transaction)
+    );
+
+    if (!sendTxRes) {
+      this.logger.error(`${contextInfo} Cannot send transaction`);
+      return null;
+    }
+
+    this.logger.info(`${contextInfo} Transaction sent: ${sendTxRes.result}`);
+    return {
+      signature: sendTxRes.result,
+      success: true,
+    };
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   /**
    * Check if the quote response involves Simple AMMs that don't support shared accounts
    */
@@ -253,25 +279,5 @@ export class SwapExecutor {
       (route) =>
         route.swapInfo.label && simpleAMMs.includes(route.swapInfo.label)
     );
-  }
-
-  private async sendTransaction(
-    transaction: VersionedTransaction,
-    contextInfo: string
-  ): Promise<SwapResult | null> {
-    const sendTxRes = await this.jitoClient.sendTransactionV1(
-      versionedTxToSerializedBase64(transaction)
-    );
-
-    if (!sendTxRes) {
-      this.logger.error(`${contextInfo} Cannot send transaction`);
-      return null;
-    }
-
-    this.logger.info(`${contextInfo} Transaction sent: ${sendTxRes.result}`);
-    return {
-      signature: sendTxRes.result,
-      success: true,
-    };
   }
 }

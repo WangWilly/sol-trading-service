@@ -5,8 +5,12 @@ import type {
   RecordMap,
   SubIdTarPubkeyMap,
 } from "../dtos";
-import type { Logger } from "../../../utils/logging";
+
 import type { IStrategyPersistence } from "./persistence";
+
+import type { Logger } from "../../../utils/logging";
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Manages copy trade strategies with cleaner abstractions and persistence support
@@ -19,6 +23,8 @@ export class StrategyManager {
     private readonly persistence?: IStrategyPersistence,
   ) {}
 
+  //////////////////////////////////////////////////////////////////////////////
+
   /**
    * Get copy trade record for a given subId
    */
@@ -29,6 +35,8 @@ export class StrategyManager {
     }
     return this.recordMap.get(targetPublicKey) || null;
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   /**
    * Add or update a buy strategy
@@ -162,6 +170,8 @@ export class StrategyManager {
     this.subIdTarPubkeyMap.clear();
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+
   /**
    * Load strategies from persistence if available
    */
@@ -221,6 +231,8 @@ export class StrategyManager {
   hasPersistence(): boolean {
     return this.persistence !== undefined;
   }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   private getOrCreateRecord(targetPublicKey: string): CopyTradeRecord {
     let record = this.recordMap.get(targetPublicKey);

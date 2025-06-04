@@ -1,5 +1,5 @@
 export { StrategyManager } from "./strategyManager";
-export { SwapExecutor } from "./swapExecutor";
+export { SwapExecutor } from "../../swapExecutor/swapExecutor";
 export { StrategyValidator } from "./strategyValidator";
 export { TransactionProcessor } from "./transactionProcessor";
 export { CopyTradeOrchestrator } from "./copyTradeOrchestrator";
@@ -9,7 +9,7 @@ export type { IStrategyPersistence } from "./persistence";
 export type {
   SwapParams,
   SwapResult,
-} from "./swapExecutor";
+} from "../../swapExecutor/swapExecutor";
 
 export type {
   BuyStrategyContext,

@@ -13,12 +13,12 @@ import {
 } from "@solana/web3.js";
 import BN from "bn.js";
 
-import { ResultUtils } from "../../../utils/result";
+import { ResultUtils } from "../../utils/result";
 import {
   COIN_TYPE_USDC_MINT,
   COIN_TYPE_USDT_MINT,
   COIN_TYPE_WSOL_MINT,
-} from "../../../utils/constants";
+} from "../../utils/constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 

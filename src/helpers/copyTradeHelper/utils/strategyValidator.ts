@@ -1,14 +1,17 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
-import type * as txHelper from "../../transactionHelper";
+
 import type {
   CopyTradeRecord,
   CopyTradeRecordOnBuyStrategy,
   CopyTradeRecordOnSellStrategy,
 } from "../dtos";
-import { TokenHelper } from "../tokenHelper";
-import { FULL_SELLING_BPS } from "../../../utils/constants";
+
 import type { Logger } from "../../../utils/logging";
+
+import type * as txHelper from "../../transactionHelper";
+import { TokenHelper } from "../../tokenHelper";
+import { FULL_SELLING_BPS } from "../../../utils/constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,7 +75,7 @@ export class StrategyValidator {
     let playerBalance = await TokenHelper.getUserQuoteBalance(
       this.connection,
       this.playerPublicKey,
-      swapInfo.fromCoinType,
+      swapInfo.fromCoinType
     );
 
     if (!playerBalance || playerBalance.lte(new BN(0))) {

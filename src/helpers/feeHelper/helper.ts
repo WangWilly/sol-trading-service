@@ -4,7 +4,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-import { ComputeBudgetInfo } from "../../../utils/dtos";
+import { ComputeBudgetInfo } from "../../utils/dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13,6 +13,8 @@ export class FeeHelper {
     private readonly fixedFeeLamports: number | bigint,
     private readonly receiver: PublicKey
   ) {}
+
+  //////////////////////////////////////////////////////////////////////////////
 
   transferFeeIxProc(
     computeBudget: ComputeBudgetInfo,

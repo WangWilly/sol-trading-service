@@ -2,9 +2,9 @@ import { Connection, Keypair, Logs } from "@solana/web3.js";
 import type { Logger } from "../../../utils/logging";
 import { JupSwapClient } from "../../3rdParties/jup";
 import { JitoClient } from "../../3rdParties/jito";
-import { FeeHelper } from "../feeHelper/helper";
+import { FeeHelper } from "../../feeHelper/helper";
 import { StrategyManager } from "./strategyManager";
-import { SwapExecutor } from "./swapExecutor";
+import { SwapExecutor } from "../../swapExecutor/swapExecutor";
 import {
   BuyStrategyContext,
   SellStrategyContext,
