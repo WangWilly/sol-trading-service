@@ -11,6 +11,7 @@ import {
   BuildSwapWithIxsV1BodyDtoSchema,
   getComputeBudgetFromBuildSwapWithIxsV1Result,
   GetQuoteV1ResultDto,
+  getQuoteV1ResultInStr,
   getTxFromBuildSwapWithIxsV1Result,
 } from "../../3rdParties/jup/dtos";
 import { JitoClient } from "../../3rdParties/jito";
@@ -70,6 +71,11 @@ export class SwapExecutor {
       this.logger.error(`${contextInfo} Quote data is empty`);
       return null;
     }
+    this.logger.info(
+      `${contextInfo} Quote received: ${getQuoteV1ResultInStr(
+        quoteResult.data
+      )}`
+    );
 
     // Build transaction
     const transaction = await ResultUtils.wrap(
@@ -85,6 +91,7 @@ export class SwapExecutor {
       this.logger.error(`${contextInfo} Built transaction is empty`);
       return null;
     }
+    this.logger.info(`${contextInfo} Transaction built successfully.`);
 
     // Send transaction
     const res = await ResultUtils.wrap(
@@ -100,6 +107,9 @@ export class SwapExecutor {
       this.logger.error(`${contextInfo} Transaction result is empty`);
       return null;
     }
+    this.logger.info(
+      `${contextInfo} Transaction sent successfully: ${res.data.signature}`
+    );
     return res.data;
   }
 

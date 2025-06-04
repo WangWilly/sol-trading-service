@@ -14,6 +14,7 @@ import { TransactionProcessor } from "./transactionProcessor";
 import type * as txHelper from "../../transactionHelper";
 import { CopyTradeRecord } from "../dtos";
 import { COIN_TYPE_WSOL_MINT } from "../../../utils/constants";
+import { UUID } from "../../../utils/uuid";
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -153,9 +154,8 @@ export class CopyTradeOrchestrator {
     strategyContext: BuyStrategyContext
   ): Promise<void> {
     const { swapInfo, strategy, strategyName } = strategyContext;
-    const contextInfo = `[BuyStrategy][${strategyName}][Tx]${swapInfo.txSignature}`;
+    const contextInfo = `[BuyStrategy][${strategyName}][${UUID.generate()}][Tx]${swapInfo.txSignature}`;
 
-    // TODO:
     if (swapInfo.toCoinType === null) {
       this.logger.warn(
         `${contextInfo} No fromCoinType found in swap info, skipping sell strategy`
@@ -183,7 +183,6 @@ export class CopyTradeOrchestrator {
     const { swapInfo, strategy, strategyName, sellAmount } = strategyContext;
     const contextInfo = `[SellStrategy][${strategyName}][Tx]${swapInfo.txSignature}`;
 
-    // TODO:
     if (swapInfo.fromCoinType === null) {
       this.logger.warn(
         `${contextInfo} No fromCoinType found in swap info, skipping sell strategy`
