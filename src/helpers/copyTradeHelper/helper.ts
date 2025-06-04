@@ -4,17 +4,23 @@ import type {
   RecordMap,
   SubIdTarPubkeyMap,
 } from "./dtos";
+import { FeeHelper } from "./feeHelper/helper";
+import {
+  StrategyManager,
+  CopyTradeOrchestrator,
+  JsonStrategyPersistence,
+} from "./utils";
 
 import { Connection, Keypair, Logs } from "@solana/web3.js";
 
-import { TsLogLogger } from "../../utils/logging";
 import { LOG_TYPE, NOT_USE_CLI } from "../../config";
+
+import { TsLogLogger } from "../../utils/logging";
 import type { Logger } from "../../utils/logging";
+import { transportFunc } from "../logHistoryHelper/helper";
+
 import { JupSwapClient } from "../3rdParties/jup";
 import { JitoClient } from "../3rdParties/jito";
-import { FeeHelper } from "./feeHelper/helper";
-import { transportFunc } from "../logHistoryHelper/helper";
-import { StrategyManager, CopyTradeOrchestrator, JsonStrategyPersistence } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,10 +48,10 @@ export class CopyTradeHelper {
       },
     }),
     enablePersistence: boolean,
-    persistenceDataPath: string,
+    persistenceDataPath: string
   ) {
     // Initialize persistence if enabled
-    const persistence = enablePersistence 
+    const persistence = enablePersistence
       ? new JsonStrategyPersistence(persistenceDataPath, this.logger)
       : undefined;
 
@@ -53,7 +59,7 @@ export class CopyTradeHelper {
       this.copyTradeSubIdTarPubkeyMap,
       this.copyTradeRecordMap,
       this.logger,
-      persistence,
+      persistence
     );
 
     this.orchestrator = new CopyTradeOrchestrator(
@@ -63,7 +69,7 @@ export class CopyTradeHelper {
       this.jupSwapClient,
       this.jitoClient,
       this.feeHelper,
-      this.logger,
+      this.logger
     );
   }
 
@@ -75,7 +81,7 @@ export class CopyTradeHelper {
 
   public registerCopyTradeTargetPublicKey(
     subId: number,
-    targetPublicKey: string,
+    targetPublicKey: string
   ): void {
     this.strategyManager.registerSubscription(subId, targetPublicKey);
   }
@@ -83,31 +89,45 @@ export class CopyTradeHelper {
   public async createCopyTradeRecordOnBuyStrategy(
     targetPublicKey: string,
     strategyName: string,
-    strategy: CopyTradeRecordOnBuyStrategy,
+    strategy: CopyTradeRecordOnBuyStrategy
   ): Promise<boolean> {
-    return await this.strategyManager.addBuyStrategy(targetPublicKey, strategyName, strategy);
+    return await this.strategyManager.addBuyStrategy(
+      targetPublicKey,
+      strategyName,
+      strategy
+    );
   }
 
   public async removeCopyTradeOnBuyStrategy(
     targetPublicKey: string,
-    strategyName: string,
+    strategyName: string
   ): Promise<boolean> {
-    return await this.strategyManager.removeBuyStrategy(targetPublicKey, strategyName);
+    return await this.strategyManager.removeBuyStrategy(
+      targetPublicKey,
+      strategyName
+    );
   }
 
   public async createCopyTradeRecordOnSellStrategy(
     targetPublicKey: string,
     strategyName: string,
-    strategy: CopyTradeRecordOnSellStrategy,
+    strategy: CopyTradeRecordOnSellStrategy
   ): Promise<boolean> {
-    return await this.strategyManager.addSellStrategy(targetPublicKey, strategyName, strategy);
+    return await this.strategyManager.addSellStrategy(
+      targetPublicKey,
+      strategyName,
+      strategy
+    );
   }
 
   public async removeCopyTradeOnSellStrategy(
     targetPublicKey: string,
-    strategyName: string,
+    strategyName: string
   ): Promise<boolean> {
-    return await this.strategyManager.removeSellStrategy(targetPublicKey, strategyName);
+    return await this.strategyManager.removeSellStrategy(
+      targetPublicKey,
+      strategyName
+    );
   }
 
   public clearAll4GracefulStop(): void {
@@ -132,13 +152,13 @@ export class CopyTradeHelper {
    */
   public async gracefulShutdown(): Promise<void> {
     this.logger.info("Starting graceful shutdown...");
-    
+
     try {
       if (this.strategyManager.hasPersistence()) {
         this.logger.info("Saving strategies before shutdown...");
         await this.strategyManager.saveStrategies();
       }
-      
+
       this.clearAll4GracefulStop();
       this.logger.info("Graceful shutdown completed");
     } catch (error) {
