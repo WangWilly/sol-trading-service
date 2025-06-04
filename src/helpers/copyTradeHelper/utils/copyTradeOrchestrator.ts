@@ -3,13 +3,13 @@ import type { Logger } from "../../../utils/logging";
 import { JupSwapClient } from "../../3rdParties/jup";
 import { JitoClient } from "../../3rdParties/jito";
 import { FeeHelper } from "../feeHelper/helper";
-import { COIN_TYPE_WSOL_MINT } from "../../solRpcWsClient/const";
 import { StrategyManager } from "./strategyManager";
 import { SwapExecutor } from "./swapExecutor";
 import { BuyStrategyContext, SellStrategyContext, StrategyValidator } from "./strategyValidator";
 import { TransactionProcessor } from "./transactionProcessor";
 import type * as txHelper from "../../transactionHelper";
 import { CopyTradeRecord } from "../dtos";
+import { COIN_TYPE_WSOL_MINT } from "../../../utils/constants";
 
 //////////////////////////////////////////////////////////////////////////////
 

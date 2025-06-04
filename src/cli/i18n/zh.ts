@@ -25,14 +25,18 @@ export const chineseMessages: Messages = {
   enterWalletAddress: '输入要跟单的钱包地址：',
   enterStrategyName: '为此策略输入名称：',
   enterSolAmount: '输入用于交易的SOL数量（以lamports为单位）：',
+  enterUsdcAmount: '输入用于交易的USDC数量（以0.000001 USDC为单位）：',
+  enterUsdtAmount: '输入用于交易的USDT数量（以0.000001 USDT为单位）：',
   enterSlippage: '输入滑点（基点，例如100表示1%）：',
-  enterFixedSellingPercentage: '输入固定卖出百分比（基点，例如500表示5%）：',
+  enterFixedSellingPercentage: '（可选）输入固定卖出百分比（基点，例如500表示5%）：',
+  selectUsedCoin: '选择用于買入的代币：',
   strategyCreatedSuccessfully: '策略创建成功！',
   
   // Validation messages
   validSolanaAddress: '请输入有效的Solana钱包地址',
   strategyNameNotEmpty: '策略名称不能为空',
   validNumberGreaterThanZero: '请输入大于0的有效数字',
+  validNumberBetween0And10000: '请输入0到10000之间的有效数字',
   validNumberBetween1And10000: '请输入1到10000之间的有效数字',
   
   // Status display

@@ -25,14 +25,18 @@ export const englishMessages: Messages = {
   enterWalletAddress: 'Enter wallet address to copy trades from:',
   enterStrategyName: 'Enter a name for this strategy:',
   enterSolAmount: 'Enter the amount of SOL to use for trades (in lamports):',
+  enterUsdcAmount: 'Enter the amount of USDC to use for trades (in 0.000001 USDC):',
+  enterUsdtAmount: 'Enter the amount of USDT to use for trades (in 0.000001 USDT):',
   enterSlippage: 'Enter slippage in basis points (e.g. 100 for 1%):',
-  enterFixedSellingPercentage: 'Enter fixed selling percentage in basis points (e.g. 500 for 5%):',
+  enterFixedSellingPercentage: '(optional) Enter fixed selling percentage in basis points (e.g. 500 for 5%):',
+  selectUsedCoin: 'Select the coin to use for buy:',
   strategyCreatedSuccessfully: 'strategy created successfully!',
   
   // Validation messages
   validSolanaAddress: 'Please enter a valid Solana wallet address',
   strategyNameNotEmpty: 'Strategy name cannot be empty',
   validNumberGreaterThanZero: 'Please enter a valid number greater than 0',
+  validNumberBetween0And10000: 'Please enter a valid number between 0 and 10000',
   validNumberBetween1And10000: 'Please enter a valid number between 1 and 10000',
   
   // Status display

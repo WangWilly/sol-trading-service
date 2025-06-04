@@ -6,7 +6,6 @@ import type {
   CopyTradeRecordOnBuyStrategy,
   CopyTradeRecordOnSellStrategy,
 } from "../dtos";
-import { COIN_TYPE_WSOL_MINT } from "../../solRpcWsClient/const";
 import { TokenHelper } from "../tokenHelper";
 import { FULL_SELLING_BPS } from "../../../utils/constants";
 import type { Logger } from "../../../utils/logging";
@@ -35,7 +34,7 @@ export class StrategyValidator {
   constructor(
     private readonly connection: Connection,
     private readonly playerPublicKey: PublicKey,
-    private readonly logger: Logger,
+    private readonly logger: Logger
   ) {}
 
   /**
@@ -43,21 +42,26 @@ export class StrategyValidator {
    */
   getBuyStrategies(
     swapInfo: txHelper.SwapInfoDto,
-    copyTradeRecord: CopyTradeRecord,
+    copyTradeRecord: CopyTradeRecord
   ): BuyStrategyContext[] {
     // Validate swap info
     if (!swapInfo.toCoinType || swapInfo.toSol) {
       return [];
     }
 
+    /** TODO: deprecated, no need to filter by WSOL selling
     // Filter strategies that match WSOL selling
     const applicableStrategies = Array.from(
       copyTradeRecord.onBuyStrategiesMap.entries(),
     ).filter(([_, strategy]) => strategy.sellCoinType.equals(COIN_TYPE_WSOL_MINT));
+    */
+    const applicableStrategies = Array.from(
+      copyTradeRecord.onBuyStrategiesMap.entries()
+    );
 
     if (applicableStrategies.length === 0) {
       this.logger.debug(
-        `No buy strategies applicable for tx: ${swapInfo.txSignature}`,
+        `No buy strategies applicable for tx: ${swapInfo.txSignature}`
       );
       return [];
     }
@@ -74,17 +78,19 @@ export class StrategyValidator {
    */
   async getSellStrategies(
     swapInfo: txHelper.SwapInfoDto,
-    copyTradeRecord: CopyTradeRecord,
+    copyTradeRecord: CopyTradeRecord
   ): Promise<Array<SellStrategyContext>> {
     // Validate swap info
     if (!swapInfo.fromCoinType || swapInfo.fromSol) {
       return [];
     }
 
-    const strategies = Array.from(copyTradeRecord.onSellStrategiesMap.entries());
+    const strategies = Array.from(
+      copyTradeRecord.onSellStrategiesMap.entries()
+    );
     if (strategies.length === 0) {
       this.logger.debug(
-        `No sell strategies applicable for tx: ${swapInfo.txSignature}`,
+        `No sell strategies applicable for tx: ${swapInfo.txSignature}`
       );
       return [];
     }
@@ -94,19 +100,19 @@ export class StrategyValidator {
       this.connection,
       this.playerPublicKey,
       swapInfo.fromCoinType,
-      swapInfo.fromCoinOwnerProgramId,
+      swapInfo.fromCoinOwnerProgramId
     );
 
     if (!playerBalance || playerBalance.lte(new BN(0))) {
       this.logger.error(
-        `No token balance for sell from mint: ${swapInfo.fromCoinType.toBase58()}`,
+        `No token balance for sell from mint: ${swapInfo.fromCoinType.toBase58()}`
       );
       return [];
     }
 
     if (swapInfo.fromCoinPreBalance.isZero()) {
       this.logger.error(
-        `Invalid fromCoinPreBalance for tx: ${swapInfo.txSignature}`,
+        `Invalid fromCoinPreBalance for tx: ${swapInfo.txSignature}`
       );
       return [];
     }
@@ -117,12 +123,12 @@ export class StrategyValidator {
       const sellAmount = StrategyValidator.calculateSellAmount(
         playerBalance,
         strategy,
-        swapInfo,
+        swapInfo
       );
 
       if (sellAmount.lte(new BN(0))) {
         this.logger.error(
-          `Invalid sell amount for strategy ${strategyName}, tx: ${swapInfo.txSignature}`,
+          `Invalid sell amount for strategy ${strategyName}, tx: ${swapInfo.txSignature}`
         );
         continue;
       }
@@ -143,10 +149,12 @@ export class StrategyValidator {
   private static calculateSellAmount(
     playerBalance: BN,
     strategy: CopyTradeRecordOnSellStrategy,
-    swapInfo: txHelper.SwapInfoDto,
+    swapInfo: txHelper.SwapInfoDto
   ): BN {
     if (strategy.fixedSellingBps) {
-      return playerBalance.muln(strategy.fixedSellingBps).divn(FULL_SELLING_BPS);
+      return playerBalance
+        .muln(strategy.fixedSellingBps)
+        .divn(FULL_SELLING_BPS);
     }
 
     return playerBalance

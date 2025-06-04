@@ -25,14 +25,18 @@ export interface Messages {
   enterWalletAddress: string;
   enterStrategyName: string;
   enterSolAmount: string;
+  enterUsdcAmount: string;
+  enterUsdtAmount: string;
   enterSlippage: string;
   enterFixedSellingPercentage: string;
+  selectUsedCoin: string;
   strategyCreatedSuccessfully: string;
   
   // Validation messages
   validSolanaAddress: string;
   strategyNameNotEmpty: string;
   validNumberGreaterThanZero: string;
+  validNumberBetween0And10000: string;
   validNumberBetween1And10000: string;
   
   // Status display

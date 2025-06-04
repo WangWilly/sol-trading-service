@@ -1,3 +1,5 @@
+import { PublicKey } from "@solana/web3.js";
+
 ////////////////////////////////////////////////////////////////////////////////
 // Https - headers
 export const CONTENT_TYPE_KEY = "Content-Type";
@@ -18,8 +20,10 @@ export const FULL_SELLING_BPS: number = 10000;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Connection URLs
-export const SOLANA_RPC_HTTP_URL = "https://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607";
-export const SOLANA_RPC_WS_URL = "wss://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607";
+export const SOLANA_RPC_HTTP_URL =
+  "https://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607";
+export const SOLANA_RPC_WS_URL =
+  "wss://newest-icy-isle.solana-mainnet.quiknode.pro/c72249a674becf5948b09bfa6ba1269f41a28607";
 
 // Jupiter API
 export const JUPITER_API_URL = "https://lite-api.jup.ag";
@@ -30,5 +34,23 @@ export const JITO_BUNDLES_URL = "https://bundles.jito.wtf";
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fee related
-export const FEE_DESTINATION_PUBKEY = "81v6neWF9XPArSSeHoUqc49Zb6npuK4cWsErQ8TiA5Rh";
+export const FEE_DESTINATION_PUBKEY =
+  "81v6neWF9XPArSSeHoUqc49Zb6npuK4cWsErQ8TiA5Rh";
 export const FEE_AMOUNT = 100_000;
+
+////////////////////////////////////////////////////////////////////////////////
+// SOLANA WEB3 MINT CONSTANTS
+export const COIN_TYPE_WSOL_MINT = new PublicKey(
+  "So11111111111111111111111111111111111111112"
+);
+export const COIN_TYPE_USDC_MINT = new PublicKey(
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+);
+export const COIN_TYPE_USDT_MINT = new PublicKey(
+  "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+);
+export const COIN_TYPE_NAME_MAP: Record<string, string> = {
+  [COIN_TYPE_WSOL_MINT.toBase58()]: "Wrapped SOL (WSOL)",
+  [COIN_TYPE_USDC_MINT.toBase58()]: "USDC",
+  [COIN_TYPE_USDT_MINT.toBase58()]: "USDT",
+};

@@ -123,7 +123,9 @@ export class SolRpcWsSubscribeManager {
 
   // Remove a strategy by its ID
   async removeCopyTradeRecord(id: string): Promise<boolean> {
-    const [targetWallet, type, strategyName] = id.split("-");
+    const [targetWallet, type, strategyName] = RegExp(
+      /^(.*?)-(buy|sell)-(.*)$/,
+    ).exec(id)?.slice(1) || [];
 
     if (type === "buy") {
       const result = await this.copyTradeHelper.removeCopyTradeOnBuyStrategy(
