@@ -131,5 +131,12 @@ export const validations = {
       return true;
     }
     return i18n.t("validNumberBetween0And10000");
-  }
+  },
+
+  slippage: (input: number | undefined): boolean | string => {
+    if (input !== undefined && input > 0 && input <= 10000) {
+      return true;
+    }
+    return i18n.t("validSlippage");
+  },
 };

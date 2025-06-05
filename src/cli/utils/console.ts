@@ -30,4 +30,15 @@ export class ConsoleUtils {
   static logInfo(message: string): void {
     console.log(`ℹ️ ${message}`);
   }
+
+  static showSpinner(message?: string): void {
+    if (message) {
+      console.log(`⏳ ${message}`);
+    }
+  }
+
+  static hideSpinner(): void {
+    // For simplicity, we'll just do nothing here
+    // In a more sophisticated implementation, you could use a spinner library
+  }
 }

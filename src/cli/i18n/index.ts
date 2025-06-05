@@ -55,6 +55,23 @@ class I18n {
     return this.t(messageKey);
   }
 
+  // Helper method for buy amount messages in swap operations
+  getBuyAmountMessage(mintAddr: string): string {
+    const mintAddrMessageMap: Record<string, keyof Messages> = {
+      [COIN_TYPE_WSOL_MINT.toBase58()]: "enterSolAmount",
+      [COIN_TYPE_USDC_MINT.toBase58()]: "enterUsdcAmount",
+      [COIN_TYPE_USDT_MINT.toBase58()]: "enterUsdtAmount",
+    };
+
+    const messageKey = mintAddrMessageMap[mintAddr];
+    if (!messageKey) {
+      return this.currentLanguage === "zh" 
+        ? "输入购买金额：" 
+        : "Enter buy amount:";
+    }
+    return this.t(messageKey);
+  }
+
   // Helper method for strategy success messages
   strategySuccess(strategyName: string, type: "buy" | "sell"): string {
     const typeText =
