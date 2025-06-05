@@ -644,7 +644,13 @@ export class SwapCommands {
       history.forEach((swap, index) => {
         const date = new Date(swap.timestamp).toLocaleString();
         console.log(`\n${index + 1}. ${swap.type.toUpperCase()} - ${date}`);
-        console.log(`   From: ${COIN_TYPE_NAME_MAP[swap.fromTokenMint]}`);
+        console.log(
+          `   From: ${swap.fromTokenMint} alias ${
+            swap.fromTokenMint in COIN_TYPE_NAME_MAP
+              ? COIN_TYPE_NAME_MAP[swap.fromTokenMint]
+              : "Unknown"
+          }`
+        );
         console.log(`   Amount: ${swap.amount?.toString()}`);
         console.log(`   Token: ${swap.toTokenMint}`);
         console.log(`   ${swap.success ? "✅ Success" : "❌ Failed"}`);
