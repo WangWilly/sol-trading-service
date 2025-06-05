@@ -18,10 +18,11 @@
 - **📊 Strategy Analytics** - Track performance and trading patterns
 
 ### 🖥️ **Professional CLI Experience**
-- **🎨 Interactive Menu System** - 9 comprehensive trading options
+- **🎨 Hierarchical Menu System** - Organized main menu with specialized submenus
 - **📱 Real-time Monitoring** - Live service status and strategy tracking
 - **📈 Portfolio Management** - Complete wallet and asset overview
 - **📋 Transaction History** - Detailed logging with searchable records
+- **💱 Direct Trading Interface** - Immediate buy/sell operations with advanced controls
 
 ### ⚙️ **Enterprise-Grade Management**
 - **🔐 Secure Key Handling** - Military-grade private key protection
@@ -37,7 +38,7 @@ npm install
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env with your Solana private key and settings
+# Edit .env file and set your PRIVATE_KEY_BASE58
 
 # 3. Launch CLI (English)
 npm run cli
@@ -46,6 +47,22 @@ npm run cli
 npm run cli:zh
 ```
 
+### 🔧 Command Line Options
+
+The CLI application supports the following command-line options:
+
+- `-k, --private-key <string>` - Private key (base58 encoded) for the wallet (required)
+- `-l, --language <string>` - Interface language (`en` for English, `zh` for Chinese, default: `en`)
+
+### 📋 Environment Variables
+
+Configure your `.env` file with the following variables:
+
+- `PRIVATE_KEY_BASE58` - Your Solana wallet private key in base58 format
+- `LOG_LEVEL` - Logging level (default: `info`)
+- `ENABLE_PERSISTENCE` - Enable strategy persistence (default: `true`)
+- `PERSISTENCE_DATA_PATH` - Path for strategy data storage (default: `data/strategies.json`)
+
 ## 🎛️ CLI Navigation
 
 ### Main Menu Options:
@@ -53,14 +70,35 @@ npm run cli:zh
 | Option | Feature | Description |
 |--------|---------|-------------|
 | 1️⃣ | **📊 Service Status** | Real-time monitoring of copy trading service health |
-| 2️⃣ | **📋 Active Strategies** | View and manage all running trading strategies |
-| 3️⃣ | **💰 Create Buy Strategy** | Set up automated buying based on target wallets |
-| 4️⃣ | **🔄 Create Sell Strategy** | Configure intelligent selling rules and triggers |
-| 5️⃣ | **🗑️ Remove Strategy** | Safely delete existing trading strategies |
-| 6️⃣ | **📜 Transaction Logs** | Comprehensive trading history and analytics |
-| 7️⃣ | **💼 Wallet Assets** | Complete portfolio overview and token balances |
-| 8️⃣ | **🌐 Language Settings** | Switch interface language (EN ↔ 中文) |
-| 9️⃣ | **❌ Exit Application** | Graceful shutdown with data persistence |
+| 2️⃣ | **📋 Strategy Management** | Complete strategy management submenu |
+| 3️⃣ | **💱 Token Trading** | Direct trading and swap operations submenu |
+| 4️⃣ | **📜 View Log History** | Comprehensive trading history and analytics |
+| 5️⃣ | **💼 View Wallet Assets** | Complete portfolio overview and token balances |
+| 6️⃣ | **🌐 Change Language** | Switch interface language (EN ↔ 中文) |
+| 7️⃣ | **❌ Exit Application** | Graceful shutdown with data persistence |
+
+### Strategy Management Submenu:
+
+| Option | Feature | Description |
+|--------|---------|-------------|
+| 1️⃣ | **📋 List Active Strategies** | View all running copy trading strategies |
+| 2️⃣ | **💰 Create Buy Strategy** | Set up automated buying based on target wallets |
+| 3️⃣ | **🔄 Create Sell Strategy** | Configure intelligent selling rules and triggers |
+| 4️⃣ | **🗑️ Remove Strategy** | Safely delete existing trading strategies |
+| 5️⃣ | **🔙 Back to Main Menu** | Return to main navigation |
+
+### Token Trading Submenu:
+
+| Option | Feature | Description |
+|--------|---------|-------------|
+| 1️⃣ | **💰 Direct Buy Token** | Execute immediate token purchase |
+| 2️⃣ | **💸 Direct Sell Token** | Execute immediate token sale |
+| 3️⃣ | **⚡ Quick Buy Token** | Fast token purchase with preset amounts |
+| 4️⃣ | **⚡ Quick Sell Token** | Fast token sale with preset amounts |
+| 5️⃣ | **⚙️ View Swap Config** | Display current swap configuration |
+| 6️⃣ | **🔧 Update Swap Config** | Modify swap settings and parameters |
+| 7️⃣ | **📊 View Swap History** | Review historical swap transactions |
+| 8️⃣ | **🔙 Back to Main Menu** | Return to main navigation |
 
 ### 🌍 Supported Languages:
 - **🇺🇸 English** - Complete feature set with detailed help
@@ -99,11 +137,12 @@ src/
 
 ## 📚 Getting Started Guide
 
-1. **Environment Setup**: Configure your Solana RPC endpoint and private key
-2. **First Run**: Launch the CLI and explore the interactive menu
-3. **Strategy Creation**: Set up your first copy trading strategy
-4. **Monitoring**: Use real-time status and logging features
-5. **Language Preference**: Switch to your preferred interface language
+1. **Environment Setup**: Configure your `.env` file with `PRIVATE_KEY_BASE58` and other settings
+2. **First Run**: Launch the CLI using `npm run cli` or `npm run cli:zh` and explore the main menu
+3. **Strategy Management**: Navigate to Strategy Management to create and manage copy trading strategies
+4. **Direct Trading**: Use Token Trading submenu for immediate buy/sell operations
+5. **Monitoring**: Check Service Status and View Log History for real-time monitoring
+6. **Language Preference**: Use Change Language option to switch between English and Chinese
 
 ---
 
