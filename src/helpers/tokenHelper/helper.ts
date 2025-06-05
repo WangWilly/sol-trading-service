@@ -21,6 +21,7 @@ import {
   COIN_TYPE_USDT_MINT,
   COIN_TYPE_WSOL_MINT,
 } from "../../utils/constants";
+import { getTokenName } from "../../utils/tokenAsset";
 import { TokenBalanceDto, WalletBalancesDto } from "./dtos";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,6 +288,10 @@ export class TokenHelper {
       mintAccountPubkey,
       mintOwnerProgramId
     );
+    const name = await getTokenName(
+      solWeb3Conn,
+      mintAccountPubkey.toBase58()
+    );
 
     if (balance.isZero()) {
       return {
@@ -294,6 +299,7 @@ export class TokenHelper {
         amount: new BN(0),
         decimals: 0,
         uiAmount: 0,
+        name,
       };
     }
 
@@ -307,6 +313,7 @@ export class TokenHelper {
         amount: balance,
         decimals: 0,
         uiAmount: 0,
+        name,
       };
     }
     const mintInfoData = ResultUtils.unwrap(mintInfo);
@@ -316,6 +323,7 @@ export class TokenHelper {
       amount: balance,
       decimals: mintInfoData.decimals,
       uiAmount: balance.toNumber() / Math.pow(10, mintInfoData.decimals),
+      name,
     };
   }
 
@@ -348,6 +356,7 @@ export class TokenHelper {
       const amount = new BN(parsedInfo.tokenAmount.amount);
       const decimals = parsedInfo.tokenAmount.decimals;
       const uiAmount = parsedInfo.tokenAmount.uiAmount || 0;
+      const name = await getTokenName(solWeb3Conn, parsedInfo.mint);
 
       // Skip empty balances
       if (amount.gt(new BN(0))) {
@@ -356,6 +365,7 @@ export class TokenHelper {
           amount,
           decimals,
           uiAmount,
+          name: name,
         });
       }
     }

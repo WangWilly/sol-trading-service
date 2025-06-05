@@ -117,6 +117,14 @@ export interface Messages {
   swapConfigTitle: string;
   updateSwapConfigTitle: string;
   swapHistoryTitle: string;
+
+  // Swap display
+  tokenInfo: string;
+  noBalance: string;
+  noBalanceForBuy: string;
+  noBalanceForQuickBuy: string;
+  availableTokenMints: string;
+  noAvailableTokens: string;
   
   // Swap inputs
   enterTokenMint: string;
@@ -130,6 +138,7 @@ export interface Messages {
   enterSellAmount: string;
   enterSlippageOptional: string;
   enterPriorityFeeOptional: string;
+  selectTokenToSell: string;
   
   // Quick operations
   selectQuickAmount: string;

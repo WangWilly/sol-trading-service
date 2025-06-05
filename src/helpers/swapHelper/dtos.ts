@@ -52,7 +52,8 @@ export const BuyParamsSchema = zod.object({
 export type BuyParams = zod.infer<typeof BuyParamsSchema>;
 
 export const SellParamsSchema = zod.object({
-  tokenMint: zod.instanceof(PublicKey),
+  fromTokenMint: zod.instanceof(PublicKey),
+  toTokenMint: zod.instanceof(PublicKey),
   tokenAmount: zod.instanceof(BN), // Amount of tokens to sell
   percentage: zod.number().optional(), // If provided, sell this percentage of holdings
   slippageBps: zod.number().optional(), // If provided, use custom slippage; otherwise use default

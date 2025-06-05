@@ -114,6 +114,14 @@ export const chineseMessages: Messages = {
   updateSwapConfigTitle: '🔧 ===== 更新交换配置 =====',
   swapHistoryTitle: '📋 ===== 交换交易历史 =====',
   
+  // Swap display
+  tokenInfo: '代币信息',
+  noBalance: '没有足够的余额',
+  noBalanceForBuy: '没有足够的余额进行购买',
+  noBalanceForQuickBuy: '没有足够的余额进行快速购买',
+  availableTokenMints: '可用的代币地址',
+  noAvailableTokens: '没有可用的代币',
+
   // Swap inputs
   enterTokenMint: '输入要交易的代币地址：',
   selectBuyCoin: '选择用于购买的币种：',
@@ -126,6 +134,7 @@ export const chineseMessages: Messages = {
   enterSellAmount: '输入要出售的代币数量：',
   enterSlippageOptional: '输入滑点（基点，可选，回车使用默认值）：',
   enterPriorityFeeOptional: '输入优先费用（SOL，可选，回车使用默认值）：',
+  selectTokenToSell: '选择要出售的代币：',
   
   // Quick operations
   selectQuickAmount: '选择快速购买金额：',

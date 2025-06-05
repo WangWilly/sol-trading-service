@@ -8,6 +8,7 @@ export interface TokenBalanceDto {
   amount: BN;
   decimals: number;
   uiAmount: number;
+  name: string;
 }
 
 export interface WalletBalancesDto {

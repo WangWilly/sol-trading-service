@@ -50,6 +50,25 @@ export class SwapCommands {
         ],
       });
 
+      // display token info
+      const buyCoinInfo = await this.services.swapHelper.getTokenBalance(
+        new PublicKey(buyCoinMint)
+      );
+
+      console.log(
+        `\n${i18n.t("tokenInfo")}: ${buyCoinMint} - ${
+          buyCoinInfo?.uiAmount
+            ? `${buyCoinInfo.uiAmount.toString()} ${
+                COIN_TYPE_NAME_MAP[buyCoinMint]
+              }`
+            : i18n.t("noBalance")
+        }`
+      );
+      if (!buyCoinInfo || !buyCoinInfo.amount || buyCoinInfo.amount.isZero()) {
+        console.log(`⚠️ ${i18n.t("noBalanceForBuy")}`);
+        return;
+      }
+
       // Get buy amount
       const buyAmount = await validateNumber({
         message: i18n.getBuyAmountMessage(buyCoinMint),
@@ -126,16 +145,17 @@ export class SwapCommands {
       console.log(`\n${i18n.t("directSellTitle")}`);
 
       // Get token mint address
+      /**
       const tokenMint = await validateInput({
         message: i18n.t("enterTokenMint"),
         validate: validations.solanaAddress,
       });
+      */
+      const tokenMint = await this.selectSellTokenMint();
 
-      // Select sell coin type
-      // TODO:
-      /**
+      // Select quote coin type
       const sellCoinMint = await validateSelect({
-        message: i18n.t('selectSellCoin'),
+        message: i18n.t("selectSellCoin"),
         choices: [
           {
             name: COIN_TYPE_NAME_MAP[COIN_TYPE_WSOL_MINT.toBase58()],
@@ -151,7 +171,6 @@ export class SwapCommands {
           },
         ],
       });
-      */
 
       // Select sell amount type
       const sellAmountType = await validateSelect({
@@ -227,7 +246,8 @@ export class SwapCommands {
       ConsoleUtils.showSpinner();
 
       const result = await this.services.swapHelper.sell({
-        tokenMint: new PublicKey(tokenMint),
+        fromTokenMint: new PublicKey(tokenMint),
+        toTokenMint: new PublicKey(sellCoinMint),
         tokenAmount: sellAmount || new BN(0),
         percentage: sellPercentage,
         slippageBps: slippage,
@@ -269,6 +289,20 @@ export class SwapCommands {
         message: i18n.t("enterTokenMint"),
         validate: validations.solanaAddress,
       });
+
+      // display token info
+      const buyCoinInfo = await this.services.swapHelper.getSolBalance();
+      console.log(
+        `\n${i18n.t("tokenInfo")}: ${tokenMint} - ${
+          buyCoinInfo
+            ? `${buyCoinInfo.toString()} lamports`
+            : i18n.t("noBalance")
+        }`
+      );
+      if (!buyCoinInfo || buyCoinInfo.isZero()) {
+        console.log(`⚠️ ${i18n.t("noBalanceForQuickBuy")}`);
+        return;
+      }
 
       // Get quick amount options from config
       const config = this.services.swapHelper.getConfig();
@@ -325,10 +359,14 @@ export class SwapCommands {
       console.log(`\n${i18n.t("quickSellTitle")}`);
 
       // Get token mint address
-      const tokenMint = await validateInput({
+      /**
+      const tokenMintRes = await validateInput({
         message: i18n.t("enterTokenMint"),
         validate: validations.solanaAddress,
       });
+      const tokenMint = new PublicKey(tokenMintRes);
+      */
+      const tokenMint = await this.selectSellTokenMint();
 
       // Get quick sell options from config
       const config = this.services.swapHelper.getConfig();
@@ -354,7 +392,7 @@ export class SwapCommands {
       ConsoleUtils.showSpinner();
 
       const result = await this.services.swapHelper.quickSell(
-        new PublicKey(tokenMint),
+        tokenMint,
         selectedPercentageIndex
       );
 
@@ -380,6 +418,41 @@ export class SwapCommands {
       ConsoleUtils.hideSpinner();
       throw error;
     }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  // private async displayAvailableTokenMints(): Promise<void> {
+  //   console.log(`\n${i18n.t("availableTokenMints")}:`);
+  //   const tokenMints = await this.services.swapHelper.getWalletBalances();
+  //   if (tokenMints.tokenBalances.length === 0) {
+  //     console.log(`  ${i18n.t("noAvailableTokens")}`);
+  //     return;
+  //   }
+  //   tokenMints.tokenBalances.forEach((tokenBalanceDto, index) => {
+  //     console.log(
+  //       `  ${index + 1}. ${tokenBalanceDto.mint.toBase58()} - ${
+  //         tokenBalanceDto.uiAmount
+  //       } (${tokenBalanceDto.name})`
+  //     );
+  //   });
+  // }
+
+  private async selectSellTokenMint(): Promise<PublicKey> {
+    console.log(`\n${i18n.t("availableTokenMints")}:`);
+    const tokenMints = await this.services.swapHelper.getWalletBalances();
+    if (tokenMints.tokenBalances.length === 0) {
+      console.log(`  ${i18n.t("noAvailableTokens")}`);
+      throw new Error(i18n.t("noAvailableTokens"));
+    }
+    const selectedIndex = await validateSelect({
+      message: i18n.t("selectTokenToSell"),
+      choices: tokenMints.tokenBalances.map((tokenBalanceDto, index) => ({
+        name: `${tokenBalanceDto.mint.toBase58()} - ${tokenBalanceDto.uiAmount} (${tokenBalanceDto.name})`,
+        value: index,
+      })),
+    });
+    return tokenMints.tokenBalances[selectedIndex].mint;
   }
 
   //////////////////////////////////////////////////////////////////////////////

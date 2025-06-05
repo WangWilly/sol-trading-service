@@ -1,4 +1,4 @@
-import { TsLogLogger } from "./utils/logging";
+import { Logger, TsLogLogger } from "./utils/logging";
 import {
   PRIVATE_KEY_BASE58,
   LOG_TYPE,
@@ -37,7 +37,8 @@ import { SwapHelper } from "./helpers/swapHelper";
 
 // Export the initialization function for CLI usage
 export async function initializeCopyTradingService(
-  playerKeypair: Keypair
+  playerKeypair: Keypair,
+  rootLogger?: Logger
 ): Promise<{
   solWeb3Conn: Connection;
   copyTradeHelper: CopyTradeHelper;
@@ -48,17 +49,19 @@ export async function initializeCopyTradingService(
 }> {
   LogHistoryHelper.loadLogHistory();
 
-  const rootLogger = new TsLogLogger({
-    name: "copy-trade-service",
-    type: LOG_TYPE,
-    overwrite: {
-      transportJSON: NOT_USE_CLI
-        ? undefined
-        : (json: unknown) => {
-            transportFunc(json);
-          },
-    },
-  });
+  if (!rootLogger) {
+    rootLogger = new TsLogLogger({
+      name: "copy-trade-service",
+      type: LOG_TYPE,
+      overwrite: {
+        transportJSON: NOT_USE_CLI
+          ? undefined
+          : (json: unknown) => {
+              transportFunc(json);
+            },
+      },
+    });
+  }
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -126,14 +129,6 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
   swapExecutor: SwapExecutor;
   swapHelper: SwapHelper;
 }> {
-  const baseServices = await initializeCopyTradingService(playerKeypair);
-
-  // Create FeeHelper
-  const feeHelper = new FeeHelper(
-    FEE_AMOUNT,
-    new PublicKey(FEE_DESTINATION_PUBKEY)
-  );
-
   // Create logger for SwapExecutor
   const rootLogger = new TsLogLogger({
     name: "copy-trade-service",
@@ -146,6 +141,17 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
           },
     },
   });
+
+  const baseServices = await initializeCopyTradingService(
+    playerKeypair,
+    rootLogger
+  );
+
+  // Create FeeHelper
+  const feeHelper = new FeeHelper(
+    FEE_AMOUNT,
+    new PublicKey(FEE_DESTINATION_PUBKEY)
+  );
 
   // Create SwapExecutor
   const swapExecutor = new SwapExecutor(

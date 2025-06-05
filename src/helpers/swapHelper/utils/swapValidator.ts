@@ -77,7 +77,7 @@ export class SwapValidator {
    */
   validateSellParams(params: SellParams): { valid: boolean; error?: string } {
     // Check if token mint is valid
-    if (!PublicKey.isOnCurve(params.tokenMint)) {
+    if (!PublicKey.isOnCurve(params.fromTokenMint)) {
       return { valid: false, error: "Invalid token mint address" };
     }
 
@@ -175,7 +175,7 @@ export class SwapValidator {
    */
   private calculateAutoSlippage(params: {
     fromMint: PublicKey;
-    toMint: PublicKey;
+    toMint: PublicKey; // TODO: Use this in future for more complex logic
     amount: BN;
   }): number {
     // Basic auto slippage logic

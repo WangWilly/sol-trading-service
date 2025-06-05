@@ -113,6 +113,14 @@ export const englishMessages: Messages = {
   swapConfigTitle: '⚙️ ===== SWAP CONFIGURATION =====',
   updateSwapConfigTitle: '🔧 ===== UPDATE SWAP CONFIG =====',
   swapHistoryTitle: '📋 ===== SWAP TRANSACTION HISTORY =====',
+
+  // Swap display
+  tokenInfo: 'Token Information',
+  noBalance: '⚠️ Insufficient balance for this operation',
+  noBalanceForBuy: '⚠️ Insufficient balance for buy operation',
+  noBalanceForQuickBuy: '⚠️ Insufficient balance for quick buy operation',
+  availableTokenMints: 'Available Token Mints',
+  noAvailableTokens: '⚠️ No available tokens found for trading',
   
   // Swap inputs
   enterTokenMint: 'Enter the token mint address to trade:',
@@ -126,6 +134,7 @@ export const englishMessages: Messages = {
   enterSellAmount: 'Enter the amount of tokens to sell:',
   enterSlippageOptional: 'Enter slippage in basis points (optional, press Enter to use default):',
   enterPriorityFeeOptional: 'Enter priority fee in SOL (optional, press Enter to use default):',
+  selectTokenToSell: 'Select the token to sell:',
   
   // Quick operations
   selectQuickAmount: 'Select a quick buy amount:',

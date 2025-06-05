@@ -242,7 +242,7 @@ export class SwapHelper {
 
       // Log failed transaction
       await this.logSwapHistory({
-        id: UUID.generate(),
+        id: contextInfo,
         timestamp: Date.now(),
         type: "buy",
         fromTokenMint: params.fromTokenMint.toBase58(),
@@ -264,7 +264,7 @@ export class SwapHelper {
 
     // Log successful transaction
     await this.logSwapHistory({
-      id: UUID.generate(),
+      id: contextInfo,
       timestamp: Date.now(),
       type: "buy",
       fromTokenMint: params.fromTokenMint.toBase58(),
@@ -290,7 +290,7 @@ export class SwapHelper {
   async sell(params: SellParams): Promise<SwapOperationResult> {
     const contextInfo = `[SwapHelper][Sell][${UUID.generate()}]`;
     this.logger.info(
-      `${contextInfo} Starting sell operation for ${params.tokenMint.toBase58()}`
+      `${contextInfo} Starting sell operation for swapping ${params.fromTokenMint.toBase58()} back to ${params.toTokenMint.toBase58()}`
     );
 
     // Calculate actual token amount to sell
@@ -301,7 +301,7 @@ export class SwapHelper {
         TokenHelper.calculateSellAmount(
           this.solWeb3Conn,
           this.playerKeypair.publicKey,
-          params.tokenMint,
+          params.fromTokenMint,
           params.percentage
         )
       );
@@ -336,7 +336,7 @@ export class SwapHelper {
       TokenHelper.hasSufficientTokens(
         this.solWeb3Conn,
         this.playerKeypair.publicKey,
-        params.tokenMint,
+        params.fromTokenMint,
         tokenAmount
       )
     );
@@ -354,8 +354,8 @@ export class SwapHelper {
     // Calculate slippage
     const slippageBps = this.swapValidator.calculateSlippage({
       customSlippageBps: params.slippageBps,
-      fromMint: params.tokenMint,
-      toMint: COIN_TYPE_WSOL_MINT,
+      fromMint: params.fromTokenMint,
+      toMint: params.toTokenMint,
       amount: tokenAmount,
     });
 
@@ -368,8 +368,8 @@ export class SwapHelper {
 
     // Execute swap
     const swapParams = {
-      fromMint: params.tokenMint,
-      toMint: COIN_TYPE_WSOL_MINT,
+      fromMint: params.fromTokenMint,
+      toMint: params.toTokenMint,
       amount: tokenAmount,
       slippageBps,
       jitoTipPercentile: this.config.jitoTipPercentile,
@@ -386,11 +386,11 @@ export class SwapHelper {
 
       // Log failed transaction
       await this.logSwapHistory({
-        id: UUID.generate(),
+        id: contextInfo,
         timestamp: Date.now(),
         type: "sell",
-        fromTokenMint: params.tokenMint.toBase58(),
-        toTokenMint: COIN_TYPE_WSOL_MINT.toBase58(),
+        fromTokenMint: params.fromTokenMint.toBase58(),
+        toTokenMint: params.toTokenMint.toBase58(),
         signature: swapResult?.signature || "",
         success: false,
         tokenAmount,
@@ -408,11 +408,11 @@ export class SwapHelper {
 
     // Log successful transaction
     await this.logSwapHistory({
-      id: UUID.generate(),
+      id: contextInfo,
       timestamp: Date.now(),
       type: "sell",
-      fromTokenMint: params.tokenMint.toBase58(),
-      toTokenMint: COIN_TYPE_WSOL_MINT.toBase58(),
+      fromTokenMint: params.fromTokenMint.toBase58(),
+      toTokenMint: params.toTokenMint.toBase58(),
       signature: swapResult.signature,
       success: true,
       tokenAmount,
@@ -473,7 +473,8 @@ export class SwapHelper {
     const percentage = this.config.customSellPercentages[percentageIndex];
 
     return this.sell({
-      tokenMint,
+      fromTokenMint: tokenMint,
+      toTokenMint: COIN_TYPE_WSOL_MINT,
       tokenAmount: new BN(0), // Will be calculated from percentage
       percentage,
     });

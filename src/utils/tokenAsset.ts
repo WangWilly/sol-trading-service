@@ -18,7 +18,7 @@ export interface TokenAsset {
  * @param mint - Token mint address
  * @returns The token name or abbreviated mint address if metadata not found
  */
-async function getTokenName(connection: Connection, mint: string): Promise<string> {
+export async function getTokenName(connection: Connection, mint: string): Promise<string> {
   try {
     // For well-known tokens, you could implement a lookup table here
     if (mint === "So11111111111111111111111111111111111111112") {
