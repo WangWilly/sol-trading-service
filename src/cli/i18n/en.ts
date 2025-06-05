@@ -13,6 +13,8 @@ export const englishMessages: Messages = {
   mainMenuTitle: '🤖 SOLANA COPY-TRADING SERVICE 🤖',
   whatToDo: 'What would you like to do?',
   viewServiceStatus: '📊 View service status',
+  strategyManagement: '📋 Strategy Management',
+  tokenTrading: '💰 Token Trading',
   listActiveStrategies: '📋 List active strategies',
   createBuyStrategy: '🟢 Create buy strategy',
   createSellStrategy: '🔴 Create sell strategy',
@@ -27,6 +29,11 @@ export const englishMessages: Messages = {
   viewLogHistory: '📜 View log history',
   viewWalletAssets: '💰 View wallet token assets',
   exitApp: '❌ Exit',
+  
+  // Submenu titles
+  strategyManagementTitle: '📋 Strategy Management - What would you like to do?',
+  tokenTradingTitle: '💰 Token Trading - What would you like to do?',
+  backToMainMenuOption: '← Back to Main Menu',
   
   // Strategy creation
   enterWalletAddress: 'Enter wallet address to copy trades from:',

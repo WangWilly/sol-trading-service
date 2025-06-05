@@ -13,6 +13,8 @@ export const chineseMessages: Messages = {
   mainMenuTitle: '🤖 SOLANA 复制交易服务 🤖',
   whatToDo: '您想做什么？',
   viewServiceStatus: '📊 查看服务状态',
+  strategyManagement: '📋 策略管理',
+  tokenTrading: '💰 代币交易',
   listActiveStrategies: '📋 列出活跃策略',
   createBuyStrategy: '🟢 创建买入策略',
   createSellStrategy: '🔴 创建卖出策略',
@@ -27,6 +29,11 @@ export const chineseMessages: Messages = {
   viewLogHistory: '📜 查看日志历史',
   viewWalletAssets: '💰 查看钱包代币资产',
   exitApp: '❌ 退出',
+  
+  // Submenu titles
+  strategyManagementTitle: '📋 策略管理 - 您想做什么？',
+  tokenTradingTitle: '💰 代币交易 - 您想做什么？',
+  backToMainMenuOption: '← 返回主菜单',
   
   // Strategy creation
   enterWalletAddress: '输入要跟单的钱包地址：',

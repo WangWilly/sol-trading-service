@@ -13,6 +13,8 @@ export interface Messages {
   mainMenuTitle: string;
   whatToDo: string;
   viewServiceStatus: string;
+  strategyManagement: string;
+  tokenTrading: string;
   listActiveStrategies: string;
   createBuyStrategy: string;
   createSellStrategy: string;
@@ -27,6 +29,11 @@ export interface Messages {
   viewLogHistory: string;
   viewWalletAssets: string;
   exitApp: string;
+  
+  // Submenu titles
+  strategyManagementTitle: string;
+  tokenTradingTitle: string;
+  backToMainMenuOption: string;
   
   // Strategy creation
   enterWalletAddress: string;

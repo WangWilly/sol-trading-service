@@ -79,21 +79,16 @@ export class CliApplication {
       message: i18n.t("whatToDo"),
       choices: [
         { name: i18n.t("viewServiceStatus"), value: "status" },
-        { name: i18n.t("listActiveStrategies"), value: "list" },
-        { name: i18n.t("createBuyStrategy"), value: "buy" },
-        { name: i18n.t("createSellStrategy"), value: "sell" },
-        { name: i18n.t("removeStrategy"), value: "remove" },
-        { name: i18n.t("directBuyToken"), value: "directBuy" },
-        { name: i18n.t("directSellToken"), value: "directSell" },
-        { name: i18n.t("quickBuyToken"), value: "quickBuy" },
-        { name: i18n.t("quickSellToken"), value: "quickSell" },
-        { name: i18n.t("viewSwapConfig"), value: "swapConfig" },
-        { name: i18n.t("updateSwapConfig"), value: "updateSwapConfig" },
-        { name: i18n.t("viewSwapHistory"), value: "swapHistory" },
+        { name: "─────────────────────", value: "separator1" },
+        { name: i18n.t("strategyManagement"), value: "strategyMenu" },
+        { name: i18n.t("tokenTrading"), value: "tradingMenu" },
+        { name: "─────────────────────", value: "separator2" },
         { name: i18n.t("viewLogHistory"), value: "logs" },
         { name: i18n.t("viewWalletAssets"), value: "assets" },
+        { name: "─────────────────────", value: "separator3" },
         { name: i18n.t("changeLanguage"), value: "language" },
         { name: i18n.t("exitApp"), value: "exit" },
+        { name: "─────────────────────", value: "separator4" },
       ],
     });
 
@@ -104,38 +99,11 @@ export class CliApplication {
         case "status":
           await this.displayCommands.displayStatus();
           break;
-        case "list":
-          await this.strategyCommands.listStrategies();
+        case "strategyMenu":
+          await this.promptStrategyMenu();
           break;
-        case "buy":
-          await this.strategyCommands.createBuyStrategy();
-          break;
-        case "sell":
-          await this.strategyCommands.createSellStrategy();
-          break;
-        case "remove":
-          await this.strategyCommands.removeStrategy();
-          break;
-        case "directBuy":
-          await this.swapCommands.directBuyToken();
-          break;
-        case "directSell":
-          await this.swapCommands.directSellToken();
-          break;
-        case "quickBuy":
-          await this.swapCommands.quickBuyToken();
-          break;
-        case "quickSell":
-          await this.swapCommands.quickSellToken();
-          break;
-        case "swapConfig":
-          await this.swapCommands.showSwapConfig();
-          break;
-        case "updateSwapConfig":
-          await this.swapCommands.updateSwapConfig();
-          break;
-        case "swapHistory":
-          await this.swapCommands.getSwapHistory();
+        case "tradingMenu":
+          await this.promptTradingMenu();
           break;
         case "logs":
           await this.displayCommands.displayLogHistory();
@@ -165,6 +133,119 @@ export class CliApplication {
     if (action !== "exit") {
       await this.promptMainMenu();
     }
+  }
+
+  private async promptStrategyMenu(): Promise<void> {
+    const action = await validateSelect({
+      message: i18n.t("strategyManagementTitle"),
+      choices: [
+        { name: i18n.t("listActiveStrategies"), value: "list" },
+        { name: i18n.t("createBuyStrategy"), value: "buy" },
+        { name: i18n.t("createSellStrategy"), value: "sell" },
+        { name: i18n.t("removeStrategy"), value: "remove" },
+        { name: "─────────────────────", value: "separator" },
+        { name: i18n.t("backToMainMenuOption"), value: "back" },
+        { name: "─────────────────────", value: "separator2" },
+      ],
+    });
+
+    ConsoleUtils.refreshConsole();
+
+    if (action === "back") {
+      return; // Return to main menu
+    }
+
+    try {
+      switch (action) {
+        case "list":
+          await this.strategyCommands.listStrategies();
+          break;
+        case "buy":
+          await this.strategyCommands.createBuyStrategy();
+          break;
+        case "sell":
+          await this.strategyCommands.createSellStrategy();
+          break;
+        case "remove":
+          await this.strategyCommands.removeStrategy();
+          break;
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === "ExitPromptError") {
+        // back to main menu
+        ConsoleUtils.refreshConsole();
+        console.log(`\n${i18n.t("backToMainMenu")}`);
+        return;
+      } else {
+        ConsoleUtils.logError(`${error}`);
+      }
+    }
+
+    // Continue in strategy menu unless back was chosen
+    await this.promptStrategyMenu();
+  }
+
+  private async promptTradingMenu(): Promise<void> {
+    const action = await validateSelect({
+      message: i18n.t("tokenTradingTitle"),
+      choices: [
+        { name: i18n.t("directBuyToken"), value: "directBuy" },
+        { name: i18n.t("directSellToken"), value: "directSell" },
+        { name: i18n.t("quickBuyToken"), value: "quickBuy" },
+        { name: i18n.t("quickSellToken"), value: "quickSell" },
+        { name: "─────────────────────", value: "separator" },
+        { name: i18n.t("viewSwapConfig"), value: "swapConfig" },
+        { name: i18n.t("updateSwapConfig"), value: "updateSwapConfig" },
+        { name: i18n.t("viewSwapHistory"), value: "swapHistory" },
+        { name: "─────────────────────", value: "separator2" },
+        { name: i18n.t("backToMainMenuOption"), value: "back" },
+        { name: "─────────────────────", value: "separator3" },
+      ],
+    });
+
+    ConsoleUtils.refreshConsole();
+
+    if (action === "back" || action === "separator" || action === "separator2") {
+      return; // Return to main menu
+    }
+
+    try {
+      switch (action) {
+        case "directBuy":
+          await this.swapCommands.directBuyToken();
+          break;
+        case "directSell":
+          await this.swapCommands.directSellToken();
+          break;
+        case "quickBuy":
+          await this.swapCommands.quickBuyToken();
+          break;
+        case "quickSell":
+          await this.swapCommands.quickSellToken();
+          break;
+        case "swapConfig":
+          await this.swapCommands.showSwapConfig();
+          break;
+        case "updateSwapConfig":
+          await this.swapCommands.updateSwapConfig();
+          break;
+        case "swapHistory":
+          await this.swapCommands.getSwapHistory();
+          break;
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === "ExitPromptError") {
+        // back to main menu
+        ConsoleUtils.refreshConsole();
+        console.log(`\n${i18n.t("backToMainMenu")}`);
+        return;
+      } else {
+        ConsoleUtils.logError(`${error}`);
+      }
+    }
+
+    // Continue in trading menu unless back was chosen
+    await this.promptTradingMenu();
   }
 
   private async changeLanguage(): Promise<void> {
