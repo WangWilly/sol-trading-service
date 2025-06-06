@@ -15,6 +15,7 @@ export interface Messages {
   viewServiceStatus: string;
   strategyManagement: string;
   tokenTrading: string;
+  arbitrageTrading: string;
   listActiveStrategies: string;
   createBuyStrategy: string;
   createSellStrategy: string;
@@ -248,4 +249,52 @@ export interface Messages {
   
   // Missing swap history
   swapHistory: string;
+  
+  // Arbitrage
+  arbitrageManagementTitle: string;
+  viewArbitrageConfig: string;
+  updateArbitrageConfig: string;
+  startArbitrage: string;
+  stopArbitrage: string;
+  viewArbitrageStats: string;
+  viewArbitrageHistory: string;
+  checkArbitrageOpportunity: string;
+  
+  // Arbitrage configuration
+  arbitrageConfigTitle: string;
+  updateArbitrageConfigTitle: string;
+  arbitrageStatsTitle: string;
+  arbitrageHistoryTitle: string;
+  arbitrageOpportunityTitle: string;
+  
+  // Arbitrage inputs
+  enterTokenA: string;
+  enterTokenB: string;
+  enterTradeAmount: string;
+  enterMinProfitBps: string;
+  enterMaxSlippageBps: string;
+  enterCheckInterval: string;
+  enableParallelExecution: string;
+  
+  // Arbitrage status
+  arbitrageRunning: string;
+  arbitrageStopped: string;
+  arbitragePaused: string;
+  
+  // Arbitrage results
+  arbitrageStarted: string;
+  noArbitrageOpportunity: string;
+  arbitrageOpportunityFound: string;
+  arbitrageExecutionSuccess: string;
+  arbitrageExecutionFailed: string;
+  
+  // Arbitrage stats
+  totalOpportunities: string;
+  totalExecutions: string;
+  successfulArbitrages: string;
+  failedArbitrages: string;
+  totalProfit: string;
+  averageProfit: string;
+  averageExecutionTime: string;
+  consecutiveFailures: string;
 }

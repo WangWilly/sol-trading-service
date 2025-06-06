@@ -15,6 +15,7 @@ export const englishMessages: Messages = {
   viewServiceStatus: '📊 View service status',
   strategyManagement: '📋 Strategy Management',
   tokenTrading: '💰 Token Trading',
+  arbitrageTrading: '🔄 Arbitrage Trading (demo)',
   listActiveStrategies: '📋 List active strategies',
   createBuyStrategy: '🟢 Create buy strategy',
   createSellStrategy: '🔴 Create sell strategy',
@@ -244,6 +245,54 @@ export const englishMessages: Messages = {
   
   // Missing swap history
   swapHistory: 'Swap History',
+  
+  // Arbitrage
+  arbitrageManagementTitle: '🔄 Arbitrage Trading - What would you like to do?',
+  viewArbitrageConfig: '⚙️ View arbitrage config',
+  updateArbitrageConfig: '🔧 Update arbitrage config',
+  startArbitrage: '▶️ Start arbitrage',
+  stopArbitrage: '⏹️ Stop arbitrage',
+  viewArbitrageStats: '📊 View arbitrage stats',
+  viewArbitrageHistory: '📋 View arbitrage history',
+  checkArbitrageOpportunity: '🔍 Check arbitrage opportunity',
+  
+  // Arbitrage configuration
+  arbitrageConfigTitle: '⚙️ Arbitrage Configuration',
+  updateArbitrageConfigTitle: '🔧 Update Arbitrage Configuration',
+  arbitrageStatsTitle: '📊 Arbitrage Statistics',
+  arbitrageHistoryTitle: '📋 Arbitrage History',
+  arbitrageOpportunityTitle: '🔍 Arbitrage Opportunity Check',
+  
+  // Arbitrage inputs
+  enterTokenA: 'Enter Token A mint address (e.g., USDC):',
+  enterTokenB: 'Enter Token B mint address (e.g., SOL):',
+  enterTradeAmount: 'Enter trade amount (in Token A units):',
+  enterMinProfitBps: 'Enter minimum profit in basis points (e.g., 50 for 0.5%):',
+  enterMaxSlippageBps: 'Enter maximum slippage in basis points (e.g., 100 for 1%):',
+  enterCheckInterval: 'Enter opportunity check interval in seconds:',
+  enableParallelExecution: 'Enable parallel execution for faster trades?',
+  
+  // Arbitrage status
+  arbitrageRunning: '🟢 Running',
+  arbitrageStopped: '🔴 Stopped',
+  arbitragePaused: '🟡 Paused',
+  
+  // Arbitrage results
+  arbitrageStarted: '✅ Arbitrage started successfully!',
+  noArbitrageOpportunity: '❌ No profitable arbitrage opportunity found.',
+  arbitrageOpportunityFound: '💰 Arbitrage opportunity found! Expected profit: {0} basis points',
+  arbitrageExecutionSuccess: '✅ Arbitrage executed successfully! Profit: {0} tokens',
+  arbitrageExecutionFailed: '❌ Arbitrage execution failed: {0}',
+  
+  // Arbitrage stats
+  totalOpportunities: 'Total Opportunities Found',
+  totalExecutions: 'Total Executions',
+  successfulArbitrages: 'Successful Arbitrages',
+  failedArbitrages: 'Failed Arbitrages',
+  totalProfit: 'Total Profit',
+  averageProfit: 'Average Profit',
+  averageExecutionTime: 'Average Execution Time',
+  consecutiveFailures: 'Consecutive Failures',
   
   // Errors
   privateKeyRequired: '❌ Error: Private key is required. Use -k or --private-key option.',

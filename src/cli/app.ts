@@ -9,6 +9,7 @@ import { ServiceComponents } from "./types/services";
 import { StrategyCommands } from "./commands/strategy";
 import { DisplayCommands } from "./commands/display";
 import { SwapCommands } from "./commands/swap";
+import { ArbitrageCommands } from "./commands/arbitrage";
 
 import { initializeAllServices } from "../main";
 import { loadPrivateKeyBase58 } from "../utils/privateKey";
@@ -26,6 +27,7 @@ export class CliApplication {
   private strategyCommands!: StrategyCommands;
   private displayCommands!: DisplayCommands;
   private swapCommands!: SwapCommands;
+  private arbitrageCommands!: ArbitrageCommands;
   private program = new Command();
 
   async initialize(): Promise<void> {
@@ -64,6 +66,7 @@ export class CliApplication {
     this.strategyCommands = new StrategyCommands(this.services);
     this.displayCommands = new DisplayCommands(this.services);
     this.swapCommands = new SwapCommands(this.services);
+    this.arbitrageCommands = new ArbitrageCommands(this.services);
 
     console.log(i18n.t("serviceInitialized"));
   }
@@ -86,6 +89,7 @@ export class CliApplication {
         { name: "─────────────────────", value: "separator1" },
         { name: i18n.t("strategyManagement"), value: "strategyMenu" },
         { name: i18n.t("tokenTrading"), value: "tradingMenu" },
+        { name: i18n.t("arbitrageTrading"), value: "arbitrageMenu" },
         { name: "─────────────────────", value: "separator2" },
         { name: i18n.t("viewLogHistory"), value: "logs" },
         { name: i18n.t("viewWalletAssets"), value: "assets" },
@@ -108,6 +112,9 @@ export class CliApplication {
           break;
         case "tradingMenu":
           await this.promptTradingMenu();
+          break;
+        case "arbitrageMenu":
+          await this.promptArbitrageMenu();
           break;
         case "logs":
           await this.displayCommands.displayLogHistory();
@@ -252,6 +259,70 @@ export class CliApplication {
     await this.promptTradingMenu();
   }
 
+  private async promptArbitrageMenu(): Promise<void> {
+    const action = await validateSelect({
+      message: i18n.t("arbitrageManagementTitle"),
+      choices: [
+        { name: i18n.t("viewArbitrageConfig"), value: "viewConfig" },
+        { name: i18n.t("updateArbitrageConfig"), value: "updateConfig" },
+        { name: "─────────────────────", value: "separator1" },
+        { name: i18n.t("startArbitrage"), value: "start" },
+        { name: i18n.t("stopArbitrage"), value: "stop" },
+        { name: i18n.t("checkArbitrageOpportunity"), value: "checkOpportunity" },
+        { name: "─────────────────────", value: "separator2" },
+        { name: i18n.t("viewArbitrageStats"), value: "stats" },
+        { name: i18n.t("viewArbitrageHistory"), value: "history" },
+        { name: "─────────────────────", value: "separator3" },
+        { name: i18n.t("backToMainMenuOption"), value: "back" },
+        { name: "─────────────────────", value: "separator4" },
+      ],
+    });
+
+    ConsoleUtils.refreshConsole();
+
+    if (action === "back") {
+      return; // Return to main menu
+    }
+
+    try {
+      switch (action) {
+        case "viewConfig":
+          await this.arbitrageCommands.viewArbitrageConfig();
+          break;
+        case "updateConfig":
+          await this.arbitrageCommands.updateArbitrageConfig();
+          break;
+        case "start":
+          await this.arbitrageCommands.startArbitrage();
+          break;
+        case "stop":
+          await this.arbitrageCommands.stopArbitrage();
+          break;
+        case "checkOpportunity":
+          await this.arbitrageCommands.checkArbitrageOpportunity();
+          break;
+        case "stats":
+          await this.arbitrageCommands.viewArbitrageStats();
+          break;
+        case "history":
+          await this.arbitrageCommands.viewArbitrageHistory();
+          break;
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === "ExitPromptError") {
+        // back to main menu
+        ConsoleUtils.refreshConsole();
+        console.log(`\n${i18n.t("backToMainMenu")}`);
+        return;
+      } else {
+        ConsoleUtils.logError(`${error}`);
+      }
+    }
+
+    // Continue in arbitrage menu unless back was chosen
+    await this.promptArbitrageMenu();
+  }
+
   private async changeLanguage(): Promise<void> {
     console.log(
       `${i18n.t("currentLanguage")}: ${
@@ -295,6 +366,9 @@ export class CliApplication {
       }
       if (this.swapCommands) {
         await this.swapCommands.cleanup();
+      }
+      if (this.arbitrageCommands) {
+        await this.arbitrageCommands.cleanup();
       }
       // Save logs before exiting
       LogHistoryHelper.saveLogsToFile();

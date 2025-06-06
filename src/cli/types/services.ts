@@ -2,6 +2,7 @@ import { CopyTradeHelper } from "../../helpers/copyTradeHelper";
 import { SolRpcWsHelper } from "../../helpers/solRpcWsClient";
 import { SolRpcWsSubscribeManager } from "../../helpers/solRpcWsSubscribeManager";
 import { SwapHelper } from "../../helpers/swapHelper";
+import { ArbitrageHelper } from "../../helpers/arbitrageHelper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,6 +13,7 @@ export interface ServiceComponents {
   playerKeypair: any;
   solWeb3Conn: any;
   swapHelper: SwapHelper;
+  arbitrageHelper: ArbitrageHelper;
 }
 
 // Define interface for the strategy object returned to CLI

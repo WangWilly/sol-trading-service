@@ -30,8 +30,8 @@ import { JitoClient } from "./helpers/3rdParties/jito";
 import { CopyTradeHelper } from "./helpers/copyTradeHelper";
 import { SolRpcWsSubscribeManager } from "./helpers/solRpcWsSubscribeManager";
 import { FeeHelper } from "./helpers/feeHelper/helper";
-import { SwapExecutor } from "./helpers/swapExecutor/swapExecutor";
 import { SwapHelper } from "./helpers/swapHelper";
+import { ArbitrageHelper } from "./helpers/arbitrageHelper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -126,6 +126,7 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
   jitoClient: JitoClient;
   feeHelper: FeeHelper;
   swapHelper: SwapHelper;
+  arbitrageHelper: ArbitrageHelper;
 }> {
   // Create logger for SwapExecutor
   LogHistoryHelper.loadLogHistory();
@@ -173,10 +174,23 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
     }
   );
 
+  // Create ArbitrageHelper
+  const arbitrageHelper = new ArbitrageHelper(
+    baseServices.solWeb3Conn,
+    playerKeypair,
+    baseServices.jupSwapClient,
+    baseServices.jitoClient,
+    feeHelper
+  );
+
+  // Initialize ArbitrageHelper
+  await arbitrageHelper.initialize();
+
   return {
     ...baseServices,
     feeHelper,
     swapHelper,
+    arbitrageHelper,
   };
 }
 

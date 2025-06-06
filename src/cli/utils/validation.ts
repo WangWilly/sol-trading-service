@@ -1,4 +1,4 @@
-import { input, select, number, checkbox } from "@inquirer/prompts";
+import { input, select, number, checkbox, confirm } from "@inquirer/prompts";
 import { PublicKey } from "@solana/web3.js";
 import { i18n } from "../i18n";
 
@@ -82,6 +82,26 @@ export async function validateCheckbox<T>(options: {
   while (true) {
     try {
       return await checkbox(options);
+    } catch (error) {
+      if (error instanceof Error && error.name === "ExitPromptError") {
+        // back to main menu
+        throw new Error("ExitPromptError");
+      }
+      console.log(`${i18n.t("error")}: ${error}`);
+    }
+  }
+}
+
+export async function validateConfirm(options: {
+  message: string;
+  defaultValue?: boolean;
+}): Promise<boolean> {
+  while (true) {
+    try {
+      return await confirm({
+        message: options.message,
+        default: options.defaultValue,
+      });
     } catch (error) {
       if (error instanceof Error && error.name === "ExitPromptError") {
         // back to main menu

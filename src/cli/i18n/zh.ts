@@ -15,6 +15,7 @@ export const chineseMessages: Messages = {
   viewServiceStatus: '📊 查看服务状态',
   strategyManagement: '📋 策略管理',
   tokenTrading: '💰 代币交易',
+  arbitrageTrading: '🔄 套利交易（測試）',
   listActiveStrategies: '📋 列出活跃策略',
   createBuyStrategy: '🟢 创建买入策略',
   createSellStrategy: '🔴 创建卖出策略',
@@ -244,6 +245,54 @@ export const chineseMessages: Messages = {
   
   // Missing swap history
   swapHistory: '交换历史',
+  
+  // Arbitrage
+  arbitrageManagementTitle: '🔄 套利交易 - 您想做什么？',
+  viewArbitrageConfig: '⚙️ 查看套利配置',
+  updateArbitrageConfig: '🔧 更新套利配置',
+  startArbitrage: '▶️ 启动套利',
+  stopArbitrage: '⏹️ 停止套利',
+  viewArbitrageStats: '📊 查看套利统计',
+  viewArbitrageHistory: '📋 查看套利历史',
+  checkArbitrageOpportunity: '🔍 检查套利机会',
+  
+  // Arbitrage configuration
+  arbitrageConfigTitle: '⚙️ 套利配置',
+  updateArbitrageConfigTitle: '🔧 更新套利配置',
+  arbitrageStatsTitle: '📊 套利统计',
+  arbitrageHistoryTitle: '📋 套利历史',
+  arbitrageOpportunityTitle: '🔍 套利机会检查',
+  
+  // Arbitrage inputs
+  enterTokenA: '输入Token A铸币地址（例如：USDC）：',
+  enterTokenB: '输入Token B铸币地址（例如：SOL）：',
+  enterTradeAmount: '输入交易金额（以Token A单位）：',
+  enterMinProfitBps: '输入最小利润基点（例如：50表示0.5%）：',
+  enterMaxSlippageBps: '输入最大滑点基点（例如：100表示1%）：',
+  enterCheckInterval: '输入机会检查间隔（秒）：',
+  enableParallelExecution: '启用并行执行以加快交易速度？',
+  
+  // Arbitrage status
+  arbitrageRunning: '🟢 运行中',
+  arbitrageStopped: '🔴 已停止',
+  arbitragePaused: '🟡 已暂停',
+  
+  // Arbitrage results
+  arbitrageStarted: '✅ 套利启动成功！',
+  noArbitrageOpportunity: '❌ 未找到盈利的套利机会。',
+  arbitrageOpportunityFound: '💰 发现套利机会！预期利润：{0}基点',
+  arbitrageExecutionSuccess: '✅ 套利执行成功！利润：{0}代币',
+  arbitrageExecutionFailed: '❌ 套利执行失败：{0}',
+  
+  // Arbitrage stats
+  totalOpportunities: '发现机会总数',
+  totalExecutions: '执行总数',
+  successfulArbitrages: '成功套利数',
+  failedArbitrages: '失败套利数',
+  totalProfit: '总利润',
+  averageProfit: '平均利润',
+  averageExecutionTime: '平均执行时间',
+  consecutiveFailures: '连续失败次数',
   
   // Errors
   privateKeyRequired: '❌ 错误：需要私钥。请使用-k或--private-key选项。',
