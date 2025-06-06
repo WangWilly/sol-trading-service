@@ -66,6 +66,36 @@ export class SwapValidator {
             return slippageValid;
           }
         }
+
+        break;
+      }
+
+      case COIN_TYPE_USDC_MINT.toBase58():
+      case COIN_TYPE_USDT_MINT.toBase58(): {
+        // Check if USDC/USDT amount is not too small (minimum 0.01 USDC/USDT)
+        const minUsdcAmount = new BN(1_000_000); // 0.01 USDC/USDT in smallest unit
+        if (params.amount.lt(minUsdcAmount)) {
+          return {
+            valid: false,
+            error: "USDC/USDT amount too small (minimum 0.01 USDC/USDT)",
+          };
+        }
+        // Check if USDC/USDT amount is not too large (maximum 1,000,000 USDC/USDT)
+        const maxUsdcAmount = new BN(1_000_000_000_000); // 1,000,000 USDC/USDT in smallest unit
+        if (params.amount.gt(maxUsdcAmount)) {
+          return {
+            valid: false,
+            error: "USDC/USDT amount too large (maximum 1,000,000 USDC/USDT)",
+          };
+        }
+        // Validate slippage if provided
+        if (params.slippageBps !== undefined) {
+          const slippageValid = this.validateSlippage(params.slippageBps);
+          if (!slippageValid.valid) {
+            return slippageValid;
+          }
+        }
+        break;
       }
     }
 
@@ -200,6 +230,7 @@ export class SwapValidator {
           // 1 SOL
           slippageBps = Math.min(slippageBps * 1.5, this.config.maxSlippageBps);
         }
+        break;
       }
       case COIN_TYPE_USDT_MINT.toBase58():
       case COIN_TYPE_USDC_MINT.toBase58(): {

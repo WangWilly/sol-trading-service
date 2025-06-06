@@ -47,9 +47,8 @@ export async function initializeCopyTradingService(
   jupSwapClient: JupSwapClient;
   jitoClient: JitoClient;
 }> {
-  LogHistoryHelper.loadLogHistory();
-
   if (!rootLogger) {
+    LogHistoryHelper.loadLogHistory();
     rootLogger = new TsLogLogger({
       name: "copy-trade-service",
       type: LOG_TYPE,
@@ -126,10 +125,10 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
   jupSwapClient: JupSwapClient;
   jitoClient: JitoClient;
   feeHelper: FeeHelper;
-  swapExecutor: SwapExecutor;
   swapHelper: SwapHelper;
 }> {
   // Create logger for SwapExecutor
+  LogHistoryHelper.loadLogHistory();
   const rootLogger = new TsLogLogger({
     name: "copy-trade-service",
     type: LOG_TYPE,
@@ -151,16 +150,6 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
   const feeHelper = new FeeHelper(
     FEE_AMOUNT,
     new PublicKey(FEE_DESTINATION_PUBKEY)
-  );
-
-  // Create SwapExecutor
-  const swapExecutor = new SwapExecutor(
-    baseServices.solWeb3Conn,
-    playerKeypair,
-    baseServices.jupSwapClient,
-    baseServices.jitoClient,
-    feeHelper,
-    rootLogger.getSubLogger({ name: "SwapExecutor" })
   );
 
   const swapHelper = new SwapHelper(
@@ -187,7 +176,6 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
   return {
     ...baseServices,
     feeHelper,
-    swapExecutor,
     swapHelper,
   };
 }

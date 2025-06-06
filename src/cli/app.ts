@@ -1,11 +1,15 @@
 import { Command } from "commander";
+
 import { validateSelect } from "./utils/validation";
 import { ConsoleUtils } from "./utils/console";
+
 import { i18n, Language } from "./i18n";
+
 import { ServiceComponents } from "./types/services";
 import { StrategyCommands } from "./commands/strategy";
 import { DisplayCommands } from "./commands/display";
 import { SwapCommands } from "./commands/swap";
+
 import { initializeAllServices } from "../main";
 import { loadPrivateKeyBase58 } from "../utils/privateKey";
 import { LogHistoryHelper } from "../helpers/logHistoryHelper/helper";
