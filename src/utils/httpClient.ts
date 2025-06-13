@@ -1,7 +1,5 @@
-import { Logger, TsLogLogger } from "./logging";
-import { LOG_TYPE, NOT_USE_CLI } from "../config";
+import { Logger } from "./logging";
 import axios, { AxiosInstance, AxiosRequestConfig, Method } from "axios";
-import { transportFunc } from "../helpers/logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,17 +25,7 @@ export class HttpClient {
 
   constructor(
     private readonly config: HttpOptions,
-    private readonly logger: Logger = new TsLogLogger({
-      name: "UnknownHttpClient",
-      type: LOG_TYPE,
-      overwrite: {
-        transportJSON: NOT_USE_CLI
-          ? undefined
-          : (json: unknown) => {
-              transportFunc(json);
-            },
-      },
-    }),
+    private readonly logger: Logger,
     private readonly retryTimes = 3,
     private retryBaseInterval = 1000,
     private retryIncrement = 1000,
