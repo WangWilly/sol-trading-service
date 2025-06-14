@@ -1,12 +1,12 @@
-import { Logger as TsLogger, ILogObj, ISettings } from "tslog";
+import { Logger as TsLoggerType, ILogObj, ISettings } from "tslog";
 
-/**
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface Logger {
-  logInfo(message: string): void;
-  logWarn(message: string): void;
-  logError(message: string): void;
+  info(...args: unknown[]): unknown;
+  warn(...args: unknown[]): unknown;
+  error(...args: unknown[]): unknown;
+  debug(...args: unknown[]): unknown;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -14,24 +14,27 @@ export interface Logger {
 export class ConsoleLogger implements Logger {
   constructor(private readonly name: string) {}
 
-  logInfo(message: string): void {
+  info(message: string): void {
     console.log(`\x1b[34m[${this.name}]\x1b[0m ${message}`);
   }
 
-  logWarn(message: string): void {
+  warn(message: string): void {
     console.log(`\x1b[33m[${this.name}]\x1b[0m ${message}`);
   }
 
-  logError(message: string): void {
+  error(message: string): void {
     console.log(`\x1b[31m[${this.name}]\x1b[0m ${message}`);
   }
+
+  debug(message: string): void {
+    console.log(`\x1b[90m[${this.name}]\x1b[0m ${message}`);
+  }
 }
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type Logger = TsLogger<ILogObj>;
-export const TsLogLogger = TsLogger<ILogObj> as any as new (options?: {
+export type TsLogger = TsLoggerType<ILogObj>;
+export const TsLogLogger = TsLoggerType<ILogObj> as any as new (options?: {
   name?: string;
   type?: "pretty" | "json" | "hidden";
   minLevel?: number;
@@ -61,4 +64,4 @@ export const TsLogLogger = TsLogger<ILogObj> as any as new (options?: {
     ) => void;
     transportJSON?: (json: unknown) => void;
   };
-}) => Logger;
+}) => TsLogger;

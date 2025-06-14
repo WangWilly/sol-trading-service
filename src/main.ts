@@ -1,4 +1,4 @@
-import { Logger, TsLogLogger } from "./utils/logging";
+import { TsLogger, TsLogLogger } from "./utils/logging";
 import {
   PRIVATE_KEY_BASE58,
   LOG_TYPE,
@@ -38,7 +38,7 @@ import { ArbitrageHelper } from "./helpers/arbitrageHelper";
 // Export the initialization function for CLI usage
 export async function initializeCopyTradingService(
   playerKeypair: Keypair,
-  rootLogger?: Logger
+  rootLogger?: TsLogger,
 ): Promise<{
   solWeb3Conn: Connection;
   copyTradeHelper: CopyTradeHelper;
@@ -159,6 +159,7 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
     baseServices.jupSwapClient,
     baseServices.jitoClient,
     feeHelper,
+    rootLogger.getSubLogger({ name: "SwapHelper" }),
     {
       jitoTipPercentile: "landed_tips_95th_percentile",
       defaultSlippageBps: 100,
@@ -180,7 +181,8 @@ export async function initializeAllServices(playerKeypair: Keypair): Promise<{
     playerKeypair,
     baseServices.jupSwapClient,
     baseServices.jitoClient,
-    feeHelper
+    feeHelper,
+    rootLogger.getSubLogger({ name: "ArbitrageHelper" }),
   );
 
   // Initialize ArbitrageHelper

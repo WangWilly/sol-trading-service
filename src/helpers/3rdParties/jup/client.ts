@@ -5,8 +5,6 @@ import {
 } from "../../../utils/constants";
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
-import { TsLogLogger } from "../../../utils/logging";
-import { LOG_TYPE, NOT_USE_CLI } from "../../../config";
 import type { Logger } from "../../../utils/logging";
 import {
   GetQuoteV1ResultDtoSchema,
@@ -21,7 +19,6 @@ import {
   BuildSwapWithIxsV1BodyDto,
   BuildSwapWithIxsV1ResultDto,
 } from "./dtos";
-import { transportFunc } from "../../logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 // Reference: https://station.jup.ag/docs/api-setup
@@ -37,17 +34,7 @@ export class JupSwapClient {
   constructor(
     jupSwapBaseEndpoint: string = "https://api.jup.ag",
     apiKey: string = "",
-    private readonly logger: Logger = new TsLogLogger({
-      name: "JupSwapClient",
-      type: LOG_TYPE,
-      overwrite: {
-        transportJSON: NOT_USE_CLI
-          ? undefined
-          : (json: unknown) => {
-              transportFunc(json);
-            },
-      },
-    }),
+    private readonly logger: Logger,
   ) {
     this.baseClient = new HttpClient(
       {

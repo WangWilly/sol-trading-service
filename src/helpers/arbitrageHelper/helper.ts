@@ -1,10 +1,7 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair } from "@solana/web3.js";
 import BN from "bn.js";
 
 import type { Logger } from "../../utils/logging";
-import { TsLogLogger } from "../../utils/logging";
-import { transportFunc } from "../logHistoryHelper/helper";
-import { LOG_TYPE, NOT_USE_CLI } from "../../config";
 
 import { JupSwapClient } from "../3rdParties/jup";
 import { JitoClient } from "../3rdParties/jito";
@@ -29,7 +26,6 @@ import {
 } from "./utils";
 
 import { COIN_TYPE_WSOL_MINT, COIN_TYPE_USDC_MINT } from "../../utils/constants";
-import { ResultUtils } from "../../utils/result";
 import { UUID } from "../../utils/uuid";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +71,6 @@ export class ArbitrageHelper {
   private readonly detector: ArbitrageDetector;
   private readonly executor: ArbitrageExecutor;
   private readonly persistence: IArbitragePersistence;
-  private readonly logger: Logger;
 
   private isRunning = false;
   private intervalId?: NodeJS.Timeout;
@@ -86,21 +81,10 @@ export class ArbitrageHelper {
     readonly jupSwapClient: JupSwapClient,
     readonly jitoClient: JitoClient,
     readonly feeHelper: FeeHelper,
+    private readonly logger: Logger,
     config?: Partial<ArbitrageConfig>,
-    persistence?: IArbitragePersistence
+    persistence?: IArbitragePersistence,
   ) {
-    this.logger = new TsLogLogger({
-      name: "ArbitrageHelper",
-      type: LOG_TYPE,
-      overwrite: {
-        transportJSON: NOT_USE_CLI
-          ? undefined
-          : (json: unknown) => {
-              transportFunc(json);
-            },
-      },
-    });
-    
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.stats = { ...DEFAULT_STATS };
 

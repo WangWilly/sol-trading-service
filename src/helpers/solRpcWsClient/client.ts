@@ -13,11 +13,8 @@ import {
   RpcIdRange,
 } from "./utils";
 
-import { TsLogLogger } from "../../utils/logging";
-import { LOG_TYPE, NOT_USE_CLI } from "../../config";
 import type { Logger } from "../../utils/logging";
 import { CopyTradeHelper } from "../copyTradeHelper";
-import { transportFunc } from "../logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,17 +50,7 @@ export class SolRpcWsHelper {
   constructor(
     private readonly wsRpcUrl: string,
     private readonly copyTradeHelper: CopyTradeHelper,
-    private readonly logger: Logger = new TsLogLogger({
-      name: "SolRpcWsHelper",
-      type: LOG_TYPE,
-      overwrite: {
-        transportJSON: NOT_USE_CLI
-          ? undefined
-          : (json: unknown) => {
-              transportFunc(json);
-            },
-      },
-    }),
+    private readonly logger: Logger,
   ) {}
 
   //////////////////////////////////////////////////////////////////////////////

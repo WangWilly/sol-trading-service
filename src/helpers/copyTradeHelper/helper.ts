@@ -13,11 +13,8 @@ import {
 
 import { Connection, Keypair, Logs } from "@solana/web3.js";
 
-import { LOG_TYPE, NOT_USE_CLI } from "../../config";
 
-import { TsLogLogger } from "../../utils/logging";
 import type { Logger } from "../../utils/logging";
-import { transportFunc } from "../logHistoryHelper/helper";
 
 import { JupSwapClient } from "../3rdParties/jup";
 import { JitoClient } from "../3rdParties/jito";
@@ -36,17 +33,7 @@ export class CopyTradeHelper {
     private readonly jupSwapClient: JupSwapClient,
     private readonly jitoClient: JitoClient,
     private readonly feeHelper: FeeHelper,
-    private readonly logger: Logger = new TsLogLogger({
-      name: "CopyTradeHelper",
-      type: LOG_TYPE,
-      overwrite: {
-        transportJSON: NOT_USE_CLI
-          ? undefined
-          : (json: unknown) => {
-              transportFunc(json);
-            },
-      },
-    }),
+    private readonly logger: Logger,
     enablePersistence: boolean,
     persistenceDataPath: string
   ) {

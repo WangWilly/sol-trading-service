@@ -6,8 +6,7 @@ import {
 } from "../../../utils/constants";
 import { safe } from "../../../utils/exceptions";
 import { HttpClient } from "../../../utils/httpClient";
-import { Logger, TsLogLogger } from "../../../utils/logging";
-import { LOG_TYPE, NOT_USE_CLI } from "../../../config";
+import { Logger } from "../../../utils/logging";
 
 import {
   GetPercentileTip,
@@ -16,7 +15,6 @@ import {
 } from "./dtos";
 
 import type { GetTipInfoV1ResultDto, SendTransactionV1ResultDto } from "./dtos";
-import { transportFunc } from "../../logHistoryHelper/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,17 +33,7 @@ export class JitoClient {
     blockEngineBaseUrl: string = "https://mainnet.block-engine.jito.wtf",
     bundleBaseUrl: string = "https://bundles.jito.wtf",
     uuid: string = "",
-    private readonly logger: Logger = new TsLogLogger({
-      name: "JitoClient",
-      type: LOG_TYPE,
-      overwrite: {
-        transportJSON: NOT_USE_CLI
-          ? undefined
-          : (json: unknown) => {
-              transportFunc(json);
-            },
-      },
-    }),
+    private readonly logger: Logger,
   ) {
     const blockEngineHeaders: Record<string, string> = {
       [CONTENT_TYPE_KEY]: CONTENT_TYPE_VAL_JSON,

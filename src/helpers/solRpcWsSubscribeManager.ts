@@ -1,7 +1,5 @@
-import { Logger, TsLogLogger } from "../utils/logging";
-import { LOG_TYPE, NOT_USE_CLI } from "../config";
+import { Logger } from "../utils/logging";
 
-import { transportFunc } from "./logHistoryHelper/helper";
 
 import { SolRpcWsHelper } from "./solRpcWsClient/client";
 
@@ -28,17 +26,7 @@ export class SolRpcWsSubscribeManager {
   constructor(
     private readonly solRpcWsHelper: SolRpcWsHelper,
     private readonly copyTradeHelper: CopyTradeHelper,
-    private readonly logger: Logger = new TsLogLogger({
-      name: "SolRpcWsSubscribe",
-      type: LOG_TYPE,
-      overwrite: {
-        transportJSON: NOT_USE_CLI
-          ? undefined
-          : (json: unknown) => {
-              transportFunc(json);
-            },
-      },
-    }),
+    private readonly logger: Logger,
   ) {}
 
   //////////////////////////////////////////////////////////////////////////////

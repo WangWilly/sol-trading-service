@@ -45,18 +45,8 @@ export class SwapHelper {
     private readonly jupSwapClient: JupSwapClient,
     private readonly jitoClient: JitoClient,
     private readonly feeHelper: FeeHelper,
+    private readonly logger: Logger,
     initialConfig: Partial<SwapConfig> = {},
-    private readonly logger: Logger = new TsLogLogger({
-      name: "SwapHelper",
-      type: LOG_TYPE,
-      overwrite: {
-        transportJSON: NOT_USE_CLI
-          ? undefined
-          : (json: unknown) => {
-              transportFunc(json);
-            },
-      },
-    }),
     enablePersistence: boolean = true,
     persistenceDataPath: string = "data/swap-data.json"
   ) {
